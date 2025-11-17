@@ -1,0 +1,43 @@
+export interface CanvasPosition {
+  x: number;
+  y: number;
+}
+
+export interface CanvasViewport {
+  position: CanvasPosition;
+  zoom: number;
+  showGrid: boolean;
+}
+
+export interface CanvasInteraction {
+  isPanning: boolean;
+  lastMousePosition: CanvasPosition | null;
+  isSpacebarPressed: boolean;
+}
+
+export interface CanvasState {
+  viewport: CanvasViewport;
+  interaction: CanvasInteraction;
+
+  setPan: (position: CanvasPosition) => void;
+  updatePan: (deltaX: number, deltaY: number) => void;
+  setZoom: (zoom: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
+  toggleGrid: () => void;
+  setIsPanning: (isPanning: boolean) => void;
+  setLastMousePosition: (position: CanvasPosition | null) => void;
+  setIsSpacebarPressed: (isPressed: boolean) => void;
+  resetCanvas: () => void;
+}
+
+export interface CanvasConstants {
+  MIN_ZOOM: number;
+  MAX_ZOOM: number;
+  ZOOM_STEP: number;
+  DEFAULT_ZOOM: number;
+  GRID_SIZE: number;
+  GRID_COLOR: string;
+  GRID_DOT_SIZE: number;
+}
