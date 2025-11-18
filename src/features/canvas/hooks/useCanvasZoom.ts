@@ -6,20 +6,14 @@ export const useCanvasZoom = () => {
   const { viewport, setZoom, zoomIn, zoomOut, resetZoom } = useCanvasStore();
 
   const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-
-        const delta =
-          e.deltaY > 0
-            ? -CANVAS_CONSTANTS.ZOOM_STEP
-            : CANVAS_CONSTANTS.ZOOM_STEP;
-        const newZoom = viewport.zoom + delta;
-
-        setZoom(newZoom);
+    (deltaY: number) => {
+      if (deltaY > 0) {
+        zoomOut();
+      } else {
+        zoomIn();
       }
     },
-    [viewport.zoom, setZoom]
+    [zoomIn, zoomOut]
   );
 
   const getZoomPercentage = useCallback(() => {

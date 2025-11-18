@@ -16,7 +16,6 @@ export const CanvasControls = () => {
 
   return (
     <div className="absolute bottom-4 right-4 flex flex-col gap-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-      {/* zoom in */}
       <Button
         variant="ghost"
         size="icon"
@@ -28,7 +27,6 @@ export const CanvasControls = () => {
         <ZoomIn className="h-4 w-4" />
       </Button>
 
-      {/* zoom percentage display */}
       <button
         onClick={resetZoom}
         title="Reset Zoom (Ctrl/Cmd + 0)"
@@ -37,7 +35,6 @@ export const CanvasControls = () => {
         {getZoomPercentage()}
       </button>
 
-      {/* zoom out */}
       <Button
         variant="ghost"
         size="icon"
@@ -49,10 +46,8 @@ export const CanvasControls = () => {
         <ZoomOut className="h-4 w-4" />
       </Button>
 
-      {/* divider */}
       <div className="h-px bg-gray-200 my-1" />
 
-      {/* fit to screen */}
       <Button
         variant="ghost"
         size="icon"
@@ -63,7 +58,6 @@ export const CanvasControls = () => {
         <Maximize2 className="h-4 w-4" />
       </Button>
 
-      {/* toggle grid */}
       <Button
         variant={viewport.showGrid ? "default" : "ghost"}
         size="icon"

@@ -13,6 +13,8 @@ const initialState = {
     isPanning: false,
     lastMousePosition: null,
     isSpacebarPressed: false,
+    selectedTool: "select" as const,
+    editingBoxId: null,
   },
 };
 
@@ -140,6 +142,33 @@ export const useCanvasStore = create<CanvasState>()(
             }),
             false,
             "canvas/setIsSpacebarPressed"
+          ),
+
+        setSelectedTool: (selectedTool) =>
+          set(
+            (state) => ({
+              interaction: { ...state.interaction, selectedTool },
+            }),
+            false,
+            "canvas/setSelectedTool"
+          ),
+
+        enterEditMode: (boxId) =>
+          set(
+            (state) => ({
+              interaction: { ...state.interaction, editingBoxId: boxId },
+            }),
+            false,
+            "canvas/enterEditMode"
+          ),
+
+        exitEditMode: () =>
+          set(
+            (state) => ({
+              interaction: { ...state.interaction, editingBoxId: null },
+            }),
+            false,
+            "canvas/exitEditMode"
           ),
 
         resetCanvas: () =>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
-import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
+import { KEYBOARD_SHORTCUTS, CANVAS_CONSTANTS } from "@/lib/constants";
 
 export const useCanvasPan = () => {
   const {
@@ -47,6 +47,19 @@ export const useCanvasPan = () => {
     }
   }, [interaction.isPanning, setIsPanning, setLastMousePosition]);
 
+  const handleWheelPan = useCallback(
+    (e: WheelEvent) => {
+      const delta = e.deltaY * CANVAS_CONSTANTS.WHEEL_PAN_SENSITIVITY;
+
+      if (e.shiftKey) {
+        updatePan(-delta, 0);
+      } else {
+        updatePan(0, -delta);
+      }
+    },
+    [updatePan]
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -88,6 +101,7 @@ export const useCanvasPan = () => {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    handleWheelPan,
     isPanning: interaction.isPanning,
     isSpacebarPressed: interaction.isSpacebarPressed,
   };

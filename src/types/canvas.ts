@@ -1,3 +1,5 @@
+export type ToolType = "select" | "box" | "text" | "artboard";
+
 export interface CanvasPosition {
   x: number;
   y: number;
@@ -13,6 +15,8 @@ export interface CanvasInteraction {
   isPanning: boolean;
   lastMousePosition: CanvasPosition | null;
   isSpacebarPressed: boolean;
+  selectedTool: ToolType;
+  editingBoxId: string | null;
 }
 
 export interface CanvasState {
@@ -29,6 +33,9 @@ export interface CanvasState {
   setIsPanning: (isPanning: boolean) => void;
   setLastMousePosition: (position: CanvasPosition | null) => void;
   setIsSpacebarPressed: (isPressed: boolean) => void;
+  setSelectedTool: (tool: ToolType) => void;
+  enterEditMode: (boxId: string) => void;
+  exitEditMode: () => void;
   resetCanvas: () => void;
 }
 
@@ -40,4 +47,5 @@ export interface CanvasConstants {
   GRID_SIZE: number;
   GRID_COLOR: string;
   GRID_DOT_SIZE: number;
+  WHEEL_PAN_SENSITIVITY: number;
 }
