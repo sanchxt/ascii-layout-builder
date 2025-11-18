@@ -1,6 +1,7 @@
 import type { Box, BorderStyle } from "@/types/box";
 import type { CanvasPosition } from "@/types/canvas";
 import { BOX_CONSTANTS } from "@/lib/constants";
+import { getDeepestBoxAtPoint } from "./boxHierarchy";
 
 export const generateBoxId = (): string => {
   return crypto.randomUUID();
@@ -19,13 +20,7 @@ export const getBoxAtPoint = (
   point: CanvasPosition,
   boxes: Box[]
 ): Box | null => {
-  const matchingBoxes = boxes.filter((box) => isPointInBox(point, box));
-
-  if (matchingBoxes.length === 0) return null;
-
-  return matchingBoxes.reduce((highest, current) =>
-    current.zIndex > highest.zIndex ? current : highest
-  );
+  return getDeepestBoxAtPoint(point, boxes);
 };
 
 export const clampBoxSize = (

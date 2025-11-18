@@ -1,10 +1,12 @@
 import { useBoxStore } from "../store/boxStore";
 import type { BorderStyle } from "@/types/box";
 import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { TEXT_CONSTANTS } from "@/lib/constants";
+import { TEXT_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
+import { getNestingDepth, getChildBoxes } from "../utils/boxHierarchy";
 
 export const BoxPropertiesPanel = () => {
-  const { getSelectedBoxes, updateBox } = useBoxStore();
+  const { getSelectedBoxes, updateBox, boxes, detachFromParent, selectBox } =
+    useBoxStore();
   const selectedBoxes = getSelectedBoxes();
 
   if (selectedBoxes.length === 0) {
@@ -214,6 +216,86 @@ export const BoxPropertiesPanel = () => {
             No text
           </div>
         )}
+      </div>
+
+      <div className="space-y-2 pt-2 border-t border-gray-200">
+        <div className="text-xs font-medium text-gray-600">Hierarchy</div>
+
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500">Nesting Level:</span>
+            <span
+              className={`font-mono ${
+                getNestingDepth(box.id, boxes) >=
+                BOX_CONSTANTS.MAX_NESTING_DEPTH - 1
+                  ? "text-orange-500"
+                  : "text-gray-700"
+              }`}
+            >
+              {getNestingDepth(box.id, boxes)} of{" "}
+              {BOX_CONSTANTS.MAX_NESTING_DEPTH}
+            </span>
+          </div>
+
+          {box.parentId && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500">Parent:</span>
+                <button
+                  onClick={() => {
+                    const parent = boxes.find((b) => b.id === box.parentId);
+                    if (parent) {
+                      selectBox(parent.id, false);
+                    }
+                  }}
+                  className="px-2 py-0.5 text-xs bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 transition-colors"
+                >
+                  Go to Parent
+                </button>
+              </div>
+              <button
+                onClick={() => detachFromParent(box.id)}
+                className="w-full px-2 py-1 text-xs bg-gray-50 text-gray-600 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+              >
+                Detach from Parent
+              </button>
+            </div>
+          )}
+
+          {!box.parentId && (
+            <div className="text-xs text-gray-400 italic">
+              Root box (no parent)
+            </div>
+          )}
+
+          {box.children.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500">Children:</span>
+                <span className="font-mono text-gray-700">
+                  {box.children.length}
+                </span>
+              </div>
+              <div className="max-h-20 overflow-y-auto space-y-1 bg-gray-50 p-1.5 rounded border border-gray-200">
+                {getChildBoxes(box.id, boxes).map((child) => (
+                  <button
+                    key={child.id}
+                    onClick={() => selectBox(child.id, false)}
+                    className="w-full text-left px-2 py-1 text-xs bg-white border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  >
+                    {child.text.value || `Box ${child.id.slice(0, 6)}...`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {box.children.length === 0 && !box.parentId && (
+            <div className="text-xs text-gray-400 italic text-center py-1">
+              Drag boxes into this one to nest them
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">

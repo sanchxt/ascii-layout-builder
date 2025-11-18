@@ -6,10 +6,15 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useBoxCreation } from "@/features/boxes/hooks/useBoxCreation";
 import { useBoxSelection } from "@/features/boxes/hooks/useBoxSelection";
+import { useGrouping } from "@/features/boxes/hooks/useGrouping";
+import { useBoxDrag } from "@/features/boxes/hooks/useBoxDrag";
+import { useDropZone } from "@/features/boxes/hooks/useDropZone";
 import { Box } from "@/features/boxes/components/Box";
+import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator";
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasControls } from "./CanvasControls";
 import { screenToCanvas } from "../utils/coordinateTransform";
+import { getRootBoxes } from "@/features/boxes/utils/boxHierarchy";
 
 interface CanvasProps {
   children?: React.ReactNode;
@@ -17,7 +22,7 @@ interface CanvasProps {
 
 export const Canvas = ({ children }: CanvasProps) => {
   const { viewport, interaction, exitEditMode } = useCanvasStore();
-  const { boxes, updateBox } = useBoxStore();
+  const { boxes, updateBox, setParent, selectBox } = useBoxStore();
   const {
     handleMouseDown: handlePanMouseDown,
     handleMouseMove: handlePanMouseMove,
@@ -39,6 +44,37 @@ export const Canvas = ({ children }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useToolShortcuts();
+  useGrouping();
+
+  const rootBoxes = getRootBoxes(boxes);
+
+  const {
+    dragState,
+    startDrag,
+    isDragging: isDraggingBox,
+    getBoxPreviewPosition,
+  } = useBoxDrag({
+    onDragEnd: (draggedBoxIds) => {
+      if (dropZoneState.isValidDropZone && dropZoneState.potentialParentId) {
+        const primaryBoxId = draggedBoxIds[0];
+        setParent(primaryBoxId, dropZoneState.potentialParentId);
+      }
+    },
+  });
+
+  const getCanvasMousePosition = (clientX: number, clientY: number) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    const bounds = canvasRef.current.getBoundingClientRect();
+    return screenToCanvas(clientX, clientY, bounds, viewport);
+  };
+
+  const [canvasMousePos, setCanvasMousePos] = useState({ x: 0, y: 0 });
+
+  const dropZoneState = useDropZone({
+    draggedBoxIds: dragState.draggedBoxIds,
+    currentMousePos: canvasMousePos,
+    isDragging: isDraggingBox,
+  });
 
   useEffect(() => {
     const preventBrowserZoom = (e: WheelEvent) => {
@@ -97,6 +133,9 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    const canvasPos = getCanvasMousePosition(e.clientX, e.clientY);
+    setCanvasMousePos(canvasPos);
+
     if (isSpacebarPressed) {
       handlePanMouseMove(e);
       return;
@@ -141,10 +180,23 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const getCursor = () => {
+    if (isDraggingBox) return "grabbing";
     if (isSpacebarPressed) return "grab";
     if (interaction.selectedTool === "box") return "crosshair";
     if (interaction.selectedTool === "text") return "text";
     return "default";
+  };
+
+  const handleBoxDragStart = (
+    boxId: string,
+    clientX: number,
+    clientY: number
+  ) => {
+    if (interaction.selectedTool !== "select" || interaction.editingBoxId) {
+      return;
+    }
+
+    startDrag(boxId, clientX, clientY);
   };
 
   return (
@@ -171,23 +223,35 @@ export const Canvas = ({ children }: CanvasProps) => {
             transformOrigin: "0 0",
           }}
         >
-          {boxes.map((box) => (
+          {rootBoxes.map((box) => (
             <Box
               key={box.id}
               box={box}
               isSelected={isBoxSelected(box.id)}
-              onSelect={(_boxId, multi) => {
-                handleCanvasClick(
-                  { x: box.x + box.width / 2, y: box.y + box.height / 2 },
-                  multi
-                );
+              onSelect={(boxId, multi) => {
+                selectBox(boxId, multi);
               }}
               onUpdate={updateBox}
               getCanvasBounds={() =>
                 canvasRef.current?.getBoundingClientRect() || null
               }
+              onDragStart={handleBoxDragStart}
+              isDragging={dragState.draggedBoxIds.includes(box.id)}
+              dragPreviewPosition={
+                isDraggingBox
+                  ? getBoxPreviewPosition(box.id) || undefined
+                  : undefined
+              }
             />
           ))}
+
+          {isDraggingBox && dropZoneState.potentialParentId && (
+            <DropZoneIndicator
+              targetBoxId={dropZoneState.potentialParentId}
+              isValid={dropZoneState.isValidDropZone}
+              validationMessage={dropZoneState.validationMessage}
+            />
+          )}
 
           {tempBox && (
             <div

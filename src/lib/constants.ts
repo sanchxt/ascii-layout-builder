@@ -10,37 +10,50 @@ export const CANVAS_CONSTANTS: CanvasConstants = {
   ZOOM_STEP: 0.1,
   /** default zoom (100%) */
   DEFAULT_ZOOM: 1,
-  /** grid cell size (px) */
+  /** grid cell size */
   GRID_SIZE: 20,
   /** grid color */
   GRID_COLOR: "rgba(0, 0, 0, 0.1)",
-  /** grid dot size (px) */
+  /** grid dot size */
   GRID_DOT_SIZE: 1,
-  /** wheel pan sensitivity multiplier */
+  /** wheel pan sensitivity */
   WHEEL_PAN_SENSITIVITY: 1.0,
 };
 
 export const BOX_CONSTANTS = {
-  /** default box width (px) */
+  /** default box width */
   DEFAULT_WIDTH: 400,
-  /** default box height (px) */
+  /** default box height */
   DEFAULT_HEIGHT: 300,
-  /** minimum box width (px) */
+  /** minimum box width */
   MIN_WIDTH: 100,
-  /** minimum box height (px) */
+  /** minimum box height */
   MIN_HEIGHT: 60,
   /** default border style */
   DEFAULT_BORDER_STYLE: "single" as BorderStyle,
-  /** default padding (px) */
+  /** default padding */
   DEFAULT_PADDING: 16,
-  /** resize handle size (px) */
+  /** resize handle size */
   HANDLE_SIZE: 8,
-  /** resize handle hit area (px) */
+  /** resize handle hit area */
   HANDLE_HIT_AREA: 16,
-  /** selection outline width (px) */
+  /** selection outline width */
   SELECTION_OUTLINE_WIDTH: 2,
   /** selection outline color */
   SELECTION_OUTLINE_COLOR: "#3b82f6",
+
+  /** maximum nesting depth */
+  MAX_NESTING_DEPTH: 5,
+  /** pixel threshold inside parent border for valid drop zone */
+  NESTING_DROP_ZONE_THRESHOLD: 20,
+  /** pixel threshold outside parent bounds to trigger detach */
+  AUTO_DETACH_THRESHOLD: 20,
+  /** color for valid drop zone highlight */
+  NESTING_HIGHLIGHT_COLOR: "#10b981", // green
+  /** padding around grouped boxes when creating parent */
+  GROUP_PADDING: 40,
+  /** opacity for drag preview */
+  DRAG_PREVIEW_OPACITY: 0.5,
 } as const;
 
 export const TEXT_CONSTANTS = {
@@ -49,8 +62,8 @@ export const TEXT_CONSTANTS = {
   /** placeholder examples */
   PLACEHOLDERS: ["[Logo]", "[Image]", "[Icon]", "[Button]", "[Video]"],
   /** highlight colors */
-  HIGHLIGHT_COLORS: ["#3b82f6", "#ec4899", "#10b981", "#eab308"] as const, // blue, pink, green, yellow
-  /** max text length (characters) */
+  HIGHLIGHT_COLORS: ["#3b82f6", "#ec4899", "#10b981", "#eab308"] as const,
+  /** max text */
   MAX_LENGTH: 10000,
 } as const;
 

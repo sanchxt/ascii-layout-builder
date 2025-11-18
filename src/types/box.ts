@@ -62,6 +62,13 @@ export interface BoxState {
   getBox: (id: string) => Box | undefined;
   getSelectedBoxes: () => Box[];
   resetBoxes: () => void;
+
+  // nesting/hierarchy actions
+  setParent: (childId: string, parentId: string) => void;
+  detachFromParent: (childId: string) => void;
+  groupBoxes: (boxIds: string[]) => void;
+  ungroupBox: (parentId: string) => void;
+  updateBoxPosition: (id: string, x: number, y: number) => void;
 }
 
 export interface ResizeHandlePosition {

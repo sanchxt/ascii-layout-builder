@@ -4,6 +4,8 @@ import { BoxResizeHandles } from "./BoxResizeHandles";
 import { TextEditor } from "./TextEditor";
 import { FormattedText } from "./FormattedText";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { useBoxStore } from "../store/boxStore";
+import { getChildBoxes, getNestingDepth } from "../utils/boxHierarchy";
 
 interface BoxProps {
   box: BoxType;
@@ -11,6 +13,10 @@ interface BoxProps {
   onSelect: (id: string, multi: boolean) => void;
   onUpdate: (id: string, updates: Partial<BoxType>) => void;
   getCanvasBounds: () => DOMRect | null;
+  parentBox?: BoxType;
+  onDragStart?: (boxId: string, clientX: number, clientY: number) => void;
+  isDragging?: boolean;
+  dragPreviewPosition?: { x: number; y: number };
 }
 
 export const Box = ({
@@ -19,6 +25,10 @@ export const Box = ({
   onSelect,
   onUpdate,
   getCanvasBounds,
+  parentBox,
+  onDragStart,
+  isDragging = false,
+  dragPreviewPosition,
 }: BoxProps) => {
   const editingBoxId = useCanvasStore(
     (state) => state.interaction.editingBoxId
@@ -29,15 +39,31 @@ export const Box = ({
   const enterEditMode = useCanvasStore((state) => state.enterEditMode);
   const isEditing = editingBoxId === box.id;
 
-  const handleClick = (e: React.MouseEvent) => {
+  const allBoxes = useBoxStore((state) => state.boxes);
+  const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
+
+  const childBoxes = getChildBoxes(box.id, allBoxes);
+  const nestingDepth = getNestingDepth(box.id, allBoxes);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (isEditing) return;
 
     if (selectedTool === "text") {
       enterEditMode(box.id);
       return;
     }
 
+    if (selectedTool === "select" && onDragStart) {
+      onDragStart(box.id, e.clientX, e.clientY);
+    }
+
     onSelect(box.id, e.shiftKey);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -47,16 +73,38 @@ export const Box = ({
 
   const borderStyle = getBorderStyleCSS(box.borderStyle);
 
+  const position = {
+    left:
+      isDragging && dragPreviewPosition
+        ? parentBox
+          ? dragPreviewPosition.x + parentBox.padding
+          : dragPreviewPosition.x
+        : parentBox
+        ? box.x + parentBox.padding
+        : box.x,
+    top:
+      isDragging && dragPreviewPosition
+        ? parentBox
+          ? dragPreviewPosition.y + parentBox.padding
+          : dragPreviewPosition.y
+        : parentBox
+        ? box.y + parentBox.padding
+        : box.y,
+  };
+
   return (
     <div
-      className="absolute"
+      className="absolute transition-opacity"
       style={{
-        left: box.x,
-        top: box.y,
+        left: position.left,
+        top: position.top,
         width: box.width,
         height: box.height,
-        cursor: isEditing ? "text" : "move",
+        cursor: isEditing ? "text" : isDragging ? "grabbing" : "move",
+        zIndex: box.zIndex,
+        opacity: isDragging ? 0.5 : 1,
       }}
+      onMouseDown={handleMouseDown}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
@@ -67,6 +115,15 @@ export const Box = ({
           padding: box.padding,
         }}
       >
+        {nestingDepth > 0 && (
+          <div
+            className="absolute top-1 right-1 text-xs font-mono text-gray-400 bg-white/70 px-1 rounded pointer-events-none"
+            title={`Nesting depth: ${nestingDepth}`}
+          >
+            L{nestingDepth}
+          </div>
+        )}
+
         {isSelected && (
           <div
             className="absolute inset-0 pointer-events-none"
@@ -88,6 +145,21 @@ export const Box = ({
             Double-click to add text
           </div>
         )}
+
+        {childBoxes.map((childBox) => (
+          <Box
+            key={childBox.id}
+            box={childBox}
+            isSelected={selectedBoxIds.includes(childBox.id)}
+            onSelect={onSelect}
+            onUpdate={onUpdate}
+            getCanvasBounds={getCanvasBounds}
+            parentBox={box}
+            onDragStart={onDragStart}
+            isDragging={isDragging}
+            dragPreviewPosition={dragPreviewPosition}
+          />
+        ))}
       </div>
 
       {isSelected && (

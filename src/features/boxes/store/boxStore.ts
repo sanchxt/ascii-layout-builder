@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import type { BoxState, Box } from "@/types/box";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { STORAGE_KEYS, BOX_CONSTANTS } from "@/lib/constants";
+import {
+  getAllDescendants,
+  canNestBox,
+  convertToParentRelative,
+  convertToCanvasAbsolute,
+} from "../utils/boxHierarchy";
+import { getMaxZIndex } from "../utils/boxHelpers";
 
 const initialState = {
   boxes: [] as Box[],
@@ -40,24 +47,78 @@ export const useBoxStore = create<BoxState>()(
 
         deleteBox: (id) =>
           set(
-            (state) => ({
-              boxes: state.boxes.filter((box) => box.id !== id),
-              selectedBoxIds: state.selectedBoxIds.filter(
-                (boxId) => boxId !== id
-              ),
-            }),
+            (state) => {
+              const descendants = getAllDescendants(id, state.boxes);
+              const idsToDelete = [id, ...descendants.map((box) => box.id)];
+
+              const boxToDelete = state.boxes.find((box) => box.id === id);
+              let updatedBoxes = state.boxes.filter(
+                (box) => !idsToDelete.includes(box.id)
+              );
+
+              if (boxToDelete?.parentId) {
+                updatedBoxes = updatedBoxes.map((box) =>
+                  box.id === boxToDelete.parentId
+                    ? {
+                        ...box,
+                        children: box.children.filter(
+                          (childId) => childId !== id
+                        ),
+                      }
+                    : box
+                );
+              }
+
+              return {
+                boxes: updatedBoxes,
+                selectedBoxIds: state.selectedBoxIds.filter(
+                  (boxId) => !idsToDelete.includes(boxId)
+                ),
+              };
+            },
             false,
             "box/deleteBox"
           ),
 
         deleteBoxes: (ids) =>
           set(
-            (state) => ({
-              boxes: state.boxes.filter((box) => !ids.includes(box.id)),
-              selectedBoxIds: state.selectedBoxIds.filter(
-                (boxId) => !ids.includes(boxId)
-              ),
-            }),
+            (state) => {
+              const allIdsToDelete = new Set(ids);
+              ids.forEach((id) => {
+                const descendants = getAllDescendants(id, state.boxes);
+                descendants.forEach((desc) => allIdsToDelete.add(desc.id));
+              });
+
+              const idsToDeleteArray = Array.from(allIdsToDelete);
+
+              let updatedBoxes = state.boxes.filter(
+                (box) => !allIdsToDelete.has(box.id)
+              );
+
+              const deletedBoxesWithParents = state.boxes.filter(
+                (box) => idsToDeleteArray.includes(box.id) && box.parentId
+              );
+
+              deletedBoxesWithParents.forEach((deletedBox) => {
+                updatedBoxes = updatedBoxes.map((box) =>
+                  box.id === deletedBox.parentId
+                    ? {
+                        ...box,
+                        children: box.children.filter(
+                          (childId) => !allIdsToDelete.has(childId)
+                        ),
+                      }
+                    : box
+                );
+              });
+
+              return {
+                boxes: updatedBoxes,
+                selectedBoxIds: state.selectedBoxIds.filter(
+                  (boxId) => !allIdsToDelete.has(boxId)
+                ),
+              };
+            },
             false,
             "box/deleteBoxes"
           ),
@@ -122,19 +183,58 @@ export const useBoxStore = create<BoxState>()(
         duplicateBoxes: (ids) =>
           set(
             (state) => {
-              const boxesToDuplicate = state.boxes.filter((box) =>
-                ids.includes(box.id)
-              );
-              const duplicatedBoxes = boxesToDuplicate.map((box) => ({
-                ...box,
-                id: crypto.randomUUID(),
-                x: box.x + 20,
-                y: box.y + 20,
-              }));
+              const idMap = new Map<string, string>();
+              const allBoxesToDuplicate: Box[] = [];
+
+              const collectBoxesWithDescendants = (boxId: string) => {
+                const box = state.boxes.find((b) => b.id === boxId);
+                if (!box || allBoxesToDuplicate.some((b) => b.id === boxId))
+                  return;
+
+                allBoxesToDuplicate.push(box);
+                const descendants = getAllDescendants(boxId, state.boxes);
+                descendants.forEach((desc) => {
+                  if (!allBoxesToDuplicate.some((b) => b.id === desc.id)) {
+                    allBoxesToDuplicate.push(desc);
+                  }
+                });
+              };
+
+              ids.forEach((id) => collectBoxesWithDescendants(id));
+
+              allBoxesToDuplicate.forEach((box) => {
+                idMap.set(box.id, crypto.randomUUID());
+              });
+
+              const duplicatedBoxes = allBoxesToDuplicate.map((box) => {
+                const newId = idMap.get(box.id)!;
+                const newParentId = box.parentId
+                  ? idMap.get(box.parentId)
+                  : undefined;
+                const newChildren = box.children
+                  .map((childId) => idMap.get(childId))
+                  .filter((id): id is string => id !== undefined);
+
+                const shouldOffset =
+                  !box.parentId || !ids.includes(box.parentId);
+
+                return {
+                  ...box,
+                  id: newId,
+                  parentId: newParentId,
+                  children: newChildren,
+                  x: shouldOffset ? box.x + 20 : box.x,
+                  y: shouldOffset ? box.y + 20 : box.y,
+                };
+              });
+
+              const topLevelDuplicatedIds = ids
+                .map((id) => idMap.get(id))
+                .filter((id): id is string => id !== undefined);
 
               return {
                 boxes: [...state.boxes, ...duplicatedBoxes],
-                selectedBoxIds: duplicatedBoxes.map((box) => box.id),
+                selectedBoxIds: topLevelDuplicatedIds,
               };
             },
             false,
@@ -160,6 +260,264 @@ export const useBoxStore = create<BoxState>()(
             }),
             false,
             "box/resetBoxes"
+          ),
+
+        setParent: (childId, parentId) =>
+          set(
+            (state) => {
+              const validation = canNestBox(childId, parentId, state.boxes);
+              if (!validation.canNest) {
+                console.warn(`Cannot nest box: ${validation.reason}`);
+                return state;
+              }
+
+              const childBox = state.boxes.find((b) => b.id === childId);
+              const parentBox = state.boxes.find((b) => b.id === parentId);
+
+              if (!childBox || !parentBox) return state;
+
+              const relativePos = convertToParentRelative(
+                childBox.x,
+                childBox.y,
+                parentBox
+              );
+
+              const updatedBoxes = state.boxes.map((box) => {
+                if (box.id === childId) {
+                  return {
+                    ...box,
+                    parentId,
+                    x: relativePos.x,
+                    y: relativePos.y,
+                  };
+                } else if (box.id === parentId) {
+                  return {
+                    ...box,
+                    children: [...box.children, childId],
+                  };
+                } else if (box.id === childBox.parentId) {
+                  return {
+                    ...box,
+                    children: box.children.filter((id) => id !== childId),
+                  };
+                }
+                return box;
+              });
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/setParent"
+          ),
+
+        detachFromParent: (childId) =>
+          set(
+            (state) => {
+              const childBox = state.boxes.find((b) => b.id === childId);
+              if (!childBox || !childBox.parentId) return state;
+
+              const parentBox = state.boxes.find(
+                (b) => b.id === childBox.parentId
+              );
+              if (!parentBox) return state;
+
+              const absolutePos = convertToCanvasAbsolute(
+                childBox.x,
+                childBox.y,
+                parentBox
+              );
+
+              const updatedBoxes = state.boxes.map((box) => {
+                if (box.id === childId) {
+                  return {
+                    ...box,
+                    parentId: undefined,
+                    x: absolutePos.x,
+                    y: absolutePos.y,
+                  };
+                } else if (box.id === childBox.parentId) {
+                  return {
+                    ...box,
+                    children: box.children.filter((id) => id !== childId),
+                  };
+                }
+                return box;
+              });
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/detachFromParent"
+          ),
+
+        groupBoxes: (boxIds) =>
+          set(
+            (state) => {
+              if (boxIds.length === 0) return state;
+
+              const boxesToGroup = state.boxes.filter((box) =>
+                boxIds.includes(box.id)
+              );
+              if (boxesToGroup.length === 0) return state;
+
+              const minX = Math.min(...boxesToGroup.map((b) => b.x));
+              const minY = Math.min(...boxesToGroup.map((b) => b.y));
+              const maxX = Math.max(...boxesToGroup.map((b) => b.x + b.width));
+              const maxY = Math.max(...boxesToGroup.map((b) => b.y + b.height));
+
+              const padding = BOX_CONSTANTS.GROUP_PADDING;
+
+              const parentId = crypto.randomUUID();
+              const parentBox: Box = {
+                id: parentId,
+                x: minX - padding,
+                y: minY - padding,
+                width: maxX - minX + padding * 2,
+                height: maxY - minY + padding * 2,
+                borderStyle: "single",
+                padding: BOX_CONSTANTS.DEFAULT_PADDING,
+                text: {
+                  value: "",
+                  alignment: "left",
+                  fontSize: "medium",
+                  formatting: [],
+                },
+                children: [...boxIds],
+                parentId: undefined,
+                zIndex: getMaxZIndex(state.boxes) + 1,
+              };
+
+              const oldParentIds = new Set(
+                boxesToGroup
+                  .map((box) => box.parentId)
+                  .filter((id): id is string => id !== undefined)
+              );
+
+              let updatedBoxes = state.boxes.map((box) => {
+                if (boxIds.includes(box.id)) {
+                  const relativePos = convertToParentRelative(
+                    box.x,
+                    box.y,
+                    parentBox
+                  );
+                  return {
+                    ...box,
+                    parentId,
+                    x: relativePos.x,
+                    y: relativePos.y,
+                  };
+                }
+                return box;
+              });
+
+              updatedBoxes = updatedBoxes.map((box) => {
+                if (oldParentIds.has(box.id)) {
+                  return {
+                    ...box,
+                    children: box.children.filter(
+                      (childId) => !boxIds.includes(childId)
+                    ),
+                  };
+                }
+                return box;
+              });
+
+              return {
+                boxes: [...updatedBoxes, parentBox],
+                selectedBoxIds: [parentId],
+              };
+            },
+            false,
+            "box/groupBoxes"
+          ),
+
+        ungroupBox: (parentId) =>
+          set(
+            (state) => {
+              const parentBox = state.boxes.find((b) => b.id === parentId);
+              if (!parentBox || parentBox.children.length === 0) return state;
+
+              const childIds = [...parentBox.children];
+
+              const updatedBoxes = state.boxes
+                .filter((box) => box.id !== parentId)
+                .map((box) => {
+                  if (childIds.includes(box.id)) {
+                    const absolutePos = convertToCanvasAbsolute(
+                      box.x,
+                      box.y,
+                      parentBox
+                    );
+                    return {
+                      ...box,
+                      parentId: undefined,
+                      x: absolutePos.x,
+                      y: absolutePos.y,
+                    };
+                  }
+                  return box;
+                });
+
+              return {
+                boxes: updatedBoxes,
+                selectedBoxIds: childIds,
+              };
+            },
+            false,
+            "box/ungroupBox"
+          ),
+
+        updateBoxPosition: (id, x, y) =>
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              if (box.parentId) {
+                const parent = state.boxes.find((b) => b.id === box.parentId);
+                if (parent) {
+                  const tempBox = { ...box, x, y };
+                  const isInside =
+                    tempBox.x >= 0 &&
+                    tempBox.y >= 0 &&
+                    tempBox.x + tempBox.width <= parent.width &&
+                    tempBox.y + tempBox.height <= parent.height;
+
+                  if (!isInside) {
+                    const absolutePos = convertToCanvasAbsolute(x, y, parent);
+
+                    const updatedBoxes = state.boxes.map((b) => {
+                      if (b.id === id) {
+                        return {
+                          ...b,
+                          parentId: undefined,
+                          x: absolutePos.x,
+                          y: absolutePos.y,
+                        };
+                      } else if (b.id === box.parentId) {
+                        return {
+                          ...b,
+                          children: b.children.filter(
+                            (childId) => childId !== id
+                          ),
+                        };
+                      }
+                      return b;
+                    });
+
+                    return { boxes: updatedBoxes };
+                  }
+                }
+              }
+
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, x, y } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/updateBoxPosition"
           ),
       }),
       {
