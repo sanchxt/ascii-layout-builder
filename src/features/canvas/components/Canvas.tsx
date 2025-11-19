@@ -14,7 +14,10 @@ import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasControls } from "./CanvasControls";
 import { screenToCanvas } from "../utils/coordinateTransform";
-import { getRootBoxes } from "@/features/boxes/utils/boxHierarchy";
+import {
+  getRootBoxes,
+  convertToLocalPosition,
+} from "@/features/boxes/utils/boxHierarchy";
 
 interface CanvasProps {
   children?: React.ReactNode;
@@ -22,7 +25,7 @@ interface CanvasProps {
 
 export const Canvas = ({ children }: CanvasProps) => {
   const { viewport, interaction, exitEditMode } = useCanvasStore();
-  const { boxes, updateBox, setParent, selectBox } = useBoxStore();
+  const { boxes, updateBox, selectBox } = useBoxStore();
   const {
     handleMouseDown: handlePanMouseDown,
     handleMouseMove: handlePanMouseMove,
@@ -51,16 +54,65 @@ export const Canvas = ({ children }: CanvasProps) => {
   const {
     dragState,
     startDrag,
+    updateDrag,
+    endDrag,
+    cancelDrag,
     isDragging: isDraggingBox,
     getBoxPreviewPosition,
+    initialAbsolutePositions,
   } = useBoxDrag({
-    onDragEnd: (draggedBoxIds) => {
-      if (dropZoneState.isValidDropZone && dropZoneState.potentialParentId) {
-        const primaryBoxId = draggedBoxIds[0];
-        setParent(primaryBoxId, dropZoneState.potentialParentId);
-      }
+    onDragEnd: (draggedBoxIds, finalDelta) => {
+      draggedBoxIds.forEach((id) => {
+        const box = boxes.find((b) => b.id === id);
+        if (!box) return;
+
+        if (box.parentId && draggedBoxIds.includes(box.parentId)) {
+          return;
+        }
+
+        const initialAbs = initialAbsolutePositions.get(id);
+        if (!initialAbs) return;
+
+        const finalAbsX = initialAbs.x + finalDelta.x;
+        const finalAbsY = initialAbs.y + finalDelta.y;
+
+        let targetParentId: string | null = null;
+        if (dropZoneState.isValidDropZone && dropZoneState.potentialParentId) {
+          targetParentId = dropZoneState.potentialParentId;
+        } else {
+          targetParentId = box.parentId || null;
+        }
+
+        const targetParent = targetParentId
+          ? boxes.find((b) => b.id === targetParentId) || null
+          : null;
+
+        const newLocalPos = convertToLocalPosition(
+          finalAbsX,
+          finalAbsY,
+          targetParent,
+          boxes
+        );
+
+        updateBox(id, {
+          parentId: targetParentId || undefined,
+          x: newLocalPos.x,
+          y: newLocalPos.y,
+        });
+      });
     },
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isDraggingBox) {
+        cancelDrag();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDraggingBox, cancelDrag]);
 
   const getCanvasMousePosition = (clientX: number, clientY: number) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
@@ -136,6 +188,11 @@ export const Canvas = ({ children }: CanvasProps) => {
     const canvasPos = getCanvasMousePosition(e.clientX, e.clientY);
     setCanvasMousePos(canvasPos);
 
+    if (isDraggingBox) {
+      updateDrag(canvasPos.x, canvasPos.y);
+      return;
+    }
+
     if (isSpacebarPressed) {
       handlePanMouseMove(e);
       return;
@@ -157,6 +214,11 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const handleMouseUp = () => {
+    if (isDraggingBox) {
+      endDrag();
+      return;
+    }
+
     handlePanMouseUp();
 
     if (isCreatingBox) {
@@ -196,7 +258,8 @@ export const Canvas = ({ children }: CanvasProps) => {
       return;
     }
 
-    startDrag(boxId, clientX, clientY);
+    const canvasPos = getCanvasMousePosition(clientX, clientY);
+    startDrag(boxId, canvasPos.x, canvasPos.y);
   };
 
   return (

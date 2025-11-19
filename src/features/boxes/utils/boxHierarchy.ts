@@ -1,5 +1,16 @@
-import type { Box } from "@/types/box";
+import type { Box, BorderStyle } from "@/types/box";
 import { BOX_CONSTANTS } from "@/lib/constants";
+
+export const getBorderWidth = (borderStyle: BorderStyle): number => {
+  switch (borderStyle) {
+    case "single":
+      return 2;
+    case "double":
+      return 4;
+    case "dashed":
+      return 2;
+  }
+};
 
 export const getChildBoxes = (parentId: string, boxes: Box[]): Box[] => {
   return boxes.filter((box) => box.parentId === parentId);
@@ -147,9 +158,10 @@ export const convertToParentRelative = (
   boxY: number,
   parent: Box
 ): { x: number; y: number } => {
+  const borderWidth = getBorderWidth(parent.borderStyle);
   return {
-    x: boxX - parent.x - parent.padding,
-    y: boxY - parent.y - parent.padding,
+    x: boxX - parent.x - borderWidth - parent.padding,
+    y: boxY - parent.y - borderWidth - parent.padding,
   };
 };
 
@@ -158,9 +170,29 @@ export const convertToCanvasAbsolute = (
   boxY: number,
   parent: Box
 ): { x: number; y: number } => {
+  const borderWidth = getBorderWidth(parent.borderStyle);
   return {
-    x: parent.x + parent.padding + boxX,
-    y: parent.y + parent.padding + boxY,
+    x: parent.x + borderWidth + parent.padding + boxX,
+    y: parent.y + borderWidth + parent.padding + boxY,
+  };
+};
+
+export const convertToLocalPosition = (
+  absoluteX: number,
+  absoluteY: number,
+  targetParent: Box | null,
+  allBoxes: Box[]
+): { x: number; y: number } => {
+  if (!targetParent) {
+    return { x: absoluteX, y: absoluteY };
+  }
+
+  const parentAbsPos = getAbsolutePosition(targetParent, allBoxes);
+  const borderWidth = getBorderWidth(targetParent.borderStyle);
+
+  return {
+    x: absoluteX - (parentAbsPos.x + borderWidth + targetParent.padding),
+    y: absoluteY - (parentAbsPos.y + borderWidth + targetParent.padding),
   };
 };
 
@@ -181,8 +213,9 @@ export const getAbsolutePosition = (
   let absoluteY = box.y;
 
   for (const ancestor of ancestors.reverse()) {
-    absoluteX += ancestor.x + ancestor.padding;
-    absoluteY += ancestor.y + ancestor.padding;
+    const borderWidth = getBorderWidth(ancestor.borderStyle);
+    absoluteX += ancestor.x + borderWidth + ancestor.padding;
+    absoluteY += ancestor.y + borderWidth + ancestor.padding;
   }
 
   return { x: absoluteX, y: absoluteY };

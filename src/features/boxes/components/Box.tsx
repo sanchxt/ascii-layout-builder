@@ -5,7 +5,12 @@ import { TextEditor } from "./TextEditor";
 import { FormattedText } from "./FormattedText";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useBoxStore } from "../store/boxStore";
-import { getChildBoxes, getNestingDepth } from "../utils/boxHierarchy";
+import {
+  getChildBoxes,
+  getNestingDepth,
+  getAbsolutePosition,
+  getBorderWidth,
+} from "../utils/boxHierarchy";
 
 interface BoxProps {
   box: BoxType;
@@ -73,24 +78,43 @@ export const Box = ({
 
   const borderStyle = getBorderStyleCSS(box.borderStyle);
 
-  const position = {
-    left:
-      isDragging && dragPreviewPosition
-        ? parentBox
-          ? dragPreviewPosition.x + parentBox.padding
-          : dragPreviewPosition.x
-        : parentBox
-        ? box.x + parentBox.padding
-        : box.x,
-    top:
-      isDragging && dragPreviewPosition
-        ? parentBox
-          ? dragPreviewPosition.y + parentBox.padding
-          : dragPreviewPosition.y
-        : parentBox
-        ? box.y + parentBox.padding
-        : box.y,
-  };
+  let position: { left: number; top: number };
+
+  if (isDragging && dragPreviewPosition) {
+    if (parentBox) {
+      const parentAbsPos = getAbsolutePosition(parentBox, allBoxes);
+      const parentBorder = getBorderWidth(parentBox.borderStyle);
+      position = {
+        left:
+          dragPreviewPosition.x -
+          parentAbsPos.x -
+          parentBorder -
+          parentBox.padding,
+        top:
+          dragPreviewPosition.y -
+          parentAbsPos.y -
+          parentBorder -
+          parentBox.padding,
+      };
+    } else {
+      position = {
+        left: dragPreviewPosition.x,
+        top: dragPreviewPosition.y,
+      };
+    }
+  } else {
+    if (parentBox) {
+      position = {
+        left: box.x,
+        top: box.y,
+      };
+    } else {
+      position = {
+        left: box.x,
+        top: box.y,
+      };
+    }
+  }
 
   return (
     <div
