@@ -105,3 +105,22 @@ export const KEYBOARD_SHORTCUTS = {
   TOGGLE_GRID: "'",
   TOGGLE_PREVIEW: "/",
 } as const;
+
+export const ASCII_CONSTANTS = {
+  /** px per character width */
+  CHAR_WIDTH_RATIO: 8,
+  /** px per character height */
+  CHAR_HEIGHT_RATIO: 12,
+  /** min box width in chars */
+  MIN_BOX_CHARS_WIDTH: 10,
+  /** min box height in chars */
+  MIN_BOX_CHARS_HEIGHT: 5,
+  /** debounce delay in ms */
+  GENERATION_DEBOUNCE: 300,
+  /** max output lines */
+  MAX_OUTPUT_LINES: 10000,
+  /** max characters per line */
+  MAX_LINE_LENGTH: 500,
+  /** padding inside box */
+  TEXT_PADDING_CHARS: 1,
+} as const;
