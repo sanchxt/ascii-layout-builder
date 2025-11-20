@@ -6,7 +6,6 @@ import {
 } from "@/features/boxes/utils/boxHierarchy";
 import type { Box } from "@/types/box";
 
-// checkin for partial overlap
 const rectanglesIntersect = (
   rect1: { x: number; y: number; width: number; height: number },
   rect2: { x: number; y: number; width: number; height: number }
@@ -26,7 +25,10 @@ export const useSelectionRectangle = () => {
     updateSelectionRect,
     clearSelectionRect,
   } = useCanvasStore();
-  const { boxes, selectBox, clearSelection } = useBoxStore();
+
+  const boxes = useBoxStore((state) => state.boxes);
+  const selectBox = useBoxStore((state) => state.selectBox);
+  const clearSelection = useBoxStore((state) => state.clearSelection);
 
   const startSelection = (canvasX: number, canvasY: number) => {
     startSelectionRect(canvasX, canvasY);

@@ -38,6 +38,9 @@ export interface Box {
   children: string[];
   parentId?: string;
   zIndex: number;
+  visible?: boolean;
+  locked?: boolean;
+  name?: string;
 }
 
 export interface BoxState {
@@ -83,6 +86,16 @@ export interface BoxState {
     boxIds: string[],
     distribution: import("@/features/alignment/types/alignment").DistributionType
   ) => void;
+
+  // layers
+  toggleBoxVisibility: (id: string) => void;
+  toggleBoxLock: (id: string) => void;
+  updateBoxName: (id: string, name: string) => void;
+  reorderBox: (id: string, newZIndex: number) => void;
+  moveBoxToFront: (id: string) => void;
+  moveBoxToBack: (id: string) => void;
+  moveBoxForward: (id: string) => void;
+  moveBoxBackward: (id: string) => void;
 }
 
 export interface ResizeHandlePosition {

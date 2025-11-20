@@ -10,7 +10,9 @@ import {
   getNestingDepth,
   getAbsolutePosition,
   getBorderWidth,
+  getAncestors,
 } from "../utils/boxHierarchy";
+import { Lock } from "lucide-react";
 
 interface BoxProps {
   box: BoxType;
@@ -47,11 +49,26 @@ export const Box = ({
   const allBoxes = useBoxStore((state) => state.boxes);
   const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
 
+  const isVisible = box.visible !== false;
+  const ancestors = getAncestors(box.id, allBoxes);
+  const hasHiddenAncestor = ancestors.some(
+    (ancestor) => ancestor.visible === false
+  );
+
+  if (!isVisible || hasHiddenAncestor) {
+    return null;
+  }
+
+  const isLocked = box.locked === true;
   const childBoxes = getChildBoxes(box.id, allBoxes);
   const nestingDepth = getNestingDepth(box.id, allBoxes);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (isLocked) {
+      return;
+    }
 
     if (isEditing) return;
 
@@ -124,7 +141,13 @@ export const Box = ({
         top: position.top,
         width: box.width,
         height: box.height,
-        cursor: isEditing ? "text" : isDragging ? "grabbing" : "move",
+        cursor: isLocked
+          ? "not-allowed"
+          : isEditing
+          ? "text"
+          : isDragging
+          ? "grabbing"
+          : "move",
         zIndex: box.zIndex,
         opacity: isDragging ? 0.5 : 1,
       }}
@@ -145,6 +168,16 @@ export const Box = ({
             title={`Nesting depth: ${nestingDepth}`}
           >
             L{nestingDepth}
+          </div>
+        )}
+
+        {isLocked && (
+          <div
+            className="absolute top-1 left-1 bg-gray-900/80 text-white px-1.5 py-0.5 rounded flex items-center gap-1 pointer-events-none"
+            title="This box is locked"
+          >
+            <Lock className="w-3 h-3" />
+            <span className="text-xs font-medium">Locked</span>
           </div>
         )}
 
@@ -186,7 +219,7 @@ export const Box = ({
         ))}
       </div>
 
-      {isSelected && (
+      {isSelected && !isLocked && (
         <BoxResizeHandles
           box={box}
           onUpdate={onUpdate}

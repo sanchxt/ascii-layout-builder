@@ -4,7 +4,10 @@ import { getBoxAtPoint } from "../utils/boxHelpers";
 import type { CanvasPosition } from "@/types/canvas";
 
 export const useBoxSelection = () => {
-  const { boxes, selectedBoxIds, selectBox, clearSelection } = useBoxStore();
+  const boxes = useBoxStore((state) => state.boxes);
+  const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
+  const selectBox = useBoxStore((state) => state.selectBox);
+  const clearSelection = useBoxStore((state) => state.clearSelection);
 
   const handleCanvasClick = useCallback(
     (point: CanvasPosition, isShiftPressed: boolean) => {

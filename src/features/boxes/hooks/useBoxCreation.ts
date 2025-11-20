@@ -11,7 +11,11 @@ import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS } from "@/lib/constants";
 
 export const useBoxCreation = () => {
-  const { boxes, addBox, setTempBox, tempBox, setCreationMode } = useBoxStore();
+  const boxes = useBoxStore((state) => state.boxes);
+  const addBox = useBoxStore((state) => state.addBox);
+  const setTempBox = useBoxStore((state) => state.setTempBox);
+  const tempBox = useBoxStore((state) => state.tempBox);
+  const setCreationMode = useBoxStore((state) => state.setCreationMode);
   const { viewport } = useCanvasStore();
 
   const startCreating = useCallback(

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useCanvasPan } from "../hooks/useCanvasPan";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useToolShortcuts } from "../hooks/useToolShortcuts";
@@ -17,6 +17,7 @@ import { useHistory } from "@/features/history/hooks/useHistory";
 import { useAlignment } from "@/features/alignment/hooks/useAlignment";
 import { useDistribution } from "@/features/alignment/hooks/useDistribution";
 import { useSmartGuides } from "@/features/alignment/hooks/useSmartGuides";
+import { useLayerKeyboardShortcuts } from "@/features/boxes/hooks/useLayerKeyboardShortcuts";
 import { recordSnapshot } from "@/features/history/store/historyStore";
 import { Box } from "@/features/boxes/components/Box";
 import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator";
@@ -39,7 +40,10 @@ interface CanvasProps {
 
 export const Canvas = ({ children }: CanvasProps) => {
   const { viewport, interaction, exitEditMode } = useCanvasStore();
-  const { boxes, updateBox, selectBox } = useBoxStore();
+
+  const boxes = useBoxStore((state) => state.boxes);
+  const updateBox = useBoxStore((state) => state.updateBox);
+  const selectBox = useBoxStore((state) => state.selectBox);
   const {
     handleMouseDown: handlePanMouseDown,
     handleMouseMove: handlePanMouseMove,
@@ -64,12 +68,13 @@ export const Canvas = ({ children }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useToolShortcuts();
+  useLayerKeyboardShortcuts();
   useGrouping();
   useHistory();
   useAlignment();
   useDistribution();
 
-  const rootBoxes = getRootBoxes(boxes);
+  const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 
   const {
     dragState,
@@ -157,13 +162,23 @@ export const Canvas = ({ children }: CanvasProps) => {
     isDragging: isDraggingBox,
   });
 
+  const currentDelta = useMemo(
+    () => ({
+      x: dragState.currentCanvasPos.x - dragState.startCanvasPos.x,
+      y: dragState.currentCanvasPos.y - dragState.startCanvasPos.y,
+    }),
+    [
+      dragState.currentCanvasPos.x,
+      dragState.currentCanvasPos.y,
+      dragState.startCanvasPos.x,
+      dragState.startCanvasPos.y,
+    ]
+  );
+
   const { alignmentGuides, spacingGuides, snappedDelta } = useSmartGuides({
     isDragging: isDraggingBox,
     draggedBoxIds: dragState.draggedBoxIds,
-    currentDelta: {
-      x: dragState.currentCanvasPos.x - dragState.startCanvasPos.x,
-      y: dragState.currentCanvasPos.y - dragState.startCanvasPos.y,
-    },
+    currentDelta,
   });
 
   useEffect(() => {

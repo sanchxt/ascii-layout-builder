@@ -3,11 +3,20 @@ import type { BorderStyle } from "@/types/box";
 import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { TEXT_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
 import { getNestingDepth, getChildBoxes } from "../utils/boxHierarchy";
+import { useMemo } from "react";
 
 export const BoxPropertiesPanel = () => {
-  const { getSelectedBoxes, updateBox, boxes, detachFromParent, selectBox } =
-    useBoxStore();
-  const selectedBoxes = getSelectedBoxes();
+  const boxes = useBoxStore((state) => state.boxes);
+  const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
+
+  const selectedBoxes = useMemo(
+    () => boxes.filter((box) => selectedBoxIds.includes(box.id)),
+    [boxes, selectedBoxIds]
+  );
+
+  const updateBox = useBoxStore((state) => state.updateBox);
+  const detachFromParent = useBoxStore((state) => state.detachFromParent);
+  const selectBox = useBoxStore((state) => state.selectBox);
 
   if (selectedBoxes.length === 0) {
     return (

@@ -49,7 +49,7 @@ export const BOX_CONSTANTS = {
   /** pixel threshold outside parent bounds to trigger detach */
   AUTO_DETACH_THRESHOLD: 20,
   /** color for valid drop zone highlight */
-  NESTING_HIGHLIGHT_COLOR: "#10b981", // green
+  NESTING_HIGHLIGHT_COLOR: "#10b981",
   /** padding around grouped boxes when creating parent */
   GROUP_PADDING: 40,
   /** opacity for drag preview */
@@ -104,8 +104,8 @@ export const KEYBOARD_SHORTCUTS = {
   // view
   TOGGLE_GRID: "'",
   TOGGLE_PREVIEW: "/",
-  TOGGLE_SNAP_TO_GRID: ";", // ctrl + shift + ; (similar to grid toggle)
-  TOGGLE_SMART_GUIDES: "I", // ctrl + shift + i (I for alignment indicators)
+  TOGGLE_SNAP_TO_GRID: ";", // ctrl + shift + ;
+  TOGGLE_SMART_GUIDES: "I", // ctrl + shift + i
 } as const;
 
 export const ASCII_CONSTANTS = {
@@ -158,4 +158,17 @@ export const ALIGNMENT_SHORTCUTS = {
   // distribution
   DISTRIBUTE_H: "h", // ctrl + shift + alt + H
   DISTRIBUTE_V: "v", // ctrl + shift + alt + V
+} as const;
+
+export const LAYER_SHORTCUTS = {
+  TOGGLE_VISIBILITY: "h", // ctrl + h
+  TOGGLE_LOCK: "l", // ctrl + l
+
+  BRING_FORWARD: "]", // ctrl + ]
+  SEND_BACKWARD: "[", // ctrl + [
+  BRING_TO_FRONT: "}", // ctrl + shift + ]
+  SEND_TO_BACK: "{", // ctrl + shift + [
+
+  EXPAND_ALL_LAYERS: "E", // ctrl + shift + E
+  COLLAPSE_ALL_LAYERS: "C", // ctrl + shift + C
 } as const;

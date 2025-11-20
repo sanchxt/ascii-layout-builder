@@ -9,7 +9,6 @@ export const SelectionRectangle = ({
 }: SelectionRectangleProps) => {
   const { startX, startY, endX, endY } = selectionRect;
 
-  // Calculate normalized rectangle (top-left to bottom-right)
   const left = Math.min(startX, endX);
   const top = Math.min(startY, endY);
   const width = Math.abs(endX - startX);

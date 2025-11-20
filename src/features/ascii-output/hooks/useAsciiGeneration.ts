@@ -11,7 +11,7 @@ export function useAsciiGeneration(options?: AsciiGenerationOptions): {
   canGenerate: boolean;
   regenerate: () => void;
 } {
-  const { boxes } = useBoxStore();
+  const boxes = useBoxStore((state) => state.boxes);
   const [asciiOutput, setAsciiOutput] = useState<AsciiOutput | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);

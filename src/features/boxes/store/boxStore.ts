@@ -701,6 +701,181 @@ export const useBoxStore = create<BoxState>()(
             "box/updateBoxPosition"
           );
         },
+
+        toggleBoxVisibility: (id) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              const newVisibility = box.visible === false ? true : false;
+
+              const descendants = getAllDescendants(id, state.boxes);
+              const affectedIds = [id, ...descendants.map((d) => d.id)];
+
+              const updatedBoxes = state.boxes.map((b) =>
+                affectedIds.includes(b.id)
+                  ? { ...b, visible: newVisibility }
+                  : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/toggleBoxVisibility"
+          );
+        },
+
+        toggleBoxLock: (id) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, locked: !b.locked } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/toggleBoxLock"
+          );
+        },
+
+        updateBoxName: (id, name) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, name } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/updateBoxName"
+          );
+        },
+
+        reorderBox: (id, newZIndex) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, zIndex: newZIndex } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/reorderBox"
+          );
+        },
+
+        moveBoxToFront: (id) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              const siblings = state.boxes.filter(
+                (b) => b.parentId === box.parentId
+              );
+              const maxZ = Math.max(...siblings.map((b) => b.zIndex));
+
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, zIndex: maxZ + 1 } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/moveBoxToFront"
+          );
+        },
+
+        moveBoxToBack: (id) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              const siblings = state.boxes.filter(
+                (b) => b.parentId === box.parentId
+              );
+              const minZ = Math.min(...siblings.map((b) => b.zIndex));
+
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, zIndex: minZ - 1 } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/moveBoxToBack"
+          );
+        },
+
+        moveBoxForward: (id) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              const siblings = state.boxes
+                .filter((b) => b.parentId === box.parentId)
+                .sort((a, b) => a.zIndex - b.zIndex);
+
+              const currentIndex = siblings.findIndex((b) => b.id === id);
+              if (currentIndex === siblings.length - 1) return state;
+
+              const nextBox = siblings[currentIndex + 1];
+              const newZIndex = nextBox.zIndex + 1;
+
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, zIndex: newZIndex } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/moveBoxForward"
+          );
+        },
+
+        moveBoxBackward: (id) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const box = state.boxes.find((b) => b.id === id);
+              if (!box) return state;
+
+              const siblings = state.boxes
+                .filter((b) => b.parentId === box.parentId)
+                .sort((a, b) => a.zIndex - b.zIndex);
+
+              const currentIndex = siblings.findIndex((b) => b.id === id);
+              if (currentIndex === 0) return state;
+
+              const prevBox = siblings[currentIndex - 1];
+              const newZIndex = prevBox.zIndex - 1;
+
+              const updatedBoxes = state.boxes.map((b) =>
+                b.id === id ? { ...b, zIndex: newZIndex } : b
+              );
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/moveBoxBackward"
+          );
+        },
       }),
       {
         name: STORAGE_KEYS.BOX_STATE,
