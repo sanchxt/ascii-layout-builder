@@ -9,6 +9,8 @@ import {
   convertToCanvasAbsolute,
 } from "../utils/boxHierarchy";
 import { getMaxZIndex } from "../utils/boxHelpers";
+import { calculateAlignedPositions } from "@/features/alignment/utils/alignmentCalculations";
+import { calculateDistributedPositions } from "@/features/alignment/utils/distributionCalculations";
 
 let recordSnapshotFn: (() => void) | null = null;
 export const setRecordSnapshotFn = (fn: () => void) => {
@@ -582,6 +584,66 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/ungroupBox"
+          );
+        },
+
+        alignBoxes: (boxIds, alignment) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const updates = calculateAlignedPositions(
+                boxIds,
+                alignment,
+                state.boxes
+              );
+
+              if (updates.length === 0) return state;
+
+              const updatedBoxes = state.boxes.map((box) => {
+                const update = updates.find((u) => u.id === box.id);
+                if (update) {
+                  return {
+                    ...box,
+                    x: update.x,
+                    y: update.y,
+                  };
+                }
+                return box;
+              });
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/alignBoxes"
+          );
+        },
+
+        distributeBoxes: (boxIds, distribution) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const updates = calculateDistributedPositions(
+                boxIds,
+                distribution,
+                state.boxes
+              );
+
+              if (updates.length === 0) {
+                return state;
+              }
+
+              const updatedBoxes = state.boxes.map((box) => {
+                const update = updates.find((u) => u.id === box.id);
+                if (update) {
+                  return { ...box, x: update.x, y: update.y };
+                }
+                return box;
+              });
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/distributeBoxes"
           );
         },
 

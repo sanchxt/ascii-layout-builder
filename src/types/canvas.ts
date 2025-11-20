@@ -9,6 +9,8 @@ export interface CanvasViewport {
   position: CanvasPosition;
   zoom: number;
   showGrid: boolean;
+  snapToGrid: boolean;
+  showSmartGuides: boolean;
 }
 
 export interface SelectionRect {
@@ -38,6 +40,8 @@ export interface CanvasState {
   zoomOut: () => void;
   resetZoom: () => void;
   toggleGrid: () => void;
+  toggleSnapToGrid: () => void;
+  toggleSmartGuides: () => void;
   setIsPanning: (isPanning: boolean) => void;
   setLastMousePosition: (position: CanvasPosition | null) => void;
   setIsSpacebarPressed: (isPressed: boolean) => void;

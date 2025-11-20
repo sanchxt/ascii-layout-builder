@@ -4,6 +4,8 @@ import type { CanvasPosition } from "@/types/canvas";
 import { calculateResizedBox } from "../utils/boxGeometry";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { screenToCanvas } from "@/features/canvas/utils/coordinateTransform";
+import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
+import { CANVAS_CONSTANTS } from "@/lib/constants";
 
 export const useBoxResize = (
   box: Box,
@@ -54,6 +56,25 @@ export const useBoxResize = (
         resizingRef.current.handle,
         currentPoint
       );
+
+      if (
+        viewport.snapToGrid &&
+        resizedBox.x !== undefined &&
+        resizedBox.y !== undefined &&
+        resizedBox.width !== undefined &&
+        resizedBox.height !== undefined
+      ) {
+        resizedBox.x = snapToGrid(resizedBox.x, CANVAS_CONSTANTS.GRID_SIZE);
+        resizedBox.y = snapToGrid(resizedBox.y, CANVAS_CONSTANTS.GRID_SIZE);
+        resizedBox.width = snapToGrid(
+          resizedBox.width,
+          CANVAS_CONSTANTS.GRID_SIZE
+        );
+        resizedBox.height = snapToGrid(
+          resizedBox.height,
+          CANVAS_CONSTANTS.GRID_SIZE
+        );
+      }
 
       onUpdate(box.id, resizedBox);
     },

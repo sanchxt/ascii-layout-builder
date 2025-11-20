@@ -8,6 +8,8 @@ const initialState = {
     position: { x: 0, y: 0 },
     zoom: CANVAS_CONSTANTS.DEFAULT_ZOOM,
     showGrid: true,
+    snapToGrid: false,
+    showSmartGuides: true,
   },
   interaction: {
     isPanning: false,
@@ -116,6 +118,30 @@ export const useCanvasStore = create<CanvasState>()(
             }),
             false,
             "canvas/toggleGrid"
+          ),
+
+        toggleSnapToGrid: () =>
+          set(
+            (state) => ({
+              viewport: {
+                ...state.viewport,
+                snapToGrid: !state.viewport.snapToGrid,
+              },
+            }),
+            false,
+            "canvas/toggleSnapToGrid"
+          ),
+
+        toggleSmartGuides: () =>
+          set(
+            (state) => ({
+              viewport: {
+                ...state.viewport,
+                showSmartGuides: !state.viewport.showSmartGuides,
+              },
+            }),
+            false,
+            "canvas/toggleSmartGuides"
           ),
 
         setIsPanning: (isPanning) =>

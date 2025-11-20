@@ -4,16 +4,23 @@ import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useToolShortcuts } from "../hooks/useToolShortcuts";
 import { useSelectionRectangle } from "../hooks/useSelectionRectangle";
 import { useCanvasStore } from "../store/canvasStore";
-import { useBoxStore, setRecordSnapshotFn } from "@/features/boxes/store/boxStore";
+import {
+  useBoxStore,
+  setRecordSnapshotFn,
+} from "@/features/boxes/store/boxStore";
 import { useBoxCreation } from "@/features/boxes/hooks/useBoxCreation";
 import { useBoxSelection } from "@/features/boxes/hooks/useBoxSelection";
 import { useGrouping } from "@/features/boxes/hooks/useGrouping";
 import { useBoxDrag } from "@/features/boxes/hooks/useBoxDrag";
 import { useDropZone } from "@/features/boxes/hooks/useDropZone";
 import { useHistory } from "@/features/history/hooks/useHistory";
+import { useAlignment } from "@/features/alignment/hooks/useAlignment";
+import { useDistribution } from "@/features/alignment/hooks/useDistribution";
+import { useSmartGuides } from "@/features/alignment/hooks/useSmartGuides";
 import { recordSnapshot } from "@/features/history/store/historyStore";
 import { Box } from "@/features/boxes/components/Box";
 import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator";
+import { SmartGuides } from "@/features/alignment/components/SmartGuides";
 import { SelectionRectangle } from "./SelectionRectangle";
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasControls } from "./CanvasControls";
@@ -23,6 +30,8 @@ import {
   convertToLocalPosition,
   getDeepestBoxAtPoint,
 } from "@/features/boxes/utils/boxHierarchy";
+import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
+import { CANVAS_CONSTANTS } from "@/lib/constants";
 
 interface CanvasProps {
   children?: React.ReactNode;
@@ -47,12 +56,8 @@ export const Canvas = ({ children }: CanvasProps) => {
     tempBox,
   } = useBoxCreation();
   const { handleCanvasClick, isBoxSelected } = useBoxSelection();
-  const {
-    selectionRect,
-    startSelection,
-    updateSelection,
-    finishSelection,
-  } = useSelectionRectangle();
+  const { selectionRect, startSelection, updateSelection, finishSelection } =
+    useSelectionRectangle();
   const [isCreatingBox, setIsCreatingBox] = useState(false);
   const [isDrawingSelection, setIsDrawingSelection] = useState(false);
 
@@ -61,6 +66,8 @@ export const Canvas = ({ children }: CanvasProps) => {
   useToolShortcuts();
   useGrouping();
   useHistory();
+  useAlignment();
+  useDistribution();
 
   const rootBoxes = getRootBoxes(boxes);
 
@@ -86,8 +93,13 @@ export const Canvas = ({ children }: CanvasProps) => {
         const initialAbs = initialAbsolutePositions.get(id);
         if (!initialAbs) return;
 
-        const finalAbsX = initialAbs.x + finalDelta.x;
-        const finalAbsY = initialAbs.y + finalDelta.y;
+        let finalAbsX = initialAbs.x + finalDelta.x;
+        let finalAbsY = initialAbs.y + finalDelta.y;
+
+        if (viewport.snapToGrid) {
+          finalAbsX = snapToGrid(finalAbsX, CANVAS_CONSTANTS.GRID_SIZE);
+          finalAbsY = snapToGrid(finalAbsY, CANVAS_CONSTANTS.GRID_SIZE);
+        }
 
         let targetParentId: string | null = null;
         if (dropZoneState.isValidDropZone && dropZoneState.potentialParentId) {
@@ -116,7 +128,6 @@ export const Canvas = ({ children }: CanvasProps) => {
     },
   });
 
-  // Wire up history recording to box store
   useEffect(() => {
     setRecordSnapshotFn(recordSnapshot);
   }, []);
@@ -144,6 +155,15 @@ export const Canvas = ({ children }: CanvasProps) => {
     draggedBoxIds: dragState.draggedBoxIds,
     currentMousePos: canvasMousePos,
     isDragging: isDraggingBox,
+  });
+
+  const { alignmentGuides, spacingGuides, snappedDelta } = useSmartGuides({
+    isDragging: isDraggingBox,
+    draggedBoxIds: dragState.draggedBoxIds,
+    currentDelta: {
+      x: dragState.currentCanvasPos.x - dragState.startCanvasPos.x,
+      y: dragState.currentCanvasPos.y - dragState.startCanvasPos.y,
+    },
   });
 
   useEffect(() => {
@@ -198,14 +218,11 @@ export const Canvas = ({ children }: CanvasProps) => {
       setIsCreatingBox(true);
       startCreating(canvasPoint);
     } else if (interaction.selectedTool === "select") {
-      // Check if clicking on a box
       const clickedBox = getDeepestBoxAtPoint(canvasPoint, boxes);
 
       if (clickedBox) {
-        // Clicking on a box - handle regular selection
         handleCanvasClick(canvasPoint, e.shiftKey);
       } else {
-        // Clicking on empty canvas - start selection rectangle
         setIsDrawingSelection(true);
         startSelection(canvasPoint.x, canvasPoint.y);
       }
@@ -301,6 +318,25 @@ export const Canvas = ({ children }: CanvasProps) => {
     startDrag(boxId, canvasPos.x, canvasPos.y);
   };
 
+  const getSnappedPreviewPosition = (
+    boxId: string
+  ): { x: number; y: number } | undefined => {
+    const basePosition = getBoxPreviewPosition(boxId);
+    if (!basePosition) return undefined;
+
+    if (snappedDelta) {
+      const initialAbs = initialAbsolutePositions.get(boxId);
+      if (initialAbs) {
+        return {
+          x: initialAbs.x + snappedDelta.x,
+          y: initialAbs.y + snappedDelta.y,
+        };
+      }
+    }
+
+    return basePosition;
+  };
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-gray-50">
       <div
@@ -340,9 +376,7 @@ export const Canvas = ({ children }: CanvasProps) => {
               onDragStart={handleBoxDragStart}
               isDragging={dragState.draggedBoxIds.includes(box.id)}
               dragPreviewPosition={
-                isDraggingBox
-                  ? getBoxPreviewPosition(box.id) || undefined
-                  : undefined
+                isDraggingBox ? getSnappedPreviewPosition(box.id) : undefined
               }
             />
           ))}
@@ -352,6 +386,13 @@ export const Canvas = ({ children }: CanvasProps) => {
               targetBoxId={dropZoneState.potentialParentId}
               isValid={dropZoneState.isValidDropZone}
               validationMessage={dropZoneState.validationMessage}
+            />
+          )}
+
+          {isDraggingBox && (
+            <SmartGuides
+              alignmentGuides={alignmentGuides}
+              spacingGuides={spacingGuides}
             />
           )}
 

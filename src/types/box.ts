@@ -73,6 +73,16 @@ export interface BoxState {
   groupBoxes: (boxIds: string[]) => void;
   ungroupBox: (parentId: string) => void;
   updateBoxPosition: (id: string, x: number, y: number) => void;
+
+  // alignment/distribution
+  alignBoxes: (
+    boxIds: string[],
+    alignment: import("@/features/alignment/types/alignment").AlignmentType
+  ) => void;
+  distributeBoxes: (
+    boxIds: string[],
+    distribution: import("@/features/alignment/types/alignment").DistributionType
+  ) => void;
 }
 
 export interface ResizeHandlePosition {

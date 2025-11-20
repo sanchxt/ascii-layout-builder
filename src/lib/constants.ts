@@ -104,6 +104,8 @@ export const KEYBOARD_SHORTCUTS = {
   // view
   TOGGLE_GRID: "'",
   TOGGLE_PREVIEW: "/",
+  TOGGLE_SNAP_TO_GRID: ";", // ctrl + shift + ; (similar to grid toggle)
+  TOGGLE_SMART_GUIDES: "I", // ctrl + shift + i (I for alignment indicators)
 } as const;
 
 export const ASCII_CONSTANTS = {
@@ -123,4 +125,37 @@ export const ASCII_CONSTANTS = {
   MAX_LINE_LENGTH: 500,
   /** padding inside box */
   TEXT_PADDING_CHARS: 1,
+} as const;
+
+export const ALIGNMENT_CONSTANTS = {
+  /** guide snap threshold in px */
+  GUIDE_SNAP_THRESHOLD: 5,
+  /** max distance to show spacing guides in px */
+  SPACING_GUIDE_MAX_DISTANCE: 200,
+  /** smart guide color */
+  SMART_GUIDE_COLOR: "#a855f7",
+  /** smart guide thickness */
+  SMART_GUIDE_THICKNESS: 1,
+  /** smart guide dash pattern */
+  SMART_GUIDE_DASH: "4 4",
+  /** spacing guide color */
+  SPACING_GUIDE_COLOR: "#6366f1",
+  /** spacing label background */
+  SPACING_LABEL_BG: "#1f2937",
+  /** spacing label text color */
+  SPACING_LABEL_COLOR: "#ffffff",
+} as const;
+
+export const ALIGNMENT_SHORTCUTS = {
+  // alignment
+  ALIGN_LEFT: "L", // ctrl + shift + L
+  ALIGN_CENTER_H: "H", // ctrl + shift + H
+  ALIGN_RIGHT: "R", // ctrl + shift + R
+  ALIGN_TOP: "T", // ctrl + shift + T
+  ALIGN_MIDDLE_V: "M", // ctrl + shift + M
+  ALIGN_BOTTOM: "B", // ctrl + shift + B
+
+  // distribution
+  DISTRIBUTE_H: "h", // ctrl + shift + alt + H
+  DISTRIBUTE_V: "v", // ctrl + shift + alt + V
 } as const;

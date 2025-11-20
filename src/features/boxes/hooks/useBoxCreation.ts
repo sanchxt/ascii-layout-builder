@@ -6,9 +6,13 @@ import {
   getMaxZIndex,
 } from "../utils/boxHelpers";
 import type { CanvasPosition } from "@/types/canvas";
+import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
+import { CANVAS_CONSTANTS } from "@/lib/constants";
 
 export const useBoxCreation = () => {
   const { boxes, addBox, setTempBox, tempBox, setCreationMode } = useBoxStore();
+  const { viewport } = useCanvasStore();
 
   const startCreating = useCallback(
     (startPoint: CanvasPosition) => {
@@ -35,7 +39,7 @@ export const useBoxCreation = () => {
       const x = currentPoint.x < startX ? currentPoint.x : startX;
       const y = currentPoint.y < startY ? currentPoint.y : startY;
 
-      const updatedBox = clampBoxSizeWithAnchor(
+      let updatedBox = clampBoxSizeWithAnchor(
         {
           ...tempBox,
           x,
@@ -46,6 +50,22 @@ export const useBoxCreation = () => {
         startX,
         startY
       );
+
+      if (
+        viewport.snapToGrid &&
+        updatedBox.x !== undefined &&
+        updatedBox.y !== undefined &&
+        updatedBox.width !== undefined &&
+        updatedBox.height !== undefined
+      ) {
+        updatedBox = {
+          ...updatedBox,
+          x: snapToGrid(updatedBox.x, CANVAS_CONSTANTS.GRID_SIZE),
+          y: snapToGrid(updatedBox.y, CANVAS_CONSTANTS.GRID_SIZE),
+          width: snapToGrid(updatedBox.width, CANVAS_CONSTANTS.GRID_SIZE),
+          height: snapToGrid(updatedBox.height, CANVAS_CONSTANTS.GRID_SIZE),
+        };
+      }
 
       setTempBox(updatedBox);
     },
@@ -60,12 +80,30 @@ export const useBoxCreation = () => {
     }
 
     if (tempBox.width >= 50 && tempBox.height >= 40) {
-      addBox(tempBox as any);
+      let finalBox = { ...tempBox };
+
+      if (
+        viewport.snapToGrid &&
+        finalBox.x !== undefined &&
+        finalBox.y !== undefined &&
+        finalBox.width !== undefined &&
+        finalBox.height !== undefined
+      ) {
+        finalBox = {
+          ...finalBox,
+          x: snapToGrid(finalBox.x, CANVAS_CONSTANTS.GRID_SIZE),
+          y: snapToGrid(finalBox.y, CANVAS_CONSTANTS.GRID_SIZE),
+          width: snapToGrid(finalBox.width, CANVAS_CONSTANTS.GRID_SIZE),
+          height: snapToGrid(finalBox.height, CANVAS_CONSTANTS.GRID_SIZE),
+        };
+      }
+
+      addBox(finalBox as any);
     }
 
     setTempBox(null);
     setCreationMode("idle");
-  }, [tempBox, addBox, setTempBox, setCreationMode]);
+  }, [tempBox, addBox, setTempBox, setCreationMode, viewport.snapToGrid]);
 
   const cancelCreating = useCallback(() => {
     setTempBox(null);
@@ -74,11 +112,19 @@ export const useBoxCreation = () => {
 
   const createBoxAtPoint = useCallback(
     (point: CanvasPosition) => {
-      const newBox = createDefaultBox(point.x - 200, point.y - 150);
+      let x = point.x - 200;
+      let y = point.y - 150;
+
+      if (viewport.snapToGrid) {
+        x = snapToGrid(x, CANVAS_CONSTANTS.GRID_SIZE);
+        y = snapToGrid(y, CANVAS_CONSTANTS.GRID_SIZE);
+      }
+
+      const newBox = createDefaultBox(x, y);
       newBox.zIndex = getMaxZIndex(boxes) + 1;
       addBox(newBox);
     },
-    [addBox, boxes]
+    [addBox, boxes, viewport.snapToGrid]
   );
 
   return {

@@ -1,10 +1,16 @@
 import { useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
-import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
+import { KEYBOARD_SHORTCUTS, CANVAS_CONSTANTS } from "@/lib/constants";
 
 export const useToolShortcuts = () => {
-  const { setSelectedTool, interaction } = useCanvasStore();
+  const {
+    setSelectedTool,
+    interaction,
+    toggleSnapToGrid,
+    toggleSmartGuides,
+    viewport,
+  } = useCanvasStore();
   const {
     selectedBoxIds,
     deleteBoxes,
@@ -83,12 +89,36 @@ export const useToolShortcuts = () => {
       }
 
       if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        key === KEYBOARD_SHORTCUTS.TOGGLE_SNAP_TO_GRID.toLowerCase()
+      ) {
+        e.preventDefault();
+        toggleSnapToGrid();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        key === KEYBOARD_SHORTCUTS.TOGGLE_SMART_GUIDES.toLowerCase()
+      ) {
+        e.preventDefault();
+        toggleSmartGuides();
+      }
+
+      if (
         selectedBoxIds.length > 0 &&
         interaction.selectedTool === "select" &&
         ["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)
       ) {
         e.preventDefault();
-        const nudgeAmount = e.shiftKey ? 10 : 1;
+        const nudgeAmount = viewport.snapToGrid
+          ? e.shiftKey
+            ? CANVAS_CONSTANTS.GRID_SIZE * 2
+            : CANVAS_CONSTANTS.GRID_SIZE
+          : e.shiftKey
+          ? 10
+          : 1;
 
         selectedBoxIds.forEach((boxId) => {
           const box = getBox(boxId);
@@ -135,5 +165,8 @@ export const useToolShortcuts = () => {
     getBox,
     copyBoxes,
     pasteBoxes,
+    toggleSnapToGrid,
+    toggleSmartGuides,
+    viewport.snapToGrid,
   ]);
 };
