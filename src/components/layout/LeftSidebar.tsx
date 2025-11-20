@@ -47,10 +47,10 @@ export const LeftSidebar = () => {
       </Button>
 
       <Button
-        variant="ghost"
+        variant={getButtonVariant("artboard")}
         size="icon"
-        title="Artboard Tool (A) - Coming Soon"
-        disabled
+        title="Artboard Tool (A)"
+        onClick={() => handleToolClick("artboard")}
         className="h-10 w-10"
       >
         <Frame className="h-5 w-5" />
@@ -59,9 +59,9 @@ export const LeftSidebar = () => {
       <div className="flex-1" />
 
       <div className="text-xs text-gray-400 text-center px-1">
-        Phase 2
+        Phase 9
         <br />
-        Complete
+        In Progress
       </div>
     </div>
   );

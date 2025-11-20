@@ -67,10 +67,42 @@ export const TEXT_CONSTANTS = {
   MAX_LENGTH: 10000,
 } as const;
 
+export const ARTBOARD_CONSTANTS = {
+  SPACING: 100,
+  /** artboard border color */
+  BORDER_COLOR: "#9ca3af",
+  /** artboard border thickness */
+  BORDER_THICKNESS: 2,
+  /** artboard border dash pattern */
+  BORDER_DASH: "8 4",
+  /** artboard label height */
+  LABEL_HEIGHT: 40,
+  /** artboard label bg color */
+  LABEL_BG: "#f3f4f6",
+  /** selected artboard border color */
+  SELECTED_BORDER_COLOR: "#3b82f6",
+  /** artboard label font size */
+  LABEL_FONT_SIZE: 14,
+
+  /** preset dimensions */
+  PRESETS: {
+    mobile: { width: 375, height: 667, name: "Mobile" },
+    tablet: { width: 768, height: 1024, name: "Tablet" },
+    desktop: { width: 1440, height: 900, name: "Desktop" },
+  },
+
+  /** default artboard */
+  DEFAULT_PRESET: "desktop" as const,
+  /** default artboard position */
+  DEFAULT_X: 100,
+  DEFAULT_Y: 100,
+} as const;
+
 export const STORAGE_KEYS = {
   CANVAS_STATE: "ascii-layout-builder:canvas-state",
   PROJECT_STATE: "ascii-layout-builder:project-state",
   BOX_STATE: "ascii-layout-builder:box-state",
+  ARTBOARD_STATE: "ascii-layout-builder:artboard-state",
 } as const;
 
 export const KEYBOARD_SHORTCUTS = {

@@ -7,6 +7,7 @@ import {
 } from "../utils/boxHelpers";
 import type { CanvasPosition } from "@/types/canvas";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS } from "@/lib/constants";
 
@@ -17,6 +18,7 @@ export const useBoxCreation = () => {
   const tempBox = useBoxStore((state) => state.tempBox);
   const setCreationMode = useBoxStore((state) => state.setCreationMode);
   const { viewport } = useCanvasStore();
+  const activeArtboardId = useArtboardStore((state) => state.activeArtboardId);
 
   const startCreating = useCallback(
     (startPoint: CanvasPosition) => {
@@ -102,12 +104,26 @@ export const useBoxCreation = () => {
         };
       }
 
+      if (activeArtboardId) {
+        finalBox = {
+          ...finalBox,
+          artboardId: activeArtboardId,
+        };
+      }
+
       addBox(finalBox as any);
     }
 
     setTempBox(null);
     setCreationMode("idle");
-  }, [tempBox, addBox, setTempBox, setCreationMode, viewport.snapToGrid]);
+  }, [
+    tempBox,
+    addBox,
+    setTempBox,
+    setCreationMode,
+    viewport.snapToGrid,
+    activeArtboardId,
+  ]);
 
   const cancelCreating = useCallback(() => {
     setTempBox(null);
@@ -126,9 +142,14 @@ export const useBoxCreation = () => {
 
       const newBox = createDefaultBox(x, y);
       newBox.zIndex = getMaxZIndex(boxes) + 1;
+
+      if (activeArtboardId) {
+        newBox.artboardId = activeArtboardId;
+      }
+
       addBox(newBox);
     },
-    [addBox, boxes, viewport.snapToGrid]
+    [addBox, boxes, viewport.snapToGrid, activeArtboardId]
   );
 
   return {

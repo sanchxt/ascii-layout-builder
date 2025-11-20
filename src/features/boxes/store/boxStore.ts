@@ -11,6 +11,8 @@ import {
 import { getMaxZIndex } from "../utils/boxHelpers";
 import { calculateAlignedPositions } from "@/features/alignment/utils/alignmentCalculations";
 import { calculateDistributedPositions } from "@/features/alignment/utils/distributionCalculations";
+import { calculatePastePosition } from "@/features/artboards/utils/artboardHelpers";
+import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 
 let recordSnapshotFn: (() => void) | null = null;
 export const setRecordSnapshotFn = (fn: () => void) => {
@@ -291,6 +293,12 @@ export const useBoxStore = create<BoxState>()(
                 return state;
               }
 
+              const artboardStore = useArtboardStore.getState();
+              const activeArtboardId = artboardStore.activeArtboardId;
+              const targetArtboard = activeArtboardId
+                ? artboardStore.getArtboard(activeArtboardId)
+                : null;
+
               const idMap = new Map<string, string>();
               const allBoxesToDuplicate: Box[] = [];
 
@@ -312,6 +320,13 @@ export const useBoxStore = create<BoxState>()(
                 collectBoxesWithDescendants(id)
               );
 
+              const hasSourceArtboards = allBoxesToDuplicate.some(
+                (box) => box.artboardId && !box.parentId
+              );
+              if (!activeArtboardId && hasSourceArtboards) {
+                console.info("ℹ️ No active artboard. Boxes pasted to canvas.");
+              }
+
               allBoxesToDuplicate.forEach((box) => {
                 idMap.set(box.id, crypto.randomUUID());
               });
@@ -329,13 +344,32 @@ export const useBoxStore = create<BoxState>()(
                   !box.parentId ||
                   !state.clipboardBoxIds.includes(box.parentId);
 
+                let newX = box.x;
+                let newY = box.y;
+
+                if (shouldOffset) {
+                  const sourceArtboard = box.artboardId
+                    ? artboardStore.getArtboard(box.artboardId)
+                    : null;
+
+                  const newPos = calculatePastePosition(
+                    box,
+                    sourceArtboard || null,
+                    targetArtboard || null
+                  );
+
+                  newX = newPos.x;
+                  newY = newPos.y;
+                }
+
                 return {
                   ...box,
                   id: newId,
                   parentId: newParentId,
                   children: newChildren,
-                  x: shouldOffset ? box.x + 20 : box.x,
-                  y: shouldOffset ? box.y + 20 : box.y,
+                  artboardId: activeArtboardId || undefined,
+                  x: newX,
+                  y: newY,
                 };
               });
 
@@ -400,6 +434,7 @@ export const useBoxStore = create<BoxState>()(
                   return {
                     ...box,
                     parentId,
+                    artboardId: parentBox.artboardId,
                     x: relativePos.x,
                     y: relativePos.y,
                   };

@@ -13,7 +13,11 @@ export const useCanvasPan = () => {
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if ((e.button === 0 && interaction.isSpacebarPressed) || e.button === 1) {
+      if (interaction.isSpacebarPressed && e.button !== 2) {
+        e.preventDefault();
+        setIsPanning(true);
+        setLastMousePosition({ x: e.clientX, y: e.clientY });
+      } else if (e.button === 1) {
         e.preventDefault();
         setIsPanning(true);
         setLastMousePosition({ x: e.clientX, y: e.clientY });
@@ -49,11 +53,16 @@ export const useCanvasPan = () => {
 
   const handleWheelPan = useCallback(
     (e: WheelEvent) => {
-      const delta = e.deltaY * CANVAS_CONSTANTS.WHEEL_PAN_SENSITIVITY;
+      const hasHorizontalScroll = Math.abs(e.deltaX) > 0;
 
-      if (e.shiftKey) {
+      if (hasHorizontalScroll) {
+        const deltaX = e.deltaX * CANVAS_CONSTANTS.WHEEL_PAN_SENSITIVITY;
+        updatePan(-deltaX, 0);
+      } else if (e.shiftKey) {
+        const delta = e.deltaY * CANVAS_CONSTANTS.WHEEL_PAN_SENSITIVITY;
         updatePan(-delta, 0);
       } else {
+        const delta = e.deltaY * CANVAS_CONSTANTS.WHEEL_PAN_SENSITIVITY;
         updatePan(0, -delta);
       }
     },

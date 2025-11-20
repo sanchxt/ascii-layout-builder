@@ -19,6 +19,15 @@ import { useDistribution } from "@/features/alignment/hooks/useDistribution";
 import { useSmartGuides } from "@/features/alignment/hooks/useSmartGuides";
 import { useLayerKeyboardShortcuts } from "@/features/boxes/hooks/useLayerKeyboardShortcuts";
 import { recordSnapshot } from "@/features/history/store/historyStore";
+import {
+  useArtboardStore,
+  setArtboardRecordSnapshotFn,
+} from "@/features/artboards/store/artboardStore";
+import { useArtboardCreation } from "@/features/artboards/hooks/useArtboardCreation";
+import { useArtboardDrag } from "@/features/artboards/hooks/useArtboardDrag";
+import { useArtboardSelection } from "@/features/artboards/hooks/useArtboardSelection";
+import { useArtboardShortcuts } from "@/features/artboards/hooks/useArtboardShortcuts";
+import { Artboard } from "@/features/artboards/components/Artboard";
 import { Box } from "@/features/boxes/components/Box";
 import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator";
 import { SmartGuides } from "@/features/alignment/components/SmartGuides";
@@ -44,6 +53,9 @@ export const Canvas = ({ children }: CanvasProps) => {
   const boxes = useBoxStore((state) => state.boxes);
   const updateBox = useBoxStore((state) => state.updateBox);
   const selectBox = useBoxStore((state) => state.selectBox);
+  const artboards = useArtboardStore((state) => state.artboards);
+  const { createDesktop } = useArtboardCreation();
+  const { isArtboardSelected } = useArtboardSelection();
   const {
     handleMouseDown: handlePanMouseDown,
     handleMouseMove: handlePanMouseMove,
@@ -69,10 +81,17 @@ export const Canvas = ({ children }: CanvasProps) => {
 
   useToolShortcuts();
   useLayerKeyboardShortcuts();
+  useArtboardShortcuts();
   useGrouping();
   useHistory();
   useAlignment();
   useDistribution();
+
+  useEffect(() => {
+    if (artboards.length === 0) {
+      createDesktop();
+    }
+  }, []);
 
   const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 
@@ -133,20 +152,35 @@ export const Canvas = ({ children }: CanvasProps) => {
     },
   });
 
+  const {
+    dragState: artboardDragState,
+    startDrag: startArtboardDrag,
+    updateDrag: updateArtboardDrag,
+    endDrag: endArtboardDrag,
+    cancelDrag: cancelArtboardDrag,
+    isDragging: isDraggingArtboard,
+    getArtboardPreviewPosition,
+  } = useArtboardDrag();
+
   useEffect(() => {
     setRecordSnapshotFn(recordSnapshot);
+    setArtboardRecordSnapshotFn(recordSnapshot);
   }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isDraggingBox) {
-        cancelDrag();
+      if (e.key === "Escape") {
+        if (isDraggingBox) {
+          cancelDrag();
+        } else if (isDraggingArtboard) {
+          cancelArtboardDrag();
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDraggingBox, cancelDrag]);
+  }, [isDraggingBox, cancelDrag, isDraggingArtboard, cancelArtboardDrag]);
 
   const getCanvasMousePosition = (clientX: number, clientY: number) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
@@ -248,6 +282,11 @@ export const Canvas = ({ children }: CanvasProps) => {
     const canvasPos = getCanvasMousePosition(e.clientX, e.clientY);
     setCanvasMousePos(canvasPos);
 
+    if (isDraggingArtboard) {
+      updateArtboardDrag(canvasPos.x, canvasPos.y);
+      return;
+    }
+
     if (isDraggingBox) {
       updateDrag(canvasPos.x, canvasPos.y);
       return;
@@ -279,6 +318,11 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
+    if (isDraggingArtboard) {
+      endArtboardDrag();
+      return;
+    }
+
     if (isDraggingBox) {
       endDrag();
       return;
@@ -313,7 +357,7 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const getCursor = () => {
-    if (isDraggingBox) return "grabbing";
+    if (isDraggingArtboard || isDraggingBox) return "grabbing";
     if (isSpacebarPressed) return "grab";
     if (interaction.selectedTool === "box") return "crosshair";
     if (interaction.selectedTool === "text") return "text";
@@ -331,6 +375,15 @@ export const Canvas = ({ children }: CanvasProps) => {
 
     const canvasPos = getCanvasMousePosition(clientX, clientY);
     startDrag(boxId, canvasPos.x, canvasPos.y);
+  };
+
+  const handleArtboardDragStart = (
+    artboardId: string,
+    clientX: number,
+    clientY: number
+  ) => {
+    const canvasPos = getCanvasMousePosition(clientX, clientY);
+    startArtboardDrag(artboardId, canvasPos.x, canvasPos.y);
   };
 
   const getSnappedPreviewPosition = (
@@ -376,6 +429,27 @@ export const Canvas = ({ children }: CanvasProps) => {
             transformOrigin: "0 0",
           }}
         >
+          {artboards
+            .filter((ab) => ab.visible)
+            .sort((a, b) => a.zIndex - b.zIndex)
+            .map((artboard) => (
+              <Artboard
+                key={artboard.id}
+                artboard={artboard}
+                zoom={viewport.zoom}
+                isSelected={isArtboardSelected(artboard.id)}
+                onDragStart={handleArtboardDragStart}
+                isDragging={artboardDragState.draggedArtboardIds.includes(
+                  artboard.id
+                )}
+                dragPreviewPosition={
+                  isDraggingArtboard
+                    ? getArtboardPreviewPosition(artboard.id) || undefined
+                    : undefined
+                }
+              />
+            ))}
+
           {rootBoxes.map((box) => (
             <Box
               key={box.id}

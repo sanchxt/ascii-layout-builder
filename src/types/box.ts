@@ -37,6 +37,7 @@ export interface Box {
   text: TextContent;
   children: string[];
   parentId?: string;
+  artboardId?: string;
   zIndex: number;
   visible?: boolean;
   locked?: boolean;
