@@ -15,6 +15,7 @@ const initialState = {
     isSpacebarPressed: false,
     selectedTool: "select" as const,
     editingBoxId: null,
+    selectionRect: null,
   },
 };
 
@@ -169,6 +170,46 @@ export const useCanvasStore = create<CanvasState>()(
             }),
             false,
             "canvas/exitEditMode"
+          ),
+
+        startSelectionRect: (startX, startY) =>
+          set(
+            (state) => ({
+              interaction: {
+                ...state.interaction,
+                selectionRect: { startX, startY, endX: startX, endY: startY },
+              },
+            }),
+            false,
+            "canvas/startSelectionRect"
+          ),
+
+        updateSelectionRect: (endX, endY) =>
+          set(
+            (state) => {
+              if (!state.interaction.selectionRect) return state;
+              return {
+                interaction: {
+                  ...state.interaction,
+                  selectionRect: {
+                    ...state.interaction.selectionRect,
+                    endX,
+                    endY,
+                  },
+                },
+              };
+            },
+            false,
+            "canvas/updateSelectionRect"
+          ),
+
+        clearSelectionRect: () =>
+          set(
+            (state) => ({
+              interaction: { ...state.interaction, selectionRect: null },
+            }),
+            false,
+            "canvas/clearSelectionRect"
           ),
 
         resetCanvas: () =>

@@ -5,7 +5,16 @@ import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
 
 export const useToolShortcuts = () => {
   const { setSelectedTool, interaction } = useCanvasStore();
-  const { selectedBoxIds, deleteBoxes, duplicateBoxes } = useBoxStore();
+  const {
+    selectedBoxIds,
+    deleteBoxes,
+    duplicateBoxes,
+    selectAll,
+    updateBoxPosition,
+    getBox,
+    copyBoxes,
+    pasteBoxes,
+  } = useBoxStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,6 +63,54 @@ export const useToolShortcuts = () => {
         duplicateBoxes(selectedBoxIds);
       }
 
+      if ((e.ctrlKey || e.metaKey) && key === KEYBOARD_SHORTCUTS.SELECT_ALL) {
+        e.preventDefault();
+        selectAll();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        key === KEYBOARD_SHORTCUTS.COPY &&
+        selectedBoxIds.length > 0
+      ) {
+        e.preventDefault();
+        copyBoxes();
+      }
+
+      if ((e.ctrlKey || e.metaKey) && key === KEYBOARD_SHORTCUTS.PASTE) {
+        e.preventDefault();
+        pasteBoxes();
+      }
+
+      if (
+        selectedBoxIds.length > 0 &&
+        interaction.selectedTool === "select" &&
+        ["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)
+      ) {
+        e.preventDefault();
+        const nudgeAmount = e.shiftKey ? 10 : 1;
+
+        selectedBoxIds.forEach((boxId) => {
+          const box = getBox(boxId);
+          if (!box) return;
+
+          let newX = box.x;
+          let newY = box.y;
+
+          if (key === "arrowleft") {
+            newX = box.x - nudgeAmount;
+          } else if (key === "arrowright") {
+            newX = box.x + nudgeAmount;
+          } else if (key === "arrowup") {
+            newY = box.y - nudgeAmount;
+          } else if (key === "arrowdown") {
+            newY = box.y + nudgeAmount;
+          }
+
+          updateBoxPosition(boxId, newX, newY);
+        });
+      }
+
       if (key === KEYBOARD_SHORTCUTS.ESCAPE.toLowerCase()) {
         e.preventDefault();
         if (interaction.selectedTool !== "select") {
@@ -73,5 +130,10 @@ export const useToolShortcuts = () => {
     selectedBoxIds,
     deleteBoxes,
     duplicateBoxes,
+    selectAll,
+    updateBoxPosition,
+    getBox,
+    copyBoxes,
+    pasteBoxes,
   ]);
 };

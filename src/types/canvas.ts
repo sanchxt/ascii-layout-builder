@@ -11,12 +11,20 @@ export interface CanvasViewport {
   showGrid: boolean;
 }
 
+export interface SelectionRect {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}
+
 export interface CanvasInteraction {
   isPanning: boolean;
   lastMousePosition: CanvasPosition | null;
   isSpacebarPressed: boolean;
   selectedTool: ToolType;
   editingBoxId: string | null;
+  selectionRect: SelectionRect | null;
 }
 
 export interface CanvasState {
@@ -36,6 +44,9 @@ export interface CanvasState {
   setSelectedTool: (tool: ToolType) => void;
   enterEditMode: (boxId: string) => void;
   exitEditMode: () => void;
+  startSelectionRect: (startX: number, startY: number) => void;
+  updateSelectionRect: (endX: number, endY: number) => void;
+  clearSelectionRect: () => void;
   resetCanvas: () => void;
 }
 

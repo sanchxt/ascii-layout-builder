@@ -10,6 +10,14 @@ import {
 } from "../utils/boxHierarchy";
 import { getMaxZIndex } from "../utils/boxHelpers";
 
+let recordSnapshotFn: (() => void) | null = null;
+export const setRecordSnapshotFn = (fn: () => void) => {
+  recordSnapshotFn = fn;
+};
+const recordSnapshot = () => {
+  if (recordSnapshotFn) recordSnapshotFn();
+};
+
 const initialState = {
   boxes: [] as Box[],
   selectedBoxIds: [] as string[],
@@ -17,6 +25,7 @@ const initialState = {
   creationMode: "idle" as const,
   resizeHandle: null,
   tempBox: null,
+  clipboardBoxIds: [] as string[],
 };
 
 export const useBoxStore = create<BoxState>()(
@@ -25,16 +34,19 @@ export const useBoxStore = create<BoxState>()(
       (set, get) => ({
         ...initialState,
 
-        addBox: (box) =>
+        addBox: (box) => {
+          recordSnapshot();
           set(
             (state) => ({
               boxes: [...state.boxes, box],
             }),
             false,
             "box/addBox"
-          ),
+          );
+        },
 
-        updateBox: (id, updates) =>
+        updateBox: (id, updates) => {
+          recordSnapshot();
           set(
             (state) => ({
               boxes: state.boxes.map((box) =>
@@ -43,9 +55,11 @@ export const useBoxStore = create<BoxState>()(
             }),
             false,
             "box/updateBox"
-          ),
+          );
+        },
 
-        deleteBox: (id) =>
+        deleteBox: (id) => {
+          recordSnapshot();
           set(
             (state) => {
               const descendants = getAllDescendants(id, state.boxes);
@@ -78,9 +92,11 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/deleteBox"
-          ),
+          );
+        },
 
-        deleteBoxes: (ids) =>
+        deleteBoxes: (ids) => {
+          recordSnapshot();
           set(
             (state) => {
               const allIdsToDelete = new Set(ids);
@@ -121,7 +137,8 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/deleteBoxes"
-          ),
+          );
+        },
 
         selectBox: (id, multi = false) =>
           set(
@@ -153,6 +170,18 @@ export const useBoxStore = create<BoxState>()(
             "box/clearSelection"
           ),
 
+        selectAll: () =>
+          set(
+            (state) => {
+              const rootBoxes = state.boxes.filter((box) => !box.parentId);
+              return {
+                selectedBoxIds: rootBoxes.map((box) => box.id),
+              };
+            },
+            false,
+            "box/selectAll"
+          ),
+
         setCreationMode: (creationMode) =>
           set(
             () => ({
@@ -180,7 +209,8 @@ export const useBoxStore = create<BoxState>()(
             "box/setTempBox"
           ),
 
-        duplicateBoxes: (ids) =>
+        duplicateBoxes: (ids) => {
+          recordSnapshot();
           set(
             (state) => {
               const idMap = new Map<string, string>();
@@ -239,7 +269,87 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/duplicateBoxes"
+          );
+        },
+
+        copyBoxes: () =>
+          set(
+            (state) => ({
+              clipboardBoxIds: [...state.selectedBoxIds],
+            }),
+            false,
+            "box/copyBoxes"
           ),
+
+        pasteBoxes: () => {
+          recordSnapshot();
+          set(
+            (state) => {
+              if (state.clipboardBoxIds.length === 0) {
+                return state;
+              }
+
+              const idMap = new Map<string, string>();
+              const allBoxesToDuplicate: Box[] = [];
+
+              const collectBoxesWithDescendants = (boxId: string) => {
+                const box = state.boxes.find((b) => b.id === boxId);
+                if (!box || allBoxesToDuplicate.some((b) => b.id === boxId))
+                  return;
+
+                allBoxesToDuplicate.push(box);
+                const descendants = getAllDescendants(boxId, state.boxes);
+                descendants.forEach((desc) => {
+                  if (!allBoxesToDuplicate.some((b) => b.id === desc.id)) {
+                    allBoxesToDuplicate.push(desc);
+                  }
+                });
+              };
+
+              state.clipboardBoxIds.forEach((id) =>
+                collectBoxesWithDescendants(id)
+              );
+
+              allBoxesToDuplicate.forEach((box) => {
+                idMap.set(box.id, crypto.randomUUID());
+              });
+
+              const pastedBoxes = allBoxesToDuplicate.map((box) => {
+                const newId = idMap.get(box.id)!;
+                const newParentId = box.parentId
+                  ? idMap.get(box.parentId)
+                  : undefined;
+                const newChildren = box.children
+                  .map((childId) => idMap.get(childId))
+                  .filter((id): id is string => id !== undefined);
+
+                const shouldOffset =
+                  !box.parentId ||
+                  !state.clipboardBoxIds.includes(box.parentId);
+
+                return {
+                  ...box,
+                  id: newId,
+                  parentId: newParentId,
+                  children: newChildren,
+                  x: shouldOffset ? box.x + 20 : box.x,
+                  y: shouldOffset ? box.y + 20 : box.y,
+                };
+              });
+
+              const topLevelPastedIds = state.clipboardBoxIds
+                .map((id) => idMap.get(id))
+                .filter((id): id is string => id !== undefined);
+
+              return {
+                boxes: [...state.boxes, ...pastedBoxes],
+                selectedBoxIds: topLevelPastedIds,
+              };
+            },
+            false,
+            "box/pasteBoxes"
+          );
+        },
 
         getBox: (id) => {
           const state = get();
@@ -262,7 +372,8 @@ export const useBoxStore = create<BoxState>()(
             "box/resetBoxes"
           ),
 
-        setParent: (childId, parentId) =>
+        setParent: (childId, parentId) => {
+          recordSnapshot();
           set(
             (state) => {
               const validation = canNestBox(childId, parentId, state.boxes);
@@ -308,9 +419,11 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/setParent"
-          ),
+          );
+        },
 
-        detachFromParent: (childId) =>
+        detachFromParent: (childId) => {
+          recordSnapshot();
           set(
             (state) => {
               const childBox = state.boxes.find((b) => b.id === childId);
@@ -348,9 +461,11 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/detachFromParent"
-          ),
+          );
+        },
 
-        groupBoxes: (boxIds) =>
+        groupBoxes: (boxIds) => {
+          recordSnapshot();
           set(
             (state) => {
               if (boxIds.length === 0) return state;
@@ -429,9 +544,11 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/groupBoxes"
-          ),
+          );
+        },
 
-        ungroupBox: (parentId) =>
+        ungroupBox: (parentId) => {
+          recordSnapshot();
           set(
             (state) => {
               const parentBox = state.boxes.find((b) => b.id === parentId);
@@ -465,9 +582,11 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/ungroupBox"
-          ),
+          );
+        },
 
-        updateBoxPosition: (id, x, y) =>
+        updateBoxPosition: (id, x, y) => {
+          recordSnapshot();
           set(
             (state) => {
               const box = state.boxes.find((b) => b.id === id);
@@ -518,7 +637,8 @@ export const useBoxStore = create<BoxState>()(
             },
             false,
             "box/updateBoxPosition"
-          ),
+          );
+        },
       }),
       {
         name: STORAGE_KEYS.BOX_STATE,

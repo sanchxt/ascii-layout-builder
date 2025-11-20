@@ -47,6 +47,7 @@ export interface BoxState {
   creationMode: BoxCreationMode;
   resizeHandle: ResizeHandle | null;
   tempBox: Partial<Box> | null;
+  clipboardBoxIds: string[];
 
   // actions
   addBox: (box: Box) => void;
@@ -55,10 +56,13 @@ export interface BoxState {
   deleteBoxes: (ids: string[]) => void;
   selectBox: (id: string, multi?: boolean) => void;
   clearSelection: () => void;
+  selectAll: () => void;
   setCreationMode: (mode: BoxCreationMode) => void;
   setResizeHandle: (handle: ResizeHandle | null) => void;
   setTempBox: (box: Partial<Box> | null) => void;
   duplicateBoxes: (ids: string[]) => void;
+  copyBoxes: () => void;
+  pasteBoxes: () => void;
   getBox: (id: string) => Box | undefined;
   getSelectedBoxes: () => Box[];
   resetBoxes: () => void;

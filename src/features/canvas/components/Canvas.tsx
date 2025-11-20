@@ -2,21 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { useCanvasPan } from "../hooks/useCanvasPan";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useToolShortcuts } from "../hooks/useToolShortcuts";
+import { useSelectionRectangle } from "../hooks/useSelectionRectangle";
 import { useCanvasStore } from "../store/canvasStore";
-import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useBoxStore, setRecordSnapshotFn } from "@/features/boxes/store/boxStore";
 import { useBoxCreation } from "@/features/boxes/hooks/useBoxCreation";
 import { useBoxSelection } from "@/features/boxes/hooks/useBoxSelection";
 import { useGrouping } from "@/features/boxes/hooks/useGrouping";
 import { useBoxDrag } from "@/features/boxes/hooks/useBoxDrag";
 import { useDropZone } from "@/features/boxes/hooks/useDropZone";
+import { useHistory } from "@/features/history/hooks/useHistory";
+import { recordSnapshot } from "@/features/history/store/historyStore";
 import { Box } from "@/features/boxes/components/Box";
 import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator";
+import { SelectionRectangle } from "./SelectionRectangle";
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasControls } from "./CanvasControls";
 import { screenToCanvas } from "../utils/coordinateTransform";
 import {
   getRootBoxes,
   convertToLocalPosition,
+  getDeepestBoxAtPoint,
 } from "@/features/boxes/utils/boxHierarchy";
 
 interface CanvasProps {
@@ -42,12 +47,20 @@ export const Canvas = ({ children }: CanvasProps) => {
     tempBox,
   } = useBoxCreation();
   const { handleCanvasClick, isBoxSelected } = useBoxSelection();
+  const {
+    selectionRect,
+    startSelection,
+    updateSelection,
+    finishSelection,
+  } = useSelectionRectangle();
   const [isCreatingBox, setIsCreatingBox] = useState(false);
+  const [isDrawingSelection, setIsDrawingSelection] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useToolShortcuts();
   useGrouping();
+  useHistory();
 
   const rootBoxes = getRootBoxes(boxes);
 
@@ -102,6 +115,11 @@ export const Canvas = ({ children }: CanvasProps) => {
       });
     },
   });
+
+  // Wire up history recording to box store
+  useEffect(() => {
+    setRecordSnapshotFn(recordSnapshot);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -180,7 +198,17 @@ export const Canvas = ({ children }: CanvasProps) => {
       setIsCreatingBox(true);
       startCreating(canvasPoint);
     } else if (interaction.selectedTool === "select") {
-      handleCanvasClick(canvasPoint, e.shiftKey);
+      // Check if clicking on a box
+      const clickedBox = getDeepestBoxAtPoint(canvasPoint, boxes);
+
+      if (clickedBox) {
+        // Clicking on a box - handle regular selection
+        handleCanvasClick(canvasPoint, e.shiftKey);
+      } else {
+        // Clicking on empty canvas - start selection rectangle
+        setIsDrawingSelection(true);
+        startSelection(canvasPoint.x, canvasPoint.y);
+      }
     }
   };
 
@@ -190,6 +218,11 @@ export const Canvas = ({ children }: CanvasProps) => {
 
     if (isDraggingBox) {
       updateDrag(canvasPos.x, canvasPos.y);
+      return;
+    }
+
+    if (isDrawingSelection) {
+      updateSelection(canvasPos.x, canvasPos.y);
       return;
     }
 
@@ -213,9 +246,15 @@ export const Canvas = ({ children }: CanvasProps) => {
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent) => {
     if (isDraggingBox) {
       endDrag();
+      return;
+    }
+
+    if (isDrawingSelection) {
+      finishSelection(e.shiftKey);
+      setIsDrawingSelection(false);
       return;
     }
 
@@ -326,6 +365,10 @@ export const Canvas = ({ children }: CanvasProps) => {
                 height: tempBox.height,
               }}
             />
+          )}
+
+          {selectionRect && (
+            <SelectionRectangle selectionRect={selectionRect} />
           )}
 
           {boxes.length === 0 && !tempBox && (
