@@ -58,11 +58,7 @@ export const LeftSidebar = () => {
 
       <div className="flex-1" />
 
-      <div className="text-xs text-gray-400 text-center px-1">
-        Phase 9
-        <br />
-        In Progress
-      </div>
+      <div className="text-xs text-gray-400 text-center px-1">v0.1.0</div>
     </div>
   );
 };
