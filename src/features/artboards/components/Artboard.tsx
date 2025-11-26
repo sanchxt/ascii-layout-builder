@@ -4,6 +4,7 @@ import { ARTBOARD_CONSTANTS } from "@/lib/constants";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useArtboardStore } from "../store/artboardStore";
 import { getBoxesInArtboard, getBoxOverflow } from "../utils/artboardHelpers";
+import { cn } from "@/lib/utils";
 
 interface ArtboardProps {
   artboard: ArtboardType;
@@ -56,13 +57,7 @@ export const Artboard: FC<ArtboardProps> = ({
     }
   };
 
-  if (!artboard.visible) {
-    return null;
-  }
-
-  const borderColor = isSelected
-    ? ARTBOARD_CONSTANTS.SELECTED_BORDER_COLOR
-    : ARTBOARD_CONSTANTS.BORDER_COLOR;
+  if (!artboard.visible) return null;
 
   const displayX = dragPreviewPosition?.x ?? artboard.x;
   const displayY = dragPreviewPosition?.y ?? artboard.y;
@@ -72,51 +67,28 @@ export const Artboard: FC<ArtboardProps> = ({
       data-artboard-id={artboard.id}
       onClick={handleArtboardClick}
       onMouseDown={handleMouseDown}
-      className="absolute pointer-events-auto"
+      className="absolute pointer-events-auto group"
       style={{
         left: displayX,
         top: displayY,
         width: artboard.width,
         height: artboard.height,
         pointerEvents: artboard.locked ? "none" : "auto",
-        opacity: artboard.locked ? 0.5 : isDragging ? 0.7 : 1,
+        opacity: artboard.locked ? 0.6 : isDragging ? 0.8 : 1,
         transition: isDragging ? "none" : "opacity 0.2s",
+        zIndex: artboard.zIndex,
       }}
     >
-      <div
-        data-artboard-boundary
-        className="absolute inset-0 bg-white"
-        style={{
-          border: `${ARTBOARD_CONSTANTS.BORDER_THICKNESS}px dashed ${borderColor}`,
-          cursor: artboard.locked
-            ? "not-allowed"
-            : isDragging
-            ? "grabbing"
-            : "grab",
-        }}
-      />
-
+      {/* Artboard Label */}
       <div
         data-artboard-label
-        className="absolute"
+        className={cn(
+          "absolute bottom-full left-0 mb-1 px-2 py-0.5 rounded-t-sm text-[10px] font-semibold tracking-wide transition-colors flex items-center gap-2 select-none",
+          isSelected
+            ? "bg-blue-500 text-white shadow-sm"
+            : "text-zinc-500 group-hover:text-zinc-800"
+        )}
         style={{
-          left: 0,
-          top: -ARTBOARD_CONSTANTS.LABEL_HEIGHT,
-          width: artboard.width,
-          height: ARTBOARD_CONSTANTS.LABEL_HEIGHT,
-          backgroundColor: isSelected
-            ? ARTBOARD_CONSTANTS.SELECTED_BORDER_COLOR
-            : ARTBOARD_CONSTANTS.LABEL_BG,
-          border: `1px solid ${
-            isSelected ? ARTBOARD_CONSTANTS.SELECTED_BORDER_COLOR : "#d1d5db"
-          }`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 8px",
-          fontSize: ARTBOARD_CONSTANTS.LABEL_FONT_SIZE,
-          fontWeight: 600,
-          color: isSelected ? "#ffffff" : "#374151",
           cursor: artboard.locked
             ? "not-allowed"
             : isDragging
@@ -124,31 +96,52 @@ export const Artboard: FC<ArtboardProps> = ({
             : "grab",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span>{artboard.name}</span>
-          {hasOverflow && (
-            <span
-              title="Some boxes overflow artboard boundaries"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "16px",
-                height: "16px",
-                borderRadius: "50%",
-                backgroundColor: isSelected ? "#ffffff" : "#f59e0b",
-                color: isSelected ? "#f59e0b" : "#ffffff",
-                fontSize: "10px",
-                fontWeight: 700,
-              }}
-            >
-              !
-            </span>
+        <span>{artboard.name}</span>
+        <span
+          className={cn(
+            "font-normal opacity-70",
+            isSelected ? "text-blue-100" : "text-zinc-400"
           )}
-        </div>
-        <span style={{ fontSize: "0.85em", opacity: 0.7, fontWeight: 500 }}>
-          {artboard.width} × {artboard.height}
+        >
+          {artboard.width}×{artboard.height}
         </span>
+        {hasOverflow && (
+          <div
+            className="w-1.5 h-1.5 rounded-full bg-amber-400"
+            title="Content overflow"
+          />
+        )}
+      </div>
+
+      {/* Artboard Surface */}
+      <div
+        data-artboard-boundary
+        className={cn(
+          "absolute inset-0 bg-white transition-all",
+          isSelected
+            ? "ring-2 ring-blue-500 shadow-lg shadow-blue-500/10"
+            : "shadow-sm border border-zinc-200 hover:border-zinc-300",
+          artboard.locked && "bg-zinc-50/50"
+        )}
+        style={{
+          cursor: artboard.locked
+            ? "not-allowed"
+            : isDragging
+            ? "grabbing"
+            : "default",
+        }}
+      >
+        {/* Grid/Pattern for empty artboards could go here */}
+        {artboard.locked && (
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+              opacity: 0.5,
+            }}
+          />
+        )}
       </div>
     </div>
   );

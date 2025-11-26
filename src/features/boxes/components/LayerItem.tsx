@@ -7,12 +7,14 @@ import {
   Lock,
   LockOpen,
   Square,
+  Type,
 } from "lucide-react";
 import type { Box } from "@/types/box";
 import { useBoxStore } from "../store/boxStore";
 import { useLayersUIStore } from "../store/layersUIStore";
 import { cn } from "@/lib/utils";
 
+// ... [Keep interfaces DragStateType, LayerItemProps] ...
 interface DragStateType {
   draggedBoxId: string | null;
   dropTargetBoxId: string | null;
@@ -49,13 +51,11 @@ export const LayerItem = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
-
   const selectBox = useBoxStore((state) => state.selectBox);
   const toggleBoxVisibility = useBoxStore((state) => state.toggleBoxVisibility);
   const toggleBoxLock = useBoxStore((state) => state.toggleBoxLock);
   const updateBoxName = useBoxStore((state) => state.updateBoxName);
   const getBox = useBoxStore((state) => state.getBox);
-
   const expandedBoxIds = useLayersUIStore((state) => state.expandedBoxIds);
   const toggleExpanded = useLayersUIStore((state) => state.toggleExpanded);
 
@@ -72,14 +72,15 @@ export const LayerItem = ({
   const getDisplayName = () => {
     if (box.name) return box.name;
     if (box.text.value) {
-      const truncated = box.text.value.trim().slice(0, 30);
-      return truncated || `Box ${box.id.slice(0, 6)}`;
+      const truncated = box.text.value.trim().slice(0, 20);
+      return truncated || `Box ${box.id.slice(0, 4)}`;
     }
-    return `Box ${box.id.slice(0, 6)}`;
+    return `Box ${box.id.slice(0, 4)}`;
   };
 
   const displayName = getDisplayName();
 
+  // ... [Keep event handlers: handleDoubleClick, handleEditComplete, etc.] ...
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEditValue(box.name || "");
@@ -144,16 +145,10 @@ export const LayerItem = ({
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const height = rect.height;
-
     let position: "before" | "after" | "inside";
-    if (y < height * 0.25) {
-      position = "before";
-    } else if (y > height * 0.75) {
-      position = "after";
-    } else {
-      position = "inside";
-    }
-
+    if (y < height * 0.25) position = "before";
+    else if (y > height * 0.75) position = "after";
+    else position = "inside";
     onDragOver?.(box.id, e, position);
   };
 
@@ -166,9 +161,17 @@ export const LayerItem = ({
   };
 
   return (
-    <div className="select-none">
+    <div className="select-none relative">
+      {/* Indentation Guide Lines */}
+      {depth > 0 && (
+        <div
+          className="absolute top-0 bottom-0 border-l border-zinc-200"
+          style={{ left: `${depth * 16 + 11}px` }}
+        />
+      )}
+
       {isDropTarget && dropPosition === "before" && (
-        <div className="h-0.5 bg-blue-500 mx-2 -mt-0.5" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 z-20" />
       )}
 
       <div
@@ -178,35 +181,54 @@ export const LayerItem = ({
         onDrop={handleDropLocal}
         onDragEnd={handleDragEndLocal}
         className={cn(
-          "group flex items-center h-8 px-2 cursor-pointer hover:bg-gray-100 transition-colors relative",
-          isSelected && "bg-blue-50 border-l-2 border-blue-500",
+          "group flex items-center h-9 pr-2 cursor-pointer transition-colors relative border-b border-transparent",
+          isSelected
+            ? "bg-blue-50/80 text-blue-700"
+            : "hover:bg-zinc-50 text-zinc-700",
           !isVisible && "opacity-50",
-          isDragging && "opacity-40 bg-gray-200",
+          isDragging && "opacity-40 bg-zinc-100",
           isDropTarget &&
             dropPosition === "inside" &&
-            "bg-blue-100 border border-blue-400 border-dashed"
+            "bg-blue-50 ring-1 ring-inset ring-blue-300"
         )}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        style={{ paddingLeft: `${depth * 16 + 6}px` }}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
       >
-        <div className="w-4 h-4 mr-1 flex items-center justify-center">
+        {/* Expand/Collapse */}
+        <div className="w-5 h-5 flex items-center justify-center shrink-0 mr-1">
           {hasChildren ? (
             <button
               onClick={handleToggleExpand}
-              className="hover:bg-gray-200 rounded p-0.5 transition-colors"
+              className="hover:bg-zinc-200 rounded p-0.5 transition-colors"
             >
               {expanded ? (
-                <ChevronDown className="w-3 h-3 text-gray-600" />
+                <ChevronDown className="w-3 h-3 text-zinc-500" />
               ) : (
-                <ChevronRight className="w-3 h-3 text-gray-600" />
+                <ChevronRight className="w-3 h-3 text-zinc-500" />
               )}
             </button>
           ) : null}
         </div>
 
-        <Square className="w-3 h-3 mr-2 text-gray-500 shrink-0" />
+        {/* Icon */}
+        {box.text.value ? (
+          <Type
+            className={cn(
+              "w-3.5 h-3.5 mr-2 shrink-0",
+              isSelected ? "text-blue-500" : "text-zinc-400"
+            )}
+          />
+        ) : (
+          <Square
+            className={cn(
+              "w-3.5 h-3.5 mr-2 shrink-0",
+              isSelected ? "text-blue-500" : "text-zinc-400"
+            )}
+          />
+        )}
 
+        {/* Name Input/Label */}
         <div className="flex-1 min-w-0 mr-2">
           {isEditing ? (
             <input
@@ -216,51 +238,56 @@ export const LayerItem = ({
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={handleEditComplete}
               onKeyDown={handleEditKeyDown}
-              className="w-full px-1 py-0 text-sm border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-1 py-0.5 text-xs bg-white border border-blue-500 rounded focus:outline-none shadow-sm"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="text-sm text-gray-900 truncate block">
+            <span className="text-xs font-medium truncate block">
               {displayName}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleToggleVisibility}
-            className={cn(
-              "p-1 rounded hover:bg-gray-200 transition-colors",
-              !isVisible && "opacity-100"
-            )}
-            title={isVisible ? "Hide" : "Show"}
-          >
-            {isVisible ? (
-              <Eye className="w-3.5 h-3.5 text-gray-600" />
-            ) : (
-              <EyeOff className="w-3.5 h-3.5 text-gray-400" />
-            )}
-          </button>
-
+        {/* Action Buttons (Hover only) */}
+        <div
+          className={cn(
+            "flex items-center gap-1 transition-opacity",
+            isSelected || isLocked || !isVisible
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100"
+          )}
+        >
           <button
             onClick={handleToggleLock}
             className={cn(
-              "p-1 rounded hover:bg-gray-200 transition-colors",
-              isLocked && "opacity-100"
+              "p-1 rounded hover:bg-zinc-200 transition-colors",
+              isLocked && "text-amber-600 bg-amber-50 hover:bg-amber-100"
             )}
             title={isLocked ? "Unlock" : "Lock"}
           >
             {isLocked ? (
-              <Lock className="w-3.5 h-3.5 text-gray-600" />
+              <Lock className="w-3 h-3" />
             ) : (
-              <LockOpen className="w-3.5 h-3.5 text-gray-400" />
+              <LockOpen className="w-3 h-3 text-zinc-400" />
+            )}
+          </button>
+
+          <button
+            onClick={handleToggleVisibility}
+            className="p-1 rounded hover:bg-zinc-200 transition-colors"
+            title={isVisible ? "Hide" : "Show"}
+          >
+            {isVisible ? (
+              <Eye className="w-3 h-3 text-zinc-400" />
+            ) : (
+              <EyeOff className="w-3 h-3 text-zinc-400" />
             )}
           </button>
         </div>
       </div>
 
       {isDropTarget && dropPosition === "after" && (
-        <div className="h-0.5 bg-blue-500 mx-2 -mb-0.5" />
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 z-20" />
       )}
 
       {hasChildren && expanded && (
@@ -268,7 +295,6 @@ export const LayerItem = ({
           {box.children.map((childId) => {
             const childBox = getBox(childId);
             if (!childBox) return null;
-
             return (
               <LayerItem
                 key={childId}

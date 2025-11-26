@@ -56,36 +56,22 @@ export const ArtboardLabel: FC<ArtboardLabelProps> = ({
     }
   }, [isEditing]);
 
-  const labelY = artboard.y - ARTBOARD_CONSTANTS.LABEL_HEIGHT / zoom;
-  const fontSize = ARTBOARD_CONSTANTS.LABEL_FONT_SIZE / zoom;
-  const padding = 8 / zoom;
+  // Calculate positions relative to zoom
+  const labelHeight = 24 / zoom;
+  const labelY = artboard.y - labelHeight - 4 / zoom;
+  const fontSize = 12 / zoom;
+  const padding = 6 / zoom;
 
-  const backgroundColor = isSelected
-    ? ARTBOARD_CONSTANTS.SELECTED_BORDER_COLOR
-    : ARTBOARD_CONSTANTS.LABEL_BG;
-
-  const textColor = isSelected ? "#ffffff" : "#374151";
+  const textColor = isSelected ? "#3b82f6" : "#71717a"; // blue-500 : zinc-500
 
   return (
     <g data-artboard-label>
-      <rect
-        x={artboard.x}
-        y={labelY}
-        width={artboard.width}
-        height={ARTBOARD_CONSTANTS.LABEL_HEIGHT / zoom}
-        fill={backgroundColor}
-        stroke={
-          isSelected ? ARTBOARD_CONSTANTS.SELECTED_BORDER_COLOR : "#d1d5db"
-        }
-        strokeWidth={1 / zoom}
-      />
-
       {isEditing ? (
         <foreignObject
-          x={artboard.x + padding}
-          y={labelY + padding}
-          width={artboard.width - padding * 2}
-          height={ARTBOARD_CONSTANTS.LABEL_HEIGHT / zoom - padding * 2}
+          x={artboard.x}
+          y={labelY}
+          width={artboard.width}
+          height={labelHeight}
         >
           <input
             ref={inputRef}
@@ -95,50 +81,47 @@ export const ArtboardLabel: FC<ArtboardLabelProps> = ({
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
             style={{
-              width: "100%",
+              width: "auto",
+              minWidth: "50px",
               height: "100%",
               border: "none",
-              outline: "none",
+              outline: "2px solid #3b82f6",
+              borderRadius: "2px",
               fontSize: `${fontSize}px`,
               fontWeight: 600,
-              color: textColor,
-              backgroundColor: "transparent",
+              color: "#18181b",
+              backgroundColor: "#ffffff",
               fontFamily: "Inter, sans-serif",
+              padding: `0 ${padding}px`,
             }}
             onClick={(e) => e.stopPropagation()}
           />
         </foreignObject>
       ) : (
-        <>
-          <text
-            x={artboard.x + padding}
-            y={labelY + ARTBOARD_CONSTANTS.LABEL_HEIGHT / zoom / 2}
-            fontSize={fontSize}
-            fontWeight={600}
-            fill={textColor}
-            dominantBaseline="middle"
-            onDoubleClick={handleDoubleClick}
-            style={{
-              cursor: artboard.locked ? "not-allowed" : "text",
-              userSelect: "none",
-            }}
-          >
-            {artboard.name}
-          </text>
-
-          <text
-            x={artboard.x + artboard.width - padding}
-            y={labelY + ARTBOARD_CONSTANTS.LABEL_HEIGHT / zoom / 2}
-            fontSize={fontSize * 0.85}
-            fontWeight={500}
-            fill={textColor}
-            dominantBaseline="middle"
-            textAnchor="end"
-            style={{ userSelect: "none", opacity: 0.7 }}
+        <text
+          x={artboard.x}
+          y={labelY + labelHeight / 2}
+          fontSize={fontSize}
+          fontWeight={600}
+          fill={textColor}
+          dominantBaseline="middle"
+          onDoubleClick={handleDoubleClick}
+          style={{
+            cursor: artboard.locked ? "not-allowed" : "text",
+            userSelect: "none",
+            textShadow: "0 1px 2px rgba(255,255,255,0.8)",
+          }}
+        >
+          {artboard.name}
+          <tspan
+            fill="#a1a1aa"
+            fontWeight={400}
+            dx={8 / zoom}
+            fontSize={fontSize * 0.9}
           >
             {artboard.width} × {artboard.height}
-          </text>
-        </>
+          </tspan>
+        </text>
       )}
     </g>
   );

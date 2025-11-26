@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useCanvasStore } from "../store/canvasStore";
+import { cn } from "@/lib/utils";
 
 export const CanvasControls = () => {
   const {
@@ -22,79 +23,87 @@ export const CanvasControls = () => {
   const { viewport, toggleGrid, toggleSnapToGrid, toggleSmartGuides } =
     useCanvasStore();
 
+  const ControlButton = ({
+    onClick,
+    active = false,
+    disabled = false,
+    children,
+    title,
+  }: any) => (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={cn(
+        "h-8 w-8 rounded-md transition-all",
+        active
+          ? "bg-blue-50 text-blue-600"
+          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+      )}
+    >
+      {children}
+    </Button>
+  );
+
   return (
-    <div className="absolute bottom-4 right-4 flex flex-col gap-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={zoomIn}
-        disabled={!canZoomIn}
-        title="Zoom In (Ctrl/Cmd + Scroll Up)"
-        className="h-8 w-8"
-      >
-        <ZoomIn className="h-4 w-4" />
-      </Button>
+    <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-40">
+      {/* View Controls */}
+      <div className="bg-white rounded-xl shadow-lg border border-zinc-200/80 p-1.5 flex flex-col gap-1 backdrop-blur-sm">
+        <ControlButton onClick={zoomIn} disabled={!canZoomIn} title="Zoom In">
+          <ZoomIn className="h-4 w-4" />
+        </ControlButton>
 
-      <button
-        onClick={resetZoom}
-        title="Reset Zoom (Ctrl/Cmd + 0)"
-        className="px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
-      >
-        {getZoomPercentage()}
-      </button>
+        <button
+          onClick={resetZoom}
+          title="Reset Zoom"
+          className="py-1 text-[10px] font-bold text-zinc-500 hover:text-zinc-900 transition-colors text-center font-mono"
+        >
+          {getZoomPercentage()}
+        </button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={zoomOut}
-        disabled={!canZoomOut}
-        title="Zoom Out (Ctrl/Cmd + Scroll Down)"
-        className="h-8 w-8"
-      >
-        <ZoomOut className="h-4 w-4" />
-      </Button>
+        <ControlButton
+          onClick={zoomOut}
+          disabled={!canZoomOut}
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </ControlButton>
+      </div>
 
-      <div className="h-px bg-gray-200 my-1" />
+      {/* Toggle Controls */}
+      <div className="bg-white rounded-xl shadow-lg border border-zinc-200/80 p-1.5 flex flex-col gap-1 backdrop-blur-sm">
+        <ControlButton onClick={resetZoom} title="Fit to Screen">
+          <Maximize2 className="h-4 w-4" />
+        </ControlButton>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={resetZoom}
-        title="Reset View (Ctrl/Cmd + 0)"
-        className="h-8 w-8"
-      >
-        <Maximize2 className="h-4 w-4" />
-      </Button>
+        <div className="h-px bg-zinc-100 my-0.5" />
 
-      <Button
-        variant={viewport.showGrid ? "default" : "ghost"}
-        size="icon"
-        onClick={toggleGrid}
-        title="Toggle Grid (Ctrl/Cmd + ')"
-        className="h-8 w-8"
-      >
-        <Grid3x3 className="h-4 w-4" />
-      </Button>
+        <ControlButton
+          active={viewport.showGrid}
+          onClick={toggleGrid}
+          title="Toggle Grid"
+        >
+          <Grid3x3 className="h-4 w-4" />
+        </ControlButton>
 
-      <Button
-        variant={viewport.snapToGrid ? "default" : "ghost"}
-        size="icon"
-        onClick={toggleSnapToGrid}
-        title="Snap to Grid (Ctrl/Cmd + Shift + ;)"
-        className="h-8 w-8"
-      >
-        <Magnet className="h-4 w-4" />
-      </Button>
+        <ControlButton
+          active={viewport.snapToGrid}
+          onClick={toggleSnapToGrid}
+          title="Snap to Grid"
+        >
+          <Magnet className="h-4 w-4" />
+        </ControlButton>
 
-      <Button
-        variant={viewport.showSmartGuides ? "default" : "ghost"}
-        size="icon"
-        onClick={toggleSmartGuides}
-        title="Smart Guides (Ctrl/Cmd + Shift + I)"
-        className="h-8 w-8"
-      >
-        <Ruler className="h-4 w-4" />
-      </Button>
+        <ControlButton
+          active={viewport.showSmartGuides}
+          onClick={toggleSmartGuides}
+          title="Smart Guides"
+        >
+          <Ruler className="h-4 w-4" />
+        </ControlButton>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import { Toolbar } from "./Toolbar";
-import { LeftSidebar } from "./LeftSidebar";
 import { RightSidebar } from "./RightSidebar";
 
 interface AppLayoutProps {
@@ -8,14 +7,14 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-zinc-50 text-zinc-900 font-sans">
       <Toolbar />
 
-      <div className="flex-1 flex overflow-hidden">
-        <LeftSidebar />
-
-        {/* canvas area */}
-        <div className="flex-1 relative">{children}</div>
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Canvas Area (Children includes the floating LeftSidebar) */}
+        <div className="flex-1 relative h-full w-full overflow-hidden">
+          {children}
+        </div>
 
         <RightSidebar />
       </div>

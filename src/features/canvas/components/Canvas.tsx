@@ -36,6 +36,7 @@ import { SmartGuides } from "@/features/alignment/components/SmartGuides";
 import { SelectionRectangle } from "./SelectionRectangle";
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasControls } from "./CanvasControls";
+import { LeftSidebar } from "@/components/layout/LeftSidebar"; // Moved here
 import { screenToCanvas } from "../utils/coordinateTransform";
 import {
   getRootBoxes,
@@ -46,6 +47,7 @@ import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
 import { findArtboardAtPoint } from "@/features/artboards/utils/artboardHelpers";
 import { canvasToArtboardRelative } from "@/features/artboards/utils/coordinateConversion";
+import { Command, MousePointer2, Square } from "lucide-react";
 
 interface CanvasProps {
   children?: React.ReactNode;
@@ -101,6 +103,9 @@ export const Canvas = ({ children }: CanvasProps) => {
 
   const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 
+  // ... [Keep existing drag logic hooks: useBoxDrag, useArtboardDrag] ...
+  // For brevity in this response, assume the complex drag logic
+  // (lines 103-242 of your original file) remains exactly the same here.
   const {
     dragState,
     startDrag,
@@ -112,32 +117,25 @@ export const Canvas = ({ children }: CanvasProps) => {
     initialAbsolutePositions,
   } = useBoxDrag({
     onDragEnd: (draggedBoxIds, finalDelta) => {
+      // ... existing logic ...
       draggedBoxIds.forEach((id) => {
         const box = boxes.find((b) => b.id === id);
         if (!box) return;
-
-        if (box.parentId && draggedBoxIds.includes(box.parentId)) {
-          return;
-        }
-
+        if (box.parentId && draggedBoxIds.includes(box.parentId)) return;
         const initialAbs = initialAbsolutePositions.get(id);
         if (!initialAbs) return;
-
         let finalAbsX = initialAbs.x + finalDelta.x;
         let finalAbsY = initialAbs.y + finalDelta.y;
-
         if (viewport.snapToGrid) {
           finalAbsX = snapToGrid(finalAbsX, CANVAS_CONSTANTS.GRID_SIZE);
           finalAbsY = snapToGrid(finalAbsY, CANVAS_CONSTANTS.GRID_SIZE);
         }
-
         let targetParentId: string | null = null;
         if (dropZoneState.isValidDropZone && dropZoneState.potentialParentId) {
           targetParentId = dropZoneState.potentialParentId;
         } else {
           targetParentId = box.parentId || null;
         }
-
         if (targetParentId) {
           const targetParent =
             boxes.find((b) => b.id === targetParentId) || null;
@@ -147,7 +145,6 @@ export const Canvas = ({ children }: CanvasProps) => {
             targetParent,
             boxes
           );
-
           updateBox(id, {
             parentId: targetParentId,
             artboardId: undefined,
@@ -156,10 +153,8 @@ export const Canvas = ({ children }: CanvasProps) => {
           });
           return;
         }
-
         const boxCenterX = finalAbsX + box.width / 2;
         const boxCenterY = finalAbsY + box.height / 2;
-
         if (box.artboardId) {
           const currentArtboard = artboards.find(
             (a) => a.id === box.artboardId
@@ -173,7 +168,6 @@ export const Canvas = ({ children }: CanvasProps) => {
               boxCenterY < currentArtboard.y - threshold ||
               boxCenterY >
                 currentArtboard.y + currentArtboard.height + threshold;
-
             if (isOutside) {
               updateBox(id, {
                 artboardId: undefined,
@@ -185,12 +179,10 @@ export const Canvas = ({ children }: CanvasProps) => {
             }
           }
         }
-
         const targetArtboard = findArtboardAtPoint(
           { x: boxCenterX, y: boxCenterY },
           artboards
         );
-
         if (targetArtboard && targetArtboard.id !== box.artboardId) {
           const relativePos = canvasToArtboardRelative(
             finalAbsX,
@@ -205,7 +197,6 @@ export const Canvas = ({ children }: CanvasProps) => {
           });
           return;
         }
-
         if (box.artboardId) {
           const artboard = artboards.find((a) => a.id === box.artboardId);
           if (artboard) {
@@ -214,16 +205,10 @@ export const Canvas = ({ children }: CanvasProps) => {
               finalAbsY,
               artboard
             );
-            updateBox(id, {
-              x: relativePos.x,
-              y: relativePos.y,
-            });
+            updateBox(id, { x: relativePos.x, y: relativePos.y });
           }
         } else {
-          updateBox(id, {
-            x: finalAbsX,
-            y: finalAbsY,
-          });
+          updateBox(id, { x: finalAbsX, y: finalAbsY });
         }
       });
     },
@@ -489,7 +474,7 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gray-50">
+    <div className="relative w-full h-full overflow-hidden bg-zinc-50/50">
       <div
         ref={canvasRef}
         className="absolute inset-0"
@@ -611,31 +596,24 @@ export const Canvas = ({ children }: CanvasProps) => {
           )}
 
           {boxes.length === 0 && !tempBox && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="text-center space-y-2">
-                <h2 className="text-2xl font-semibold text-gray-700">
-                  Welcome to ASCII Layout Builder
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Press{" "}
-                  <kbd className="px-2 py-1 bg-white border border-gray-300 rounded">
-                    B
-                  </kbd>{" "}
-                  to activate box tool, then drag to create boxes
-                  <br />
-                  <kbd className="px-2 py-1 bg-white border border-gray-300 rounded">
-                    Space
-                  </kbd>{" "}
-                  + drag or scroll to pan •{" "}
-                  <kbd className="px-2 py-1 bg-white border border-gray-300 rounded">
-                    Shift
-                  </kbd>{" "}
-                  + scroll for horizontal pan
-                  <br />
-                  <kbd className="px-2 py-1 bg-white border border-gray-300 rounded">
-                    Ctrl/Cmd
-                  </kbd>{" "}
-                  + scroll to zoom
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+              <div className="flex flex-col items-center gap-4 text-zinc-400">
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 shadow-sm flex items-center justify-center">
+                      <Square className="w-6 h-6 text-zinc-400" />
+                    </div>
+                    <span className="text-xs font-medium">Box Tool (B)</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 shadow-sm flex items-center justify-center">
+                      <MousePointer2 className="w-6 h-6 text-zinc-400" />
+                    </div>
+                    <span className="text-xs font-medium">Select (V)</span>
+                  </div>
+                </div>
+                <p className="text-sm text-zinc-400 mt-2">
+                  Start by selecting a tool or dragging on the canvas
                 </p>
               </div>
             </div>
@@ -645,6 +623,8 @@ export const Canvas = ({ children }: CanvasProps) => {
         </div>
       </div>
 
+      {/* Floating UI Elements */}
+      <LeftSidebar />
       <CanvasControls />
     </div>
   );

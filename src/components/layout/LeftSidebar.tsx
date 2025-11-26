@@ -2,63 +2,69 @@ import { Button } from "@/components/ui/button";
 import { MousePointer2, Square, Type, Frame } from "lucide-react";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import type { ToolType } from "@/types/canvas";
+import { cn } from "@/lib/utils";
 
 export const LeftSidebar = () => {
   const { interaction, setSelectedTool } = useCanvasStore();
 
-  const handleToolClick = (tool: ToolType) => {
-    setSelectedTool(tool);
-  };
-
-  const getButtonVariant = (tool: ToolType) => {
-    return interaction.selectedTool === tool ? "default" : "ghost";
-  };
+  const tools: { id: ToolType; icon: any; label: string; shortcut: string }[] =
+    [
+      {
+        id: "select",
+        icon: MousePointer2,
+        label: "Selection",
+        shortcut: "V",
+      },
+      {
+        id: "box",
+        icon: Square,
+        label: "Box",
+        shortcut: "B",
+      },
+      {
+        id: "text",
+        icon: Type,
+        label: "Text",
+        shortcut: "T",
+      },
+      {
+        id: "artboard",
+        icon: Frame,
+        label: "Artboard",
+        shortcut: "A",
+      },
+    ];
 
   return (
-    <div className="w-16 border-r border-gray-200 bg-white flex flex-col items-center py-4 gap-2">
-      <Button
-        variant={getButtonVariant("select")}
-        size="icon"
-        title="Selection Tool (V)"
-        onClick={() => handleToolClick("select")}
-        className="h-10 w-10"
-      >
-        <MousePointer2 className="h-5 w-5" />
-      </Button>
+    <div className="absolute top-4 left-4 flex flex-col gap-2 z-40">
+      <div className="bg-white rounded-xl shadow-lg border border-zinc-200/80 p-1.5 flex flex-col gap-1 backdrop-blur-sm">
+        {tools.map((tool) => {
+          const isActive = interaction.selectedTool === tool.id;
+          return (
+            <div key={tool.id} className="relative group">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedTool(tool.id)}
+                className={cn(
+                  "h-10 w-10 rounded-lg transition-all duration-200",
+                  isActive
+                    ? "bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100"
+                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                )}
+              >
+                <tool.icon className="h-5 w-5" />
+              </Button>
 
-      <Button
-        variant={getButtonVariant("box")}
-        size="icon"
-        title="Box Tool (B)"
-        onClick={() => handleToolClick("box")}
-        className="h-10 w-10"
-      >
-        <Square className="h-5 w-5" />
-      </Button>
-
-      <Button
-        variant={getButtonVariant("text")}
-        size="icon"
-        title="Text Tool (T)"
-        onClick={() => handleToolClick("text")}
-        className="h-10 w-10"
-      >
-        <Type className="h-5 w-5" />
-      </Button>
-
-      <Button
-        variant={getButtonVariant("artboard")}
-        size="icon"
-        title="Artboard Tool (A)"
-        onClick={() => handleToolClick("artboard")}
-        className="h-10 w-10"
-      >
-        <Frame className="h-5 w-5" />
-      </Button>
-
-      <div className="flex-1" />
-
-      <div className="text-xs text-gray-400 text-center px-1">v0.1.0</div>
+              {/* Tooltip */}
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                {tool.label}{" "}
+                <span className="text-zinc-500 ml-1">{tool.shortcut}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

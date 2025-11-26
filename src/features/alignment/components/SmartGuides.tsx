@@ -2,7 +2,6 @@ import type {
   SmartGuide,
   SpacingGuide,
 } from "@/features/alignment/types/alignment";
-import { ALIGNMENT_CONSTANTS } from "@/lib/constants";
 
 interface SmartGuidesProps {
   alignmentGuides: SmartGuide[];
@@ -32,6 +31,7 @@ export function SmartGuides({
 
 function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
   const isVertical = guide.type === "vertical";
+  const color = "#ec4899"; // Pink-500 (Standard smart guide color)
 
   const style: React.CSSProperties = isVertical
     ? {
@@ -39,16 +39,18 @@ function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
         left: `${guide.position}px`,
         top: 0,
         bottom: 0,
-        width: 0,
-        borderLeft: `${ALIGNMENT_CONSTANTS.SMART_GUIDE_THICKNESS}px dashed ${ALIGNMENT_CONSTANTS.SMART_GUIDE_COLOR}`,
+        width: "1px",
+        backgroundColor: color,
+        boxShadow: "0 0 2px rgba(255,255,255,0.5)",
       }
     : {
         position: "absolute",
         top: `${guide.position}px`,
         left: 0,
         right: 0,
-        height: 0,
-        borderTop: `${ALIGNMENT_CONSTANTS.SMART_GUIDE_THICKNESS}px dashed ${ALIGNMENT_CONSTANTS.SMART_GUIDE_COLOR}`,
+        height: "1px",
+        backgroundColor: color,
+        boxShadow: "0 0 2px rgba(255,255,255,0.5)",
       };
 
   return <div style={style} />;
@@ -56,17 +58,12 @@ function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
 
 function SpacingGuideLine({ guide }: { guide: SpacingGuide }) {
   const { startPoint, endPoint, distance } = guide;
-  const isHorizontal = guide.type === "horizontal";
+  const color = "#f43f5e"; // Rose-500
 
   const midpoint = {
     x: (startPoint.x + endPoint.x) / 2,
     y: (startPoint.y + endPoint.y) / 2,
   };
-
-  const length = Math.sqrt(
-    Math.pow(endPoint.x - startPoint.x, 2) +
-      Math.pow(endPoint.y - startPoint.y, 2)
-  );
 
   return (
     <>
@@ -85,92 +82,41 @@ function SpacingGuideLine({ guide }: { guide: SpacingGuide }) {
           y1={startPoint.y}
           x2={endPoint.x}
           y2={endPoint.y}
-          stroke={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
-          strokeWidth={ALIGNMENT_CONSTANTS.SMART_GUIDE_THICKNESS}
-          strokeDasharray={ALIGNMENT_CONSTANTS.SMART_GUIDE_DASH}
+          stroke={color}
+          strokeWidth="1"
         />
 
-        <circle
-          cx={startPoint.x}
-          cy={startPoint.y}
-          r="3"
-          fill={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
+        {/* Endpoints */}
+        <rect
+          x={startPoint.x - 2}
+          y={startPoint.y - 2}
+          width="4"
+          height="4"
+          fill={color}
         />
-
-        <circle
-          cx={endPoint.x}
-          cy={endPoint.y}
-          r="3"
-          fill={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
+        <rect
+          x={endPoint.x - 2}
+          y={endPoint.y - 2}
+          width="4"
+          height="4"
+          fill={color}
         />
-
-        {length > 30 && (
-          <>
-            {isHorizontal ? (
-              <>
-                <path
-                  d={`M ${startPoint.x + 6} ${startPoint.y - 4} L ${
-                    startPoint.x
-                  } ${startPoint.y} L ${startPoint.x + 6} ${startPoint.y + 4}`}
-                  stroke={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d={`M ${endPoint.x - 6} ${endPoint.y - 4} L ${endPoint.x} ${
-                    endPoint.y
-                  } L ${endPoint.x - 6} ${endPoint.y + 4}`}
-                  stroke={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            ) : (
-              <>
-                <path
-                  d={`M ${startPoint.x - 4} ${startPoint.y + 6} L ${
-                    startPoint.x
-                  } ${startPoint.y} L ${startPoint.x + 4} ${startPoint.y + 6}`}
-                  stroke={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d={`M ${endPoint.x - 4} ${endPoint.y - 6} L ${endPoint.x} ${
-                    endPoint.y
-                  } L ${endPoint.x + 4} ${endPoint.y - 6}`}
-                  stroke={ALIGNMENT_CONSTANTS.SPACING_GUIDE_COLOR}
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            )}
-          </>
-        )}
       </svg>
 
       <div
-        className="absolute px-1.5 py-0.5 rounded text-xs font-mono whitespace-nowrap"
+        className="absolute px-1.5 py-0.5 rounded-sm text-[10px] font-bold font-mono whitespace-nowrap flex items-center justify-center"
         style={{
           left: `${midpoint.x}px`,
           top: `${midpoint.y}px`,
           transform: "translate(-50%, -50%)",
-          backgroundColor: ALIGNMENT_CONSTANTS.SPACING_LABEL_BG,
-          color: ALIGNMENT_CONSTANTS.SPACING_LABEL_COLOR,
-          fontSize: "11px",
-          lineHeight: "1.2",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
+          backgroundColor: color,
+          color: "white",
+          minWidth: "24px",
+          zIndex: 9999,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
         }}
       >
-        {Math.round(distance)}px
+        {Math.round(distance)}
       </div>
     </>
   );
