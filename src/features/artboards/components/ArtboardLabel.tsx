@@ -1,6 +1,5 @@
 import { type FC, useState, useCallback, useEffect, useRef } from "react";
 import type { Artboard } from "@/types/artboard";
-import { ARTBOARD_CONSTANTS } from "@/lib/constants";
 import { useArtboardStore } from "../store/artboardStore";
 
 interface ArtboardLabelProps {

@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -22,7 +21,6 @@ import {
 import { useArtboardCreation } from "../hooks/useArtboardCreation";
 import { useArtboardStore } from "../store/artboardStore";
 import { ARTBOARD_PRESETS } from "../utils/artboardPresets";
-import { cn } from "@/lib/utils";
 
 export const ArtboardControls = () => {
   const { createMobile, createTablet, createDesktop, createCustom } =

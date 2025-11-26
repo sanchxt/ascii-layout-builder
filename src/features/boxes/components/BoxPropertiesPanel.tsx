@@ -4,8 +4,6 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Type,
-  Move,
   BoxSelect,
   ArrowUpFromLine,
   Copy,
@@ -13,8 +11,8 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
-import { TEXT_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
-import { getNestingDepth, getChildBoxes } from "../utils/boxHierarchy";
+import { TEXT_CONSTANTS } from "@/lib/constants";
+import { getNestingDepth } from "../utils/boxHierarchy";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +27,6 @@ export const BoxPropertiesPanel = () => {
 
   const updateBox = useBoxStore((state) => state.updateBox);
   const detachFromParent = useBoxStore((state) => state.detachFromParent);
-  const selectBox = useBoxStore((state) => state.selectBox);
   const toggleBoxLock = useBoxStore((state) => state.toggleBoxLock);
 
   if (selectedBoxes.length === 0) {

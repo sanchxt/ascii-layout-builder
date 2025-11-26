@@ -1,6 +1,5 @@
 import { type FC, useMemo } from "react";
 import type { Artboard as ArtboardType } from "@/types/artboard";
-import { ARTBOARD_CONSTANTS } from "@/lib/constants";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useArtboardStore } from "../store/artboardStore";
 import { getBoxesInArtboard, getBoxOverflow } from "../utils/artboardHelpers";

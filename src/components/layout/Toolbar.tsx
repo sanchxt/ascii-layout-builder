@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Save, Share2, Undo2, Redo2, Menu } from "lucide-react";
+import { Save, Share2, Undo2, Redo2 } from "lucide-react";
 
 export const Toolbar = () => {
   return (

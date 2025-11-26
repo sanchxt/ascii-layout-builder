@@ -47,7 +47,7 @@ import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
 import { findArtboardAtPoint } from "@/features/artboards/utils/artboardHelpers";
 import { canvasToArtboardRelative } from "@/features/artboards/utils/coordinateConversion";
-import { Command, MousePointer2, Square } from "lucide-react";
+import { MousePointer2, Square } from "lucide-react";
 
 interface CanvasProps {
   children?: React.ReactNode;
