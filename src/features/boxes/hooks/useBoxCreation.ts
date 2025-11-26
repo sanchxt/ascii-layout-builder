@@ -10,6 +10,7 @@ import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS } from "@/lib/constants";
+import { canvasToArtboardRelative } from "@/features/artboards/utils/coordinateConversion";
 
 export const useBoxCreation = () => {
   const boxes = useBoxStore((state) => state.boxes);
@@ -19,6 +20,7 @@ export const useBoxCreation = () => {
   const setCreationMode = useBoxStore((state) => state.setCreationMode);
   const { viewport } = useCanvasStore();
   const activeArtboardId = useArtboardStore((state) => state.activeArtboardId);
+  const artboards = useArtboardStore((state) => state.artboards);
 
   const startCreating = useCallback(
     (startPoint: CanvasPosition) => {
@@ -105,10 +107,20 @@ export const useBoxCreation = () => {
       }
 
       if (activeArtboardId) {
-        finalBox = {
-          ...finalBox,
-          artboardId: activeArtboardId,
-        };
+        const artboard = artboards.find((a) => a.id === activeArtboardId);
+        if (artboard) {
+          const relativePos = canvasToArtboardRelative(
+            finalBox.x!,
+            finalBox.y!,
+            artboard
+          );
+          finalBox = {
+            ...finalBox,
+            artboardId: activeArtboardId,
+            x: relativePos.x,
+            y: relativePos.y,
+          };
+        }
       }
 
       addBox(finalBox as any);
@@ -123,6 +135,7 @@ export const useBoxCreation = () => {
     setCreationMode,
     viewport.snapToGrid,
     activeArtboardId,
+    artboards,
   ]);
 
   const cancelCreating = useCallback(() => {
@@ -144,12 +157,18 @@ export const useBoxCreation = () => {
       newBox.zIndex = getMaxZIndex(boxes) + 1;
 
       if (activeArtboardId) {
-        newBox.artboardId = activeArtboardId;
+        const artboard = artboards.find((a) => a.id === activeArtboardId);
+        if (artboard) {
+          const relativePos = canvasToArtboardRelative(x, y, artboard);
+          newBox.artboardId = activeArtboardId;
+          newBox.x = relativePos.x;
+          newBox.y = relativePos.y;
+        }
       }
 
       addBox(newBox);
     },
-    [addBox, boxes, viewport.snapToGrid, activeArtboardId]
+    [addBox, boxes, viewport.snapToGrid, activeArtboardId, artboards]
   );
 
   return {

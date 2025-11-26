@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from "react";
 import { useArtboardStore } from "../store/artboardStore";
-import { useBoxStore } from "@/features/boxes/store/boxStore";
 
 export interface ArtboardDragState {
   isDragging: boolean;
@@ -27,8 +26,6 @@ export const useArtboardDrag = (options: UseArtboardDragOptions = {}) => {
     (state) => state.selectedArtboardIds
   );
   const updateArtboard = useArtboardStore((state) => state.updateArtboard);
-  const boxes = useBoxStore((state) => state.boxes);
-  const updateBox = useBoxStore((state) => state.updateBox);
 
   const [dragState, setDragState] = useState<ArtboardDragState>({
     isDragging: false,
@@ -116,16 +113,6 @@ export const useArtboardDrag = (options: UseArtboardDragOptions = {}) => {
       const newY = initialPos.y + finalDelta.y;
 
       updateArtboard(artboardId, { x: newX, y: newY });
-
-      const artboardBoxes = boxes.filter(
-        (box) => box.artboardId === artboardId
-      );
-      artboardBoxes.forEach((box) => {
-        updateBox(box.id, {
-          x: box.x + finalDelta.x,
-          y: box.y + finalDelta.y,
-        });
-      });
     });
 
     if (onDragEnd) {
@@ -139,7 +126,7 @@ export const useArtboardDrag = (options: UseArtboardDragOptions = {}) => {
       startCanvasPos: { x: 0, y: 0 },
       currentCanvasPos: { x: 0, y: 0 },
     });
-  }, [onDragEnd, updateArtboard, boxes, updateBox]);
+  }, [onDragEnd, updateArtboard]);
 
   const cancelDrag = useCallback(() => {
     setDragState({

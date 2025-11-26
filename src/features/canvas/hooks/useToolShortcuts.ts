@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
-import { KEYBOARD_SHORTCUTS, CANVAS_CONSTANTS } from "@/lib/constants";
+import { useArtboardStore } from "@/features/artboards/store/artboardStore";
+import {
+  KEYBOARD_SHORTCUTS,
+  CANVAS_CONSTANTS,
+  BOX_CONSTANTS,
+} from "@/lib/constants";
+import { getAbsolutePosition } from "@/features/boxes/utils/boxHierarchy";
 
 export const useToolShortcuts = () => {
   const {
@@ -20,7 +26,10 @@ export const useToolShortcuts = () => {
     getBox,
     copyBoxes,
     pasteBoxes,
+    boxes,
+    updateBox,
   } = useBoxStore();
+  const artboards = useArtboardStore((state) => state.artboards);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -138,6 +147,62 @@ export const useToolShortcuts = () => {
           }
 
           updateBoxPosition(boxId, newX, newY);
+
+          if (!box.parentId && box.artboardId) {
+            const artboard = artboards.find((a) => a.id === box.artboardId);
+            console.log(
+              "[Auto-detach] Checking box:",
+              boxId,
+              "artboardId:",
+              box.artboardId,
+              "artboard found:",
+              !!artboard
+            );
+            if (artboard) {
+              const centerX = newX + box.width / 2;
+              const centerY = newY + box.height / 2;
+              const threshold = BOX_CONSTANTS.AUTO_DETACH_THRESHOLD;
+
+              const isOutside =
+                centerX < -threshold ||
+                centerX > artboard.width + threshold ||
+                centerY < -threshold ||
+                centerY > artboard.height + threshold;
+
+              console.log(
+                "[Auto-detach] centerX:",
+                centerX,
+                "centerY:",
+                centerY,
+                "threshold:",
+                threshold,
+                "isOutside:",
+                isOutside
+              );
+
+              if (isOutside) {
+                const absPos = getAbsolutePosition(
+                  { ...box, x: newX, y: newY },
+                  boxes
+                );
+                console.log("[Auto-detach] Detaching! absPos:", absPos);
+                updateBox(boxId, {
+                  artboardId: undefined,
+                  x: absPos.x,
+                  y: absPos.y,
+                });
+              }
+            }
+          } else {
+            console.log(
+              "[Auto-detach] Skipping box:",
+              boxId,
+              "parentId:",
+              box.parentId,
+              "artboardId:",
+              box.artboardId
+            );
+          }
         });
       }
 
@@ -168,5 +233,8 @@ export const useToolShortcuts = () => {
     toggleSnapToGrid,
     toggleSmartGuides,
     viewport.snapToGrid,
+    artboards,
+    boxes,
+    updateBox,
   ]);
 };

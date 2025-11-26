@@ -1,5 +1,6 @@
 import type { Box, BorderStyle } from "@/types/box";
 import { BOX_CONSTANTS } from "@/lib/constants";
+import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 
 export const getBorderWidth = (borderStyle: BorderStyle): number => {
   switch (borderStyle) {
@@ -200,13 +201,31 @@ export const getAbsolutePosition = (
   box: Box,
   boxes: Box[]
 ): { x: number; y: number } => {
+  const getArtboardOffset = (
+    artboardId: string | undefined
+  ): { x: number; y: number } => {
+    if (!artboardId) return { x: 0, y: 0 };
+    const artboard = useArtboardStore
+      .getState()
+      .artboards.find((a) => a.id === artboardId);
+    return artboard ? { x: artboard.x, y: artboard.y } : { x: 0, y: 0 };
+  };
+
   if (!box.parentId) {
-    return { x: box.x, y: box.y };
+    const artboardOffset = getArtboardOffset(box.artboardId);
+    return {
+      x: box.x + artboardOffset.x,
+      y: box.y + artboardOffset.y,
+    };
   }
 
   const ancestors = getAncestors(box.id, boxes);
   if (ancestors.length === 0) {
-    return { x: box.x, y: box.y };
+    const artboardOffset = getArtboardOffset(box.artboardId);
+    return {
+      x: box.x + artboardOffset.x,
+      y: box.y + artboardOffset.y,
+    };
   }
 
   let absoluteX = box.x;
@@ -217,6 +236,11 @@ export const getAbsolutePosition = (
     absoluteX += ancestor.x + borderWidth + ancestor.padding;
     absoluteY += ancestor.y + borderWidth + ancestor.padding;
   }
+
+  const rootAncestor = ancestors[ancestors.length - 1];
+  const artboardOffset = getArtboardOffset(rootAncestor?.artboardId);
+  absoluteX += artboardOffset.x;
+  absoluteY += artboardOffset.y;
 
   return { x: absoluteX, y: absoluteY };
 };

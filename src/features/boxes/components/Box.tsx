@@ -5,6 +5,7 @@ import { TextEditor } from "./TextEditor";
 import { FormattedText } from "./FormattedText";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useBoxStore } from "../store/boxStore";
+import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import {
   getChildBoxes,
   getNestingDepth,
@@ -48,6 +49,7 @@ export const Box = ({
 
   const allBoxes = useBoxStore((state) => state.boxes);
   const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
+  const artboards = useArtboardStore((state) => state.artboards);
 
   const isVisible = box.visible !== false;
   const ancestors = getAncestors(box.id, allBoxes);
@@ -95,6 +97,11 @@ export const Box = ({
 
   const borderStyle = getBorderStyleCSS(box.borderStyle);
 
+  const artboardOffset =
+    !parentBox && box.artboardId
+      ? artboards.find((a) => a.id === box.artboardId)
+      : null;
+
   let position: { left: number; top: number };
 
   if (isDragging && dragPreviewPosition) {
@@ -124,6 +131,11 @@ export const Box = ({
       position = {
         left: box.x,
         top: box.y,
+      };
+    } else if (artboardOffset) {
+      position = {
+        left: artboardOffset.x + box.x,
+        top: artboardOffset.y + box.y,
       };
     } else {
       position = {
@@ -213,8 +225,8 @@ export const Box = ({
             getCanvasBounds={getCanvasBounds}
             parentBox={box}
             onDragStart={onDragStart}
-            isDragging={isDragging}
-            dragPreviewPosition={dragPreviewPosition}
+            isDragging={false}
+            dragPreviewPosition={undefined}
           />
         ))}
       </div>

@@ -27,7 +27,9 @@ import { useArtboardCreation } from "@/features/artboards/hooks/useArtboardCreat
 import { useArtboardDrag } from "@/features/artboards/hooks/useArtboardDrag";
 import { useArtboardSelection } from "@/features/artboards/hooks/useArtboardSelection";
 import { useArtboardShortcuts } from "@/features/artboards/hooks/useArtboardShortcuts";
+import { useArtboardDropZone } from "@/features/artboards/hooks/useArtboardDropZone";
 import { Artboard } from "@/features/artboards/components/Artboard";
+import { ArtboardDropZoneIndicator } from "@/features/artboards/components/ArtboardDropZoneIndicator";
 import { Box } from "@/features/boxes/components/Box";
 import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator";
 import { SmartGuides } from "@/features/alignment/components/SmartGuides";
@@ -41,7 +43,9 @@ import {
   getDeepestBoxAtPoint,
 } from "@/features/boxes/utils/boxHierarchy";
 import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
-import { CANVAS_CONSTANTS } from "@/lib/constants";
+import { CANVAS_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
+import { findArtboardAtPoint } from "@/features/artboards/utils/artboardHelpers";
+import { canvasToArtboardRelative } from "@/features/artboards/utils/coordinateConversion";
 
 interface CanvasProps {
   children?: React.ReactNode;
@@ -78,6 +82,7 @@ export const Canvas = ({ children }: CanvasProps) => {
   const [isDrawingSelection, setIsDrawingSelection] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const hasInitialized = useRef(false);
 
   useToolShortcuts();
   useLayerKeyboardShortcuts();
@@ -88,10 +93,11 @@ export const Canvas = ({ children }: CanvasProps) => {
   useDistribution();
 
   useEffect(() => {
-    if (artboards.length === 0) {
+    if (!hasInitialized.current && artboards.length === 0) {
       createDesktop();
+      hasInitialized.current = true;
     }
-  }, []);
+  }, [artboards.length, createDesktop]);
 
   const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 
@@ -132,22 +138,93 @@ export const Canvas = ({ children }: CanvasProps) => {
           targetParentId = box.parentId || null;
         }
 
-        const targetParent = targetParentId
-          ? boxes.find((b) => b.id === targetParentId) || null
-          : null;
+        if (targetParentId) {
+          const targetParent =
+            boxes.find((b) => b.id === targetParentId) || null;
+          const newLocalPos = convertToLocalPosition(
+            finalAbsX,
+            finalAbsY,
+            targetParent,
+            boxes
+          );
 
-        const newLocalPos = convertToLocalPosition(
-          finalAbsX,
-          finalAbsY,
-          targetParent,
-          boxes
+          updateBox(id, {
+            parentId: targetParentId,
+            artboardId: undefined,
+            x: newLocalPos.x,
+            y: newLocalPos.y,
+          });
+          return;
+        }
+
+        const boxCenterX = finalAbsX + box.width / 2;
+        const boxCenterY = finalAbsY + box.height / 2;
+
+        if (box.artboardId) {
+          const currentArtboard = artboards.find(
+            (a) => a.id === box.artboardId
+          );
+          if (currentArtboard) {
+            const threshold = BOX_CONSTANTS.AUTO_DETACH_THRESHOLD;
+            const isOutside =
+              boxCenterX < currentArtboard.x - threshold ||
+              boxCenterX >
+                currentArtboard.x + currentArtboard.width + threshold ||
+              boxCenterY < currentArtboard.y - threshold ||
+              boxCenterY >
+                currentArtboard.y + currentArtboard.height + threshold;
+
+            if (isOutside) {
+              updateBox(id, {
+                artboardId: undefined,
+                parentId: undefined,
+                x: finalAbsX,
+                y: finalAbsY,
+              });
+              return;
+            }
+          }
+        }
+
+        const targetArtboard = findArtboardAtPoint(
+          { x: boxCenterX, y: boxCenterY },
+          artboards
         );
 
-        updateBox(id, {
-          parentId: targetParentId || undefined,
-          x: newLocalPos.x,
-          y: newLocalPos.y,
-        });
+        if (targetArtboard && targetArtboard.id !== box.artboardId) {
+          const relativePos = canvasToArtboardRelative(
+            finalAbsX,
+            finalAbsY,
+            targetArtboard
+          );
+          updateBox(id, {
+            artboardId: targetArtboard.id,
+            parentId: undefined,
+            x: relativePos.x,
+            y: relativePos.y,
+          });
+          return;
+        }
+
+        if (box.artboardId) {
+          const artboard = artboards.find((a) => a.id === box.artboardId);
+          if (artboard) {
+            const relativePos = canvasToArtboardRelative(
+              finalAbsX,
+              finalAbsY,
+              artboard
+            );
+            updateBox(id, {
+              x: relativePos.x,
+              y: relativePos.y,
+            });
+          }
+        } else {
+          updateBox(id, {
+            x: finalAbsX,
+            y: finalAbsY,
+          });
+        }
       });
     },
   });
@@ -191,6 +268,12 @@ export const Canvas = ({ children }: CanvasProps) => {
   const [canvasMousePos, setCanvasMousePos] = useState({ x: 0, y: 0 });
 
   const dropZoneState = useDropZone({
+    draggedBoxIds: dragState.draggedBoxIds,
+    currentMousePos: canvasMousePos,
+    isDragging: isDraggingBox,
+  });
+
+  const artboardDropZoneState = useArtboardDropZone({
     draggedBoxIds: dragState.draggedBoxIds,
     currentMousePos: canvasMousePos,
     isDragging: isDraggingBox,
@@ -450,25 +533,41 @@ export const Canvas = ({ children }: CanvasProps) => {
               />
             ))}
 
-          {rootBoxes.map((box) => (
-            <Box
-              key={box.id}
-              box={box}
-              isSelected={isBoxSelected(box.id)}
-              onSelect={(boxId, multi) => {
-                selectBox(boxId, multi);
-              }}
-              onUpdate={updateBox}
-              getCanvasBounds={() =>
-                canvasRef.current?.getBoundingClientRect() || null
+          {rootBoxes.map((box) => {
+            let boxDragPreview = isDraggingBox
+              ? getSnappedPreviewPosition(box.id)
+              : undefined;
+
+            if (!boxDragPreview && box.artboardId && isDraggingArtboard) {
+              const artboardPreview = getArtboardPreviewPosition(
+                box.artboardId
+              );
+              if (artboardPreview) {
+                boxDragPreview = {
+                  x: artboardPreview.x + box.x,
+                  y: artboardPreview.y + box.y,
+                };
               }
-              onDragStart={handleBoxDragStart}
-              isDragging={dragState.draggedBoxIds.includes(box.id)}
-              dragPreviewPosition={
-                isDraggingBox ? getSnappedPreviewPosition(box.id) : undefined
-              }
-            />
-          ))}
+            }
+
+            return (
+              <Box
+                key={box.id}
+                box={box}
+                isSelected={isBoxSelected(box.id)}
+                onSelect={(boxId, multi) => {
+                  selectBox(boxId, multi);
+                }}
+                onUpdate={updateBox}
+                getCanvasBounds={() =>
+                  canvasRef.current?.getBoundingClientRect() || null
+                }
+                onDragStart={handleBoxDragStart}
+                isDragging={dragState.draggedBoxIds.includes(box.id)}
+                dragPreviewPosition={boxDragPreview}
+              />
+            );
+          })}
 
           {isDraggingBox && dropZoneState.potentialParentId && (
             <DropZoneIndicator
@@ -477,6 +576,16 @@ export const Canvas = ({ children }: CanvasProps) => {
               validationMessage={dropZoneState.validationMessage}
             />
           )}
+
+          {isDraggingBox &&
+            !dropZoneState.potentialParentId &&
+            artboardDropZoneState.potentialArtboardId && (
+              <ArtboardDropZoneIndicator
+                targetArtboardId={artboardDropZoneState.potentialArtboardId}
+                isValid={artboardDropZoneState.isValidDropZone}
+                validationMessage={artboardDropZoneState.validationMessage}
+              />
+            )}
 
           {isDraggingBox && (
             <SmartGuides
