@@ -234,7 +234,7 @@ export const ArtboardsContent = () => {
       <div className="shrink-0 px-3 py-2 border-b border-zinc-100 bg-zinc-50/30">
         <div className="flex gap-1.5">
           <button
-            onClick={createMobile}
+            onClick={() => createMobile()}
             className="flex-1 flex flex-col items-center gap-1 py-2 px-2 rounded-lg border border-zinc-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 transition-all group hover-lift"
           >
             <Smartphone className="w-4 h-4 text-zinc-400 group-hover:text-blue-500" />
@@ -244,7 +244,7 @@ export const ArtboardsContent = () => {
             </span>
           </button>
           <button
-            onClick={createTablet}
+            onClick={() => createTablet()}
             className="flex-1 flex flex-col items-center gap-1 py-2 px-2 rounded-lg border border-zinc-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 transition-all group hover-lift"
           >
             <Tablet className="w-4 h-4 text-zinc-400 group-hover:text-blue-500" />
@@ -254,7 +254,7 @@ export const ArtboardsContent = () => {
             </span>
           </button>
           <button
-            onClick={createDesktop}
+            onClick={() => createDesktop()}
             className="flex-1 flex flex-col items-center gap-1 py-2 px-2 rounded-lg border border-zinc-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 transition-all group hover-lift"
           >
             <Monitor className="w-4 h-4 text-zinc-400 group-hover:text-blue-500" />

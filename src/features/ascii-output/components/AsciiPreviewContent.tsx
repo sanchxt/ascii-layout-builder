@@ -25,7 +25,6 @@ type ViewMode = "canvas" | "artboard" | "all-artboards";
 
 export const AsciiPreviewContent = () => {
   const artboards = useArtboardStore((state) => state.artboards);
-  const getArtboard = useArtboardStore((state) => state.getArtboard);
 
   const [viewMode, setViewMode] = useState<ViewMode>("canvas");
   const [selectedArtboardId, setSelectedArtboardId] = useState<string | null>(
@@ -48,10 +47,6 @@ export const AsciiPreviewContent = () => {
   const error = isAllArtboards
     ? allArtboardsGeneration.error
     : canvasGeneration.error;
-
-  const currentArtboard = selectedArtboardId
-    ? getArtboard(selectedArtboardId)
-    : null;
 
   const hasContent = isAllArtboards
     ? allArtboardsGeneration.formattedOutput
