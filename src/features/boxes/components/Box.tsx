@@ -6,6 +6,7 @@ import { FormattedText } from "./FormattedText";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useBoxStore } from "../store/boxStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
+import { useLayoutUIStore } from "@/features/layout-system/store/layoutStore";
 import {
   getChildBoxes,
   getNestingDepth,
@@ -13,7 +14,12 @@ import {
   getBorderWidth,
   getAncestors,
 } from "../utils/boxHierarchy";
-import { Lock } from "lucide-react";
+import { Lock, AlertTriangle, X } from "lucide-react";
+import {
+  LayoutIndicator,
+  GridLinesOverlay,
+  FlexDirectionOverlay,
+} from "@/features/layout-system/components/LayoutIndicator";
 
 interface BoxProps {
   box: BoxType;
@@ -49,7 +55,22 @@ export const Box = ({
 
   const allBoxes = useBoxStore((state) => state.boxes);
   const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
+  const deleteBox = useBoxStore((state) => state.deleteBox);
   const artboards = useArtboardStore((state) => state.artboards);
+  const zoom = useCanvasStore((state) => state.viewport.zoom);
+  const overflowBoxIds = useLayoutUIStore((state) => state.overflowBoxIds);
+  const clearOverflowBoxIds = useLayoutUIStore(
+    (state) => state.clearOverflowBoxIds
+  );
+  const isOverflowing = overflowBoxIds.includes(box.id);
+
+  const handleDeleteAllOverflow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    overflowBoxIds.forEach((id) => {
+      deleteBox(id);
+    });
+    clearOverflowBoxIds();
+  };
 
   const isVisible = box.visible !== false;
   const ancestors = getAncestors(box.id, allBoxes);
@@ -193,6 +214,18 @@ export const Box = ({
           </div>
         )}
 
+        {box.layout && box.layout.type !== "none" && (
+          <>
+            <LayoutIndicator box={box} zoom={zoom} />
+            {box.layout.type === "grid" && isSelected && (
+              <GridLinesOverlay box={box} zoom={zoom} />
+            )}
+            {box.layout.type === "flex" && isSelected && (
+              <FlexDirectionOverlay box={box} zoom={zoom} />
+            )}
+          </>
+        )}
+
         {isSelected && (
           <div
             className="absolute inset-0 pointer-events-none"
@@ -201,6 +234,36 @@ export const Box = ({
               outlineOffset: "-1px",
             }}
           />
+        )}
+
+        {isOverflowing && (
+          <>
+            <div
+              className="absolute inset-0 pointer-events-none animate-pulse"
+              style={{
+                outline: "3px solid #f97316",
+                outlineOffset: "-1px",
+                borderRadius: "2px",
+              }}
+            />
+            <div
+              className="absolute -top-7 left-0 flex items-center gap-1 bg-orange-500 text-white text-[10px] font-medium rounded overflow-hidden"
+              title="This box is outside the grid bounds"
+            >
+              <div className="flex items-center gap-1 px-1.5 py-0.5 animate-pulse">
+                <AlertTriangle className="w-3 h-3" />
+                Out of bounds
+              </div>
+              <button
+                onClick={handleDeleteAllOverflow}
+                className="px-1.5 py-0.5 bg-orange-600 hover:bg-orange-700 transition-colors flex items-center gap-0.5 border-l border-orange-400"
+                title={`Delete all ${overflowBoxIds.length} overflow boxes`}
+              >
+                <X className="w-3 h-3" />
+                <span>Delete all ({overflowBoxIds.length})</span>
+              </button>
+            </div>
+          </>
         )}
 
         {isEditing && <TextEditor box={box} onUpdate={onUpdate} />}

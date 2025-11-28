@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   AlignLeft,
   AlignCenter,
@@ -13,12 +13,24 @@ import {
   Maximize2,
   Layers2,
   Type,
+  LayoutGrid,
+  AlignVerticalJustifyCenter,
 } from "lucide-react";
 import { useBoxStore } from "../store/boxStore";
-import type { BorderStyle } from "@/types/box";
+import type { BorderStyle, Box } from "@/types/box";
+import type { FlexAlign } from "@/features/layout-system/types/layout";
 import { TEXT_CONSTANTS } from "@/lib/constants";
 import { getNestingDepth } from "../utils/boxHierarchy";
+import { LayoutControls } from "@/features/layout-system/components/LayoutControls";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PropertyInput = ({
   label,
@@ -193,6 +205,14 @@ export const PropertiesContent = () => {
 
         <div className="h-px bg-zinc-100" />
 
+        <PropertySection title="Layout" icon={LayoutGrid}>
+          <LayoutControls box={box} />
+        </PropertySection>
+
+        <ChildLayoutControls box={box} boxes={boxes} updateBox={updateBox} />
+
+        <div className="h-px bg-zinc-100" />
+
         <PropertySection title="Typography" icon={Type}>
           <div className="space-y-2">
             <div className="flex gap-2">
@@ -319,3 +339,62 @@ export const PropertiesContent = () => {
     </div>
   );
 };
+
+interface ChildLayoutControlsProps {
+  box: Box;
+  boxes: Box[];
+  updateBox: (id: string, updates: Partial<Box>) => void;
+}
+
+function ChildLayoutControls({
+  box,
+  boxes,
+  updateBox,
+}: ChildLayoutControlsProps) {
+  const parent = box.parentId ? boxes.find((b) => b.id === box.parentId) : null;
+  const isFlexChild = parent?.layout?.type === "flex";
+
+  if (!isFlexChild) {
+    return null;
+  }
+
+  const handleAlignSelfChange = (value: string) => {
+    const alignSelf = value === "inherit" ? undefined : (value as FlexAlign);
+    updateBox(box.id, {
+      layoutChildProps: {
+        ...box.layoutChildProps,
+        alignSelf,
+      },
+    });
+  };
+
+  return (
+    <>
+      <div className="h-px bg-zinc-100" />
+      <PropertySection title="Child Layout" icon={AlignVerticalJustifyCenter}>
+        <div className="space-y-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-500">Align Self</Label>
+            <Select
+              value={box.layoutChildProps?.alignSelf || "inherit"}
+              onValueChange={handleAlignSelfChange}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inherit">
+                  Inherit (from container)
+                </SelectItem>
+                <SelectItem value="start">Start</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="end">End</SelectItem>
+                <SelectItem value="stretch">Stretch</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </PropertySection>
+    </>
+  );
+}

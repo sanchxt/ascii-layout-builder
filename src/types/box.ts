@@ -1,3 +1,8 @@
+import type {
+  LayoutConfig,
+  BoxLayoutChildProps,
+} from "@/features/layout-system/types/layout";
+
 export type BorderStyle = "single" | "double" | "dashed";
 
 export type BoxCreationMode = "idle" | "drawing" | "resizing";
@@ -42,6 +47,8 @@ export interface Box {
   visible?: boolean;
   locked?: boolean;
   name?: string;
+  layout?: LayoutConfig;
+  layoutChildProps?: BoxLayoutChildProps;
 }
 
 export interface BoxState {
@@ -53,7 +60,6 @@ export interface BoxState {
   tempBox: Partial<Box> | null;
   clipboardBoxIds: string[];
 
-  // actions
   addBox: (box: Box) => void;
   updateBox: (id: string, updates: Partial<Box>) => void;
   deleteBox: (id: string) => void;
@@ -71,14 +77,12 @@ export interface BoxState {
   getSelectedBoxes: () => Box[];
   resetBoxes: () => void;
 
-  // nesting/hierarchy actions
   setParent: (childId: string, parentId: string) => void;
   detachFromParent: (childId: string) => void;
   groupBoxes: (boxIds: string[]) => void;
   ungroupBox: (parentId: string) => void;
   updateBoxPosition: (id: string, x: number, y: number) => void;
 
-  // alignment/distribution
   alignBoxes: (
     boxIds: string[],
     alignment: import("@/features/alignment/types/alignment").AlignmentType
@@ -88,7 +92,6 @@ export interface BoxState {
     distribution: import("@/features/alignment/types/alignment").DistributionType
   ) => void;
 
-  // layers
   toggleBoxVisibility: (id: string) => void;
   toggleBoxLock: (id: string) => void;
   updateBoxName: (id: string, name: string) => void;

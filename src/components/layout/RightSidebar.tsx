@@ -1,8 +1,9 @@
-import { Code2, Settings, Sliders } from "lucide-react";
+import { Code2, Settings, Sliders, Braces } from "lucide-react";
 import { ResizablePanel, PanelAction } from "@/components/ui/resizable-panel";
 import { Navigator } from "./Navigator";
 import { AsciiPreviewContent } from "@/features/ascii-output/components/AsciiPreviewContent";
 import { PropertiesContent } from "@/features/boxes/components/PropertiesContent";
+import { CodePreview } from "@/features/code-output/components/CodePreview";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 
 export const RightSidebar = () => {
@@ -13,12 +14,22 @@ export const RightSidebar = () => {
     <aside className="w-80 flex flex-col border-l border-zinc-200/80 bg-linear-to-b from-zinc-50 to-zinc-100/50 overflow-hidden">
       <ResizablePanel
         id="preview"
-        title="Preview"
+        title="ASCII Preview"
         icon={Code2}
         collapsible={true}
         showDivider={true}
       >
         <AsciiPreviewContent />
+      </ResizablePanel>
+
+      <ResizablePanel
+        id="code"
+        title="Code Output"
+        icon={Braces}
+        collapsible={true}
+        showDivider={true}
+      >
+        <CodePreview />
       </ResizablePanel>
 
       <Navigator />

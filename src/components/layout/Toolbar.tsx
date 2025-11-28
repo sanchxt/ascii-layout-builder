@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Save, Share2, Undo2, Redo2 } from "lucide-react";
+import { LayoutToolbarMenu } from "@/features/commands/components/LayoutToolbarMenu";
 
 export const Toolbar = () => {
   return (
     <div className="h-14 border-b border-zinc-200 bg-white flex items-center justify-between px-4 z-50 relative">
-      {/* Left: Branding & File Info */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-zinc-900">
           <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center">
@@ -14,6 +14,10 @@ export const Toolbar = () => {
             WARPSCEW
           </span>
         </div>
+
+        <div className="h-6 w-px bg-zinc-200 mx-2" />
+
+        <LayoutToolbarMenu />
 
         <div className="h-6 w-px bg-zinc-200 mx-2" />
 
@@ -27,7 +31,6 @@ export const Toolbar = () => {
         </div>
       </div>
 
-      {/* Center: History (Visual placeholder) */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 bg-zinc-50 p-1 rounded-lg border border-zinc-200">
         <Button
           variant="ghost"
@@ -47,7 +50,6 @@ export const Toolbar = () => {
         </Button>
       </div>
 
-      {/* Right: Actions */}
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"

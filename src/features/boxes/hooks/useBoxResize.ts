@@ -3,9 +3,20 @@ import type { Box, ResizeHandle } from "@/types/box";
 import type { CanvasPosition } from "@/types/canvas";
 import { calculateResizedBox } from "../utils/boxGeometry";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { useBoxStore } from "../store/boxStore";
 import { screenToCanvas } from "@/features/canvas/utils/coordinateTransform";
 import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS } from "@/lib/constants";
+import {
+  constrainLayoutResize,
+  constrainMultiLayoutResize,
+  getSelectedLayoutSiblings,
+  isLayoutChild,
+} from "@/features/layout-system/lib/layoutConstraints";
+import {
+  batchUpdateBoxes,
+  recalculateLayout,
+} from "@/features/layout-system/store/layoutStore";
 
 export const useBoxResize = (
   box: Box,
@@ -13,6 +24,8 @@ export const useBoxResize = (
   getCanvasBounds: () => DOMRect | null
 ) => {
   const { viewport } = useCanvasStore();
+  const allBoxes = useBoxStore((state) => state.boxes);
+  const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
   const resizingRef = useRef<{
     handle: ResizeHandle;
     startPoint: CanvasPosition;
@@ -76,9 +89,47 @@ export const useBoxResize = (
         );
       }
 
+      if (isLayoutChild(box.id, allBoxes)) {
+        const selectedSiblings = getSelectedLayoutSiblings(
+          box.id,
+          selectedBoxIds,
+          allBoxes
+        );
+
+        if (selectedSiblings.length > 1) {
+          const constraintResult = constrainMultiLayoutResize(
+            selectedSiblings.map((b) => b.id),
+            { width: resizedBox.width, height: resizedBox.height },
+            allBoxes
+          );
+
+          if (constraintResult.updates.length > 0) {
+            batchUpdateBoxes(constraintResult.updates);
+            if (constraintResult.layoutParent) {
+              recalculateLayout(constraintResult.layoutParent.id);
+            }
+            return;
+          }
+        } else {
+          const constraintResult = constrainLayoutResize(
+            box.id,
+            { width: resizedBox.width, height: resizedBox.height },
+            allBoxes
+          );
+
+          if (
+            constraintResult.isLayoutChild &&
+            constraintResult.updates.length > 0
+          ) {
+            batchUpdateBoxes(constraintResult.updates);
+            return;
+          }
+        }
+      }
+
       onUpdate(box.id, resizedBox);
     },
-    [box.id, onUpdate, viewport, getCanvasBounds]
+    [box.id, onUpdate, viewport, getCanvasBounds, allBoxes, selectedBoxIds]
   );
 
   const handleMouseUp = useCallback(() => {
