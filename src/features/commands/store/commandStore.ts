@@ -21,7 +21,7 @@ const initialInlineState = {
 
 export const useCommandStore = create<CommandStore>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       ...initialPaletteState,
 
       open: () =>

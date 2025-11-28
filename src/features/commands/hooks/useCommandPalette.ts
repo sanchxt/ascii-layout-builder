@@ -49,7 +49,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     setLayoutTarget,
   } = store;
 
-  const { executeLayoutCommand, canGenerateLayout, getLayoutTarget } =
+  const { executeLayoutCommand, getLayoutTarget } =
     useLayoutGeneration();
   const setSelectedTool = useCanvasStore((state) => state.setSelectedTool);
 
@@ -63,13 +63,16 @@ export function useCommandPalette(): UseCommandPaletteReturn {
         return;
       }
 
-      executeLayoutCommand(
-        config.type === "flex"
-          ? `flex ${config.direction} ${count}`
-          : `grid ${config.columns}x${config.rows}`,
-        targetId,
-        targetType
-      );
+      let command: string;
+      if (config.type === "flex") {
+        command = `flex ${config.direction} ${count}`;
+      } else if (config.type === "grid") {
+        command = `grid ${config.columns}x${config.rows}`;
+      } else {
+        return;
+      }
+
+      executeLayoutCommand(command, targetId, targetType);
       close();
     });
 

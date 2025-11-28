@@ -33,7 +33,6 @@ export function CommandPalette() {
     layoutSuggestions,
     close,
     setQuery,
-    executeSelected,
     executeCommand,
     switchToLayoutMode,
   } = useCommandPalette();

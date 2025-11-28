@@ -9,7 +9,7 @@ export function generateHTML(
   options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
 ): string {
   const opts = { ...DEFAULT_CODE_OPTIONS, ...options };
-  const { indent, includeComments } = opts;
+  const { includeComments } = opts;
 
   const rootBoxes = boxes
     .filter((box) => !box.parentId)

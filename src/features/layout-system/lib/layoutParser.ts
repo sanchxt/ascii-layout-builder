@@ -9,6 +9,9 @@ import { DEFAULT_FLEX_LAYOUT, DEFAULT_GRID_LAYOUT } from "../types/layout";
 export interface ParsedLayoutCommand {
   type: "flex" | "grid";
   direction?: FlexDirection;
+  count?: number;
+  columns?: number;
+  rows?: number;
   gap?: number;
   valid: boolean;
   error?: string;

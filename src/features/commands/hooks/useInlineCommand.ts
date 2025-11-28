@@ -12,7 +12,7 @@ export function useInlineCommand() {
   const getBox = useBoxStore((state) => state.getBox);
   const activeArtboardId = useArtboardStore((state) => state.activeArtboardId);
   const getArtboard = useArtboardStore((state) => state.getArtboard);
-  const pan = useCanvasStore((state) => state.viewport.pan);
+  const position = useCanvasStore((state) => state.viewport.position);
   const zoom = useCanvasStore((state) => state.viewport.zoom);
   const editingBoxId = useCanvasStore(
     (state) => state.interaction.editingBoxId
@@ -25,8 +25,8 @@ export function useInlineCommand() {
       const box = getBox(selectedBoxIds[0]);
       if (box) {
         const absolutePos = getAbsolutePosition(box, boxes);
-        const screenX = (absolutePos.x + box.width / 2) * zoom + pan.x - 140;
-        const screenY = (absolutePos.y + 40) * zoom + pan.y;
+        const screenX = (absolutePos.x + box.width / 2) * zoom + position.x - 140;
+        const screenY = (absolutePos.y + 40) * zoom + position.y;
 
         inlineActions.activate(box.id, "box", { x: screenX, y: screenY });
         return;
@@ -36,8 +36,8 @@ export function useInlineCommand() {
     if (activeArtboardId) {
       const artboard = getArtboard(activeArtboardId);
       if (artboard) {
-        const screenX = (artboard.x + artboard.width / 2) * zoom + pan.x - 140;
-        const screenY = (artboard.y + 60) * zoom + pan.y;
+        const screenX = (artboard.x + artboard.width / 2) * zoom + position.x - 140;
+        const screenY = (artboard.y + 60) * zoom + position.y;
 
         inlineActions.activate(artboard.id, "artboard", {
           x: screenX,
@@ -52,7 +52,7 @@ export function useInlineCommand() {
     boxes,
     getBox,
     getArtboard,
-    pan,
+    position,
     zoom,
     editingBoxId,
     inlineActions,

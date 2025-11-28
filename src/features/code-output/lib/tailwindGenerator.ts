@@ -13,7 +13,7 @@ export function generateTailwind(
   options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
 ): string {
   const opts = { ...DEFAULT_CODE_OPTIONS, ...options };
-  const { indent, includeComments } = opts;
+  const { includeComments } = opts;
 
   const relevantBoxes = artboard
     ? boxes.filter((box) => box.artboardId === artboard.id)

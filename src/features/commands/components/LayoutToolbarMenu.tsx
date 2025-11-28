@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, ChevronDown, Columns, Grid, Rows } from "lucide-react";
 import { LAYOUT_PRESETS } from "@/features/layout-system/types/layout";
 import { useLayoutGeneration } from "@/features/layout-system/hooks/useLayoutGeneration";
+import { useCommandStore } from "../store/commandStore";
 import { cn } from "@/lib/utils";
 
 export function LayoutToolbarMenu() {
@@ -37,10 +38,14 @@ export function LayoutToolbarMenu() {
   }, [isOpen]);
 
   const handlePresetClick = (preset: (typeof LAYOUT_PRESETS)[number]) => {
-    const command =
-      preset.config.type === "flex"
-        ? `flex ${preset.config.direction} ${preset.childCount}`
-        : `grid ${preset.config.columns}x${preset.config.rows}`;
+    let command: string;
+    if (preset.config.type === "flex") {
+      command = `flex ${preset.config.direction} ${preset.childCount}`;
+    } else if (preset.config.type === "grid") {
+      command = `grid ${preset.config.columns}x${preset.config.rows}`;
+    } else {
+      return;
+    }
 
     const result = executeLayoutCommand(command);
     if (result.success) {
@@ -137,9 +142,7 @@ export function LayoutToolbarMenu() {
             <button
               onClick={() => {
                 setIsOpen(false);
-                const { setMode, open } = useCommandStore.getState
-                  ? require("../store/commandStore").useCommandStore.getState()
-                  : { setMode: () => {}, open: () => {} };
+                const { setMode, open } = useCommandStore.getState();
                 open();
                 setMode("layout");
               }}
@@ -155,6 +158,3 @@ export function LayoutToolbarMenu() {
     </div>
   );
 }
-
-// Need to import useCommandStore at runtime to avoid circular deps
-import { useCommandStore } from "../store/commandStore";
