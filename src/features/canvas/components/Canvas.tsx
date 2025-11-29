@@ -23,7 +23,6 @@ import {
   useArtboardStore,
   setArtboardRecordSnapshotFn,
 } from "@/features/artboards/store/artboardStore";
-import { useArtboardCreation } from "@/features/artboards/hooks/useArtboardCreation";
 import { useArtboardDrag } from "@/features/artboards/hooks/useArtboardDrag";
 import { useArtboardSelection } from "@/features/artboards/hooks/useArtboardSelection";
 import { useArtboardShortcuts } from "@/features/artboards/hooks/useArtboardShortcuts";
@@ -60,7 +59,6 @@ export const Canvas = ({ children }: CanvasProps) => {
   const updateBox = useBoxStore((state) => state.updateBox);
   const selectBox = useBoxStore((state) => state.selectBox);
   const artboards = useArtboardStore((state) => state.artboards);
-  const { createDesktop } = useArtboardCreation();
   const { isArtboardSelected } = useArtboardSelection();
   const {
     handleMouseDown: handlePanMouseDown,
@@ -84,7 +82,6 @@ export const Canvas = ({ children }: CanvasProps) => {
   const [isDrawingSelection, setIsDrawingSelection] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const hasInitialized = useRef(false);
 
   useToolShortcuts();
   useLayerKeyboardShortcuts();
@@ -93,13 +90,6 @@ export const Canvas = ({ children }: CanvasProps) => {
   useHistory();
   useAlignment();
   useDistribution();
-
-  useEffect(() => {
-    if (!hasInitialized.current && artboards.length === 0) {
-      createDesktop();
-      hasInitialized.current = true;
-    }
-  }, [artboards.length, createDesktop]);
 
   const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 

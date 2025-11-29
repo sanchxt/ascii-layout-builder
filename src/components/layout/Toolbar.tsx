@@ -61,7 +61,7 @@ export const Toolbar = () => {
           to="/releases"
           className="hidden sm:inline-flex px-2 py-1 text-xs font-mono text-zinc-400 hover:text-zinc-600 transition-colors"
         >
-          v0.1.6
+          v0.1.7
         </Link>
         <Button
           variant="ghost"

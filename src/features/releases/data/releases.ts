@@ -2,6 +2,16 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.1.7",
+    date: "Nov 30, 2025",
+    changes: [
+      {
+        text: "Empty canvas on first load (no auto-created artboard)",
+        category: "change",
+      },
+    ],
+  },
+  {
     version: "0.1.6",
     date: "Nov 29, 2025",
     changes: [

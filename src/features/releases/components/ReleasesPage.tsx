@@ -8,6 +8,7 @@ const categoryStyles: Record<ChangeCategory, string> = {
   fix: "bg-amber-100 text-amber-700",
   improvement: "bg-blue-100 text-blue-700",
   breaking: "bg-red-100 text-red-700",
+  change: "bg-purple-100 text-purple-700",
 };
 
 function CategoryBadge({ category }: { category: ChangeCategory }) {
@@ -32,7 +33,10 @@ function ReleaseEntry({ release }: { release: Release }) {
 
       <ul className="space-y-2">
         {release.changes.map((change, i) => (
-          <li key={i} className="grid grid-cols-[80px_1fr] items-start gap-2.5 text-sm">
+          <li
+            key={i}
+            className="grid grid-cols-[80px_1fr] items-start gap-2.5 text-sm"
+          >
             <CategoryBadge category={change.category} />
             <span className="text-zinc-600">{change.text}</span>
           </li>

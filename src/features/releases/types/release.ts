@@ -1,4 +1,9 @@
-export type ChangeCategory = "feature" | "fix" | "improvement" | "breaking";
+export type ChangeCategory =
+  | "feature"
+  | "fix"
+  | "improvement"
+  | "breaking"
+  | "change";
 
 export interface ReleaseChange {
   text: string;
