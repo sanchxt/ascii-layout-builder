@@ -109,7 +109,6 @@ export const BoxPropertiesPanel = () => {
 
   return (
     <div className="p-4 space-y-6">
-      {/* Layout Section */}
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <InputGroup label="Position">
@@ -160,7 +159,6 @@ export const BoxPropertiesPanel = () => {
 
       <div className="h-px bg-zinc-100" />
 
-      {/* Appearance Section */}
       <InputGroup label="Border Style">
         <div className="flex bg-zinc-50 p-1 rounded-md border border-zinc-200">
           {(["single", "double", "dashed"] as BorderStyle[]).map((style) => (
@@ -182,7 +180,6 @@ export const BoxPropertiesPanel = () => {
 
       <div className="h-px bg-zinc-100" />
 
-      {/* Typography Section */}
       <InputGroup label="Typography">
         <div className="space-y-3">
           <div className="flex gap-2">
@@ -249,7 +246,6 @@ export const BoxPropertiesPanel = () => {
 
       <div className="h-px bg-zinc-100" />
 
-      {/* Hierarchy & Actions */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-zinc-700">

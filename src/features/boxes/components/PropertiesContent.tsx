@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   AlignLeft,
   AlignCenter,
@@ -15,13 +15,24 @@ import {
   Type,
   LayoutGrid,
   AlignVerticalJustifyCenter,
+  Settings2,
+  Columns,
+  ArrowRight,
+  ArrowDown,
 } from "lucide-react";
 import { useBoxStore } from "../store/boxStore";
+import { useSidebarUIStore } from "@/components/layout/store/sidebarUIStore";
 import type { BorderStyle, Box } from "@/types/box";
-import type { FlexAlign } from "@/features/layout-system/types/layout";
+import type {
+  FlexAlign,
+  LayoutConfig,
+} from "@/features/layout-system/types/layout";
+import {
+  DEFAULT_FLEX_LAYOUT,
+  DEFAULT_GRID_LAYOUT,
+} from "@/features/layout-system/types/layout";
 import { TEXT_CONSTANTS } from "@/lib/constants";
 import { getNestingDepth } from "../utils/boxHierarchy";
-import { LayoutControls } from "@/features/layout-system/components/LayoutControls";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import {
@@ -205,9 +216,7 @@ export const PropertiesContent = () => {
 
         <div className="h-px bg-zinc-100" />
 
-        <PropertySection title="Layout" icon={LayoutGrid}>
-          <LayoutControls box={box} />
-        </PropertySection>
+        <CompactLayoutSection box={box} updateBox={updateBox} />
 
         <ChildLayoutControls box={box} boxes={boxes} updateBox={updateBox} />
 
@@ -339,6 +348,126 @@ export const PropertiesContent = () => {
     </div>
   );
 };
+
+interface CompactLayoutSectionProps {
+  box: Box;
+  updateBox: (id: string, updates: Partial<Box>) => void;
+}
+
+function CompactLayoutSection({ box, updateBox }: CompactLayoutSectionProps) {
+  const openLayoutPanel = useSidebarUIStore((state) => state.openLayoutPanel);
+
+  const handleLayoutTypeChange = useCallback(
+    (type: "none" | "flex" | "grid") => {
+      if (type === "none") {
+        updateBox(box.id, { layout: undefined });
+      } else if (type === "flex") {
+        updateBox(box.id, { layout: DEFAULT_FLEX_LAYOUT });
+      } else if (type === "grid") {
+        updateBox(box.id, { layout: DEFAULT_GRID_LAYOUT });
+      }
+    },
+    [box.id, updateBox]
+  );
+
+  const layoutType = box.layout?.type || "none";
+  const hasLayout = layoutType !== "none";
+
+  const getLayoutSummary = () => {
+    if (!box.layout) return null;
+    if (box.layout.type === "flex") {
+      const dir = box.layout.direction === "row" ? "Row" : "Column";
+      return `${dir} • Gap: ${box.layout.gap}px`;
+    }
+    if (box.layout.type === "grid") {
+      return `${box.layout.columns}×${box.layout.rows} • Gap: ${box.layout.gap}px`;
+    }
+    return null;
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <LayoutGrid className="w-3 h-3 text-zinc-400" />
+          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+            Layout
+          </span>
+        </div>
+        {hasLayout && (
+          <button
+            onClick={() => openLayoutPanel(box.id)}
+            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+          >
+            <Settings2 className="w-3 h-3" />
+            Edit
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-lg">
+        <button
+          onClick={() => handleLayoutTypeChange("none")}
+          className={cn(
+            "flex-1 py-1.5 text-[10px] font-medium rounded-md transition-all",
+            layoutType === "none"
+              ? "bg-white text-zinc-800 shadow-sm"
+              : "text-zinc-500 hover:text-zinc-700"
+          )}
+        >
+          None
+        </button>
+        <button
+          onClick={() => handleLayoutTypeChange("flex")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium rounded-md transition-all",
+            layoutType === "flex"
+              ? "bg-white text-zinc-800 shadow-sm"
+              : "text-zinc-500 hover:text-zinc-700"
+          )}
+        >
+          <Columns className="w-3 h-3" />
+          Flex
+        </button>
+        <button
+          onClick={() => handleLayoutTypeChange("grid")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium rounded-md transition-all",
+            layoutType === "grid"
+              ? "bg-white text-zinc-800 shadow-sm"
+              : "text-zinc-500 hover:text-zinc-700"
+          )}
+        >
+          <LayoutGrid className="w-3 h-3" />
+          Grid
+        </button>
+      </div>
+
+      {hasLayout && (
+        <div
+          onClick={() => openLayoutPanel(box.id)}
+          className="flex items-center gap-2 px-2.5 py-2 bg-zinc-50 rounded-lg border border-zinc-100 cursor-pointer hover:bg-zinc-100 transition-colors"
+        >
+          {box.layout?.type === "flex" && (
+            <>
+              {box.layout.direction === "row" ? (
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+              ) : (
+                <ArrowDown className="w-3.5 h-3.5 text-zinc-400" />
+              )}
+            </>
+          )}
+          {box.layout?.type === "grid" && (
+            <LayoutGrid className="w-3.5 h-3.5 text-zinc-400" />
+          )}
+          <span className="text-[11px] text-zinc-600">
+            {getLayoutSummary()}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ChildLayoutControlsProps {
   box: Box;

@@ -67,7 +67,6 @@ export const ArtboardControls = () => {
 
   return (
     <div className="p-4 space-y-4 bg-zinc-50/50">
-      {/* Active Artboard Indicator */}
       {activeArtboard && (
         <div className="flex items-center gap-3 px-3 py-2 bg-white border border-blue-100 rounded-lg shadow-sm">
           <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center shrink-0">

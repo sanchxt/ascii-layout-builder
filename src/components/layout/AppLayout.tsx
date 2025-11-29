@@ -11,7 +11,6 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       <Toolbar />
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Canvas Area (Children includes the floating LeftSidebar) */}
         <div className="flex-1 relative h-full w-full overflow-hidden">
           {children}
         </div>

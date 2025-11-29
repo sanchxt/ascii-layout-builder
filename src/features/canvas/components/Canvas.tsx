@@ -36,7 +36,7 @@ import { SmartGuides } from "@/features/alignment/components/SmartGuides";
 import { SelectionRectangle } from "./SelectionRectangle";
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasControls } from "./CanvasControls";
-import { LeftSidebar } from "@/components/layout/LeftSidebar"; // Moved here
+import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { screenToCanvas } from "../utils/coordinateTransform";
 import {
   getRootBoxes,
@@ -103,9 +103,6 @@ export const Canvas = ({ children }: CanvasProps) => {
 
   const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 
-  // ... [Keep existing drag logic hooks: useBoxDrag, useArtboardDrag] ...
-  // For brevity in this response, assume the complex drag logic
-  // (lines 103-242 of your original file) remains exactly the same here.
   const {
     dragState,
     startDrag,
@@ -117,7 +114,6 @@ export const Canvas = ({ children }: CanvasProps) => {
     initialAbsolutePositions,
   } = useBoxDrag({
     onDragEnd: (draggedBoxIds, finalDelta) => {
-      // ... existing logic ...
       draggedBoxIds.forEach((id) => {
         const box = boxes.find((b) => b.id === id);
         if (!box) return;
@@ -623,7 +619,6 @@ export const Canvas = ({ children }: CanvasProps) => {
         </div>
       </div>
 
-      {/* Floating UI Elements */}
       <LeftSidebar />
       <CanvasControls />
     </div>

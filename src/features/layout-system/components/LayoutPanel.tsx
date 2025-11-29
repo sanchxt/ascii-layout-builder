@@ -1,0 +1,66 @@
+import { useMemo } from "react";
+import { LayoutGrid, Columns } from "lucide-react";
+import { SubPanelDrawer } from "@/components/ui/slide-over-drawer";
+import { useSidebarUIStore } from "@/components/layout/store/sidebarUIStore";
+import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { LayoutControls } from "./LayoutControls";
+
+export const LayoutPanel = () => {
+  const isOpen = useSidebarUIStore((state) => state.layoutPanelOpen);
+  const boxId = useSidebarUIStore((state) => state.layoutPanelBoxId);
+  const closePanel = useSidebarUIStore((state) => state.closeLayoutPanel);
+
+  const boxes = useBoxStore((state) => state.boxes);
+
+  const box = useMemo(() => {
+    if (!boxId) return null;
+    return boxes.find((b) => b.id === boxId) || null;
+  }, [boxId, boxes]);
+
+  const layoutType = box?.layout?.type;
+  const title =
+    layoutType === "flex"
+      ? "Flex Layout"
+      : layoutType === "grid"
+      ? "Grid Layout"
+      : "Layout Settings";
+
+  const Icon = layoutType === "grid" ? LayoutGrid : Columns;
+
+  return (
+    <SubPanelDrawer
+      isOpen={isOpen}
+      onClose={closePanel}
+      width={300}
+      showBackdrop={true}
+      closeOnBackdropClick={true}
+      closeOnEscape={true}
+    >
+      <div className="h-full flex flex-col">
+        <div className="shrink-0 px-4 py-3 border-b border-zinc-200 bg-linear-to-b from-zinc-50 to-white">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Icon className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-800">{title}</h2>
+              {box && (
+                <p className="text-[10px] text-zinc-400 font-mono">{box.id}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+          {box ? (
+            <LayoutControls box={box} />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center text-zinc-400">
+              <p className="text-sm">No box selected</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </SubPanelDrawer>
+  );
+};

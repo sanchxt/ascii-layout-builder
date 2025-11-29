@@ -55,13 +55,12 @@ export const ArtboardLabel: FC<ArtboardLabelProps> = ({
     }
   }, [isEditing]);
 
-  // Calculate positions relative to zoom
   const labelHeight = 24 / zoom;
   const labelY = artboard.y - labelHeight - 4 / zoom;
   const fontSize = 12 / zoom;
   const padding = 6 / zoom;
 
-  const textColor = isSelected ? "#3b82f6" : "#71717a"; // blue-500 : zinc-500
+  const textColor = isSelected ? "#3b82f6" : "#71717a";
 
   return (
     <g data-artboard-label>

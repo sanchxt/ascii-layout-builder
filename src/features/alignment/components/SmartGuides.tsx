@@ -31,7 +31,7 @@ export function SmartGuides({
 
 function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
   const isVertical = guide.type === "vertical";
-  const color = "#ec4899"; // Pink-500 (Standard smart guide color)
+  const color = "#ec4899";
 
   const style: React.CSSProperties = isVertical
     ? {
@@ -58,7 +58,7 @@ function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
 
 function SpacingGuideLine({ guide }: { guide: SpacingGuide }) {
   const { startPoint, endPoint, distance } = guide;
-  const color = "#f43f5e"; // Rose-500
+  const color = "#f43f5e";
 
   const midpoint = {
     x: (startPoint.x + endPoint.x) / 2,
@@ -86,7 +86,6 @@ function SpacingGuideLine({ guide }: { guide: SpacingGuide }) {
           strokeWidth="1"
         />
 
-        {/* Endpoints */}
         <rect
           x={startPoint.x - 2}
           y={startPoint.y - 2}

@@ -22,7 +22,6 @@ export const PanelTabs = ({
 }: PanelTabsProps) => {
   return (
     <div className="flex flex-col h-full">
-      {/* Tab Bar */}
       <div className="shrink-0 px-2 py-1.5 bg-zinc-50/50 border-b border-zinc-100">
         <div className="flex gap-0.5 p-0.5 bg-zinc-100/80 rounded-lg">
           {tabs.map((tab) => (
@@ -55,13 +54,11 @@ export const PanelTabs = ({
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
     </div>
   );
 };
 
-// Individual tab panel wrapper for animation
 interface TabPanelProps {
   isActive: boolean;
   children: ReactNode;

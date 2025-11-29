@@ -87,13 +87,12 @@ export const ResizablePanel = ({
         transition: isDragging ? "none" : "height 200ms ease-out",
       }}
     >
-      {/* Panel Header */}
       <div
         onClick={handleHeaderClick}
         className={cn(
           "h-11 px-3 flex items-center justify-between shrink-0",
           "border-b border-zinc-100",
-          "bg-gradient-to-b from-zinc-50/80 to-white/60",
+          "bg-linear-to-b from-zinc-50/80 to-white/60",
           collapsible && "cursor-pointer hover:bg-zinc-50/80 transition-colors"
         )}
       >
@@ -130,24 +129,21 @@ export const ResizablePanel = ({
         )}
       </div>
 
-      {/* Panel Content */}
       {!isCollapsed && (
         <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
       )}
 
-      {/* Resize Handle */}
       {showDivider && !isCollapsed && (
         <div
           onMouseDown={handleMouseDown}
           className={cn(
             "h-1.5 shrink-0 cursor-ns-resize group relative",
-            "bg-gradient-to-b from-zinc-100/50 to-zinc-200/50",
+            "bg-linear-to-b from-zinc-100/50 to-zinc-200/50",
             "hover:from-blue-100 hover:to-blue-200",
             "transition-colors duration-150",
             isDragging && "from-blue-200 to-blue-300"
           )}
         >
-          {/* Drag indicator */}
           <div
             className={cn(
               "absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 mx-auto w-8 rounded-full",
@@ -161,7 +157,6 @@ export const ResizablePanel = ({
   );
 };
 
-// Header action button component for consistency
 interface PanelActionProps {
   icon: LucideIcon;
   onClick: () => void;

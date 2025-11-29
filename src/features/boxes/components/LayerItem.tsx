@@ -14,7 +14,6 @@ import { useBoxStore } from "../store/boxStore";
 import { useLayersUIStore } from "../store/layersUIStore";
 import { cn } from "@/lib/utils";
 
-// ... [Keep interfaces DragStateType, LayerItemProps] ...
 interface DragStateType {
   draggedBoxId: string | null;
   dropTargetBoxId: string | null;
@@ -80,7 +79,6 @@ export const LayerItem = ({
 
   const displayName = getDisplayName();
 
-  // ... [Keep event handlers: handleDoubleClick, handleEditComplete, etc.] ...
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEditValue(box.name || "");
@@ -162,7 +160,6 @@ export const LayerItem = ({
 
   return (
     <div className="select-none relative">
-      {/* Indentation Guide Lines */}
       {depth > 0 && (
         <div
           className="absolute top-0 bottom-0 border-l border-zinc-200"
@@ -195,7 +192,6 @@ export const LayerItem = ({
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
       >
-        {/* Expand/Collapse */}
         <div className="w-5 h-5 flex items-center justify-center shrink-0 mr-1">
           {hasChildren ? (
             <button
@@ -211,7 +207,6 @@ export const LayerItem = ({
           ) : null}
         </div>
 
-        {/* Icon */}
         {box.text.value ? (
           <Type
             className={cn(
@@ -228,7 +223,6 @@ export const LayerItem = ({
           />
         )}
 
-        {/* Name Input/Label */}
         <div className="flex-1 min-w-0 mr-2">
           {isEditing ? (
             <input
@@ -248,7 +242,6 @@ export const LayerItem = ({
           )}
         </div>
 
-        {/* Action Buttons (Hover only) */}
         <div
           className={cn(
             "flex items-center gap-1 transition-opacity",

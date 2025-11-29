@@ -78,7 +78,6 @@ export const Artboard: FC<ArtboardProps> = ({
         zIndex: artboard.zIndex,
       }}
     >
-      {/* Artboard Label */}
       <div
         data-artboard-label
         className={cn(
@@ -112,7 +111,6 @@ export const Artboard: FC<ArtboardProps> = ({
         )}
       </div>
 
-      {/* Artboard Surface */}
       <div
         data-artboard-boundary
         className={cn(
@@ -130,7 +128,6 @@ export const Artboard: FC<ArtboardProps> = ({
             : "default",
         }}
       >
-        {/* Grid/Pattern for empty artboards could go here */}
         {artboard.locked && (
           <div
             className="absolute inset-0"

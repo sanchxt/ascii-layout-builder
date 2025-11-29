@@ -49,7 +49,6 @@ export const CanvasControls = () => {
 
   return (
     <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-40">
-      {/* View Controls */}
       <div className="bg-white rounded-xl shadow-lg border border-zinc-200/80 p-1.5 flex flex-col gap-1 backdrop-blur-sm">
         <ControlButton onClick={zoomIn} disabled={!canZoomIn} title="Zoom In">
           <ZoomIn className="h-4 w-4" />
@@ -72,7 +71,6 @@ export const CanvasControls = () => {
         </ControlButton>
       </div>
 
-      {/* Toggle Controls */}
       <div className="bg-white rounded-xl shadow-lg border border-zinc-200/80 p-1.5 flex flex-col gap-1 backdrop-blur-sm">
         <ControlButton onClick={resetZoom} title="Fit to Screen">
           <Maximize2 className="h-4 w-4" />

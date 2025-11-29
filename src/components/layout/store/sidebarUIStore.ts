@@ -10,31 +10,30 @@ interface PanelConfig {
 }
 
 interface SidebarUIState {
-  // Panel heights (percentage-based for flexibility)
   panelHeights: Record<string, number>;
 
-  // Collapsed state
   collapsedPanels: Set<string>;
 
-  // Navigator tab
   activeNavigatorTab: NavigatorTab;
 
-  // Actions
+  layoutPanelOpen: boolean;
+  layoutPanelBoxId: string | null;
+
   setPanelHeight: (id: string, height: number) => void;
   togglePanel: (id: string) => void;
   setCollapsed: (id: string, collapsed: boolean) => void;
   setNavigatorTab: (tab: NavigatorTab) => void;
   isPanelCollapsed: (id: string) => boolean;
+  openLayoutPanel: (boxId: string) => void;
+  closeLayoutPanel: () => void;
 }
 
-// Default panel heights (in pixels)
 const DEFAULT_HEIGHTS: Record<string, number> = {
   preview: 280,
   navigator: 300,
   properties: 320,
 };
 
-// Panel constraints
 export const PANEL_CONSTRAINTS: Record<string, PanelConfig> = {
   preview: { height: 280, minHeight: 120, maxHeight: 500 },
   navigator: { height: 300, minHeight: 150, maxHeight: 600 },
@@ -47,6 +46,8 @@ export const useSidebarUIStore = create<SidebarUIState>()(
       panelHeights: DEFAULT_HEIGHTS,
       collapsedPanels: new Set<string>(),
       activeNavigatorTab: "layers",
+      layoutPanelOpen: false,
+      layoutPanelBoxId: null,
 
       setPanelHeight: (id, height) => {
         const constraints = PANEL_CONSTRAINTS[id];
@@ -95,6 +96,14 @@ export const useSidebarUIStore = create<SidebarUIState>()(
 
       isPanelCollapsed: (id) => {
         return get().collapsedPanels.has(id);
+      },
+
+      openLayoutPanel: (boxId) => {
+        set({ layoutPanelOpen: true, layoutPanelBoxId: boxId });
+      },
+
+      closeLayoutPanel: () => {
+        set({ layoutPanelOpen: false, layoutPanelBoxId: null });
       },
     }),
     {

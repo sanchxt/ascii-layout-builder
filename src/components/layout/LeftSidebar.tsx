@@ -56,7 +56,6 @@ export const LeftSidebar = () => {
                 <tool.icon className="h-5 w-5" />
               </Button>
 
-              {/* Tooltip */}
               <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                 {tool.label}{" "}
                 <span className="text-zinc-500 ml-1">{tool.shortcut}</span>
