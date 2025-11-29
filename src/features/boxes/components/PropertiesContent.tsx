@@ -23,10 +23,7 @@ import {
 import { useBoxStore } from "../store/boxStore";
 import { useSidebarUIStore } from "@/components/layout/store/sidebarUIStore";
 import type { BorderStyle, Box } from "@/types/box";
-import type {
-  FlexAlign,
-  LayoutConfig,
-} from "@/features/layout-system/types/layout";
+import type { FlexAlign } from "@/features/layout-system/types/layout";
 import {
   DEFAULT_FLEX_LAYOUT,
   DEFAULT_GRID_LAYOUT,
