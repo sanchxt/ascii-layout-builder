@@ -13,7 +13,7 @@ const categoryStyles: Record<ChangeCategory, string> = {
 function CategoryBadge({ category }: { category: ChangeCategory }) {
   return (
     <span
-      className={`shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded ${categoryStyles[category]}`}
+      className={`justify-self-start px-1.5 py-0.5 text-[10px] font-medium rounded ${categoryStyles[category]}`}
     >
       {category}
     </span>
@@ -32,7 +32,7 @@ function ReleaseEntry({ release }: { release: Release }) {
 
       <ul className="space-y-2">
         {release.changes.map((change, i) => (
-          <li key={i} className="flex items-start gap-2.5 text-sm">
+          <li key={i} className="grid grid-cols-[80px_1fr] items-start gap-2.5 text-sm">
             <CategoryBadge category={change.category} />
             <span className="text-zinc-600">{change.text}</span>
           </li>

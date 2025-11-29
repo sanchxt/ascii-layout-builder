@@ -25,6 +25,10 @@ export const releases: Release[] = [
         text: "Output toggle button in toolbar",
         category: "improvement",
       },
+      {
+        text: "Release notes badge alignment",
+        category: "fix",
+      },
     ],
   },
   {
