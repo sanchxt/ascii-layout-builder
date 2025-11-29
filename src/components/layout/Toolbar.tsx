@@ -1,8 +1,14 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Save, Share2, Undo2, Redo2 } from "lucide-react";
+import { Save, Share2, Undo2, Redo2, Code2 } from "lucide-react";
 import { LayoutToolbarMenu } from "@/features/commands/components/LayoutToolbarMenu";
+import { useOutputDrawerStore } from "@/features/output-drawer/store/outputDrawerStore";
+import { cn } from "@/lib/utils";
 
 export const Toolbar = () => {
+  const isOutputOpen = useOutputDrawerStore((state) => state.isOpen);
+  const toggleOutput = useOutputDrawerStore((state) => state.toggle);
+
   return (
     <div className="h-14 border-b border-zinc-200 bg-white flex items-center justify-between px-4 z-50 relative">
       <div className="flex items-center gap-4">
@@ -51,6 +57,27 @@ export const Toolbar = () => {
       </div>
 
       <div className="flex items-center gap-2">
+        <Link
+          to="/releases"
+          className="hidden sm:inline-flex px-2 py-1 text-xs font-mono text-zinc-400 hover:text-zinc-600 transition-colors"
+        >
+          v0.1.6
+        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleOutput}
+          className={cn(
+            "transition-colors",
+            isOutputOpen
+              ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+              : "text-zinc-600 hover:text-zinc-900"
+          )}
+          title="Toggle Output Panel"
+        >
+          <Code2 className="h-4 w-4 mr-2" />
+          Output
+        </Button>
         <Button
           variant="ghost"
           size="sm"
