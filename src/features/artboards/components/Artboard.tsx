@@ -1,6 +1,7 @@
 import { type FC, useMemo } from "react";
 import type { Artboard as ArtboardType } from "@/types/artboard";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useArtboardStore } from "../store/artboardStore";
 import { getBoxesInArtboard, getBoxOverflow } from "../utils/artboardHelpers";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,9 @@ export const Artboard: FC<ArtboardProps> = ({
 }) => {
   const selectArtboard = useArtboardStore((state) => state.selectArtboard);
   const boxes = useBoxStore((state) => state.boxes);
+  const isSpacebarPressed = useCanvasStore(
+    (state) => state.interaction.isSpacebarPressed
+  );
 
   const hasOverflow = useMemo(() => {
     const artboardBoxes = getBoxesInArtboard(artboard.id, boxes);
@@ -42,6 +46,8 @@ export const Artboard: FC<ArtboardProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isSpacebarPressed) return;
+
     if (artboard.locked) return;
 
     const target = e.target as HTMLElement;

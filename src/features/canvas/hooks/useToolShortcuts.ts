@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import {
   KEYBOARD_SHORTCUTS,
   CANVAS_CONSTANTS,
@@ -31,6 +32,15 @@ export const useToolShortcuts = () => {
   } = useBoxStore();
   const artboards = useArtboardStore((state) => state.artboards);
 
+  const {
+    selectedLineIds,
+    deleteLines,
+    duplicateLines,
+    selectAllLines,
+    copyLines,
+    pasteLines,
+  } = useLineStore();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -58,24 +68,36 @@ export const useToolShortcuts = () => {
       ) {
         e.preventDefault();
         setSelectedTool("artboard");
+      } else if (
+        key === KEYBOARD_SHORTCUTS.TOOL_LINE &&
+        !e.ctrlKey &&
+        !e.metaKey
+      ) {
+        e.preventDefault();
+        setSelectedTool("line");
       }
 
       if (
-        (key === KEYBOARD_SHORTCUTS.DELETE.toLowerCase() ||
-          key === KEYBOARD_SHORTCUTS.BACKSPACE.toLowerCase()) &&
-        selectedBoxIds.length > 0
+        key === KEYBOARD_SHORTCUTS.DELETE.toLowerCase() ||
+        key === KEYBOARD_SHORTCUTS.BACKSPACE.toLowerCase()
       ) {
-        e.preventDefault();
-        deleteBoxes(selectedBoxIds);
+        if (selectedBoxIds.length > 0) {
+          e.preventDefault();
+          deleteBoxes(selectedBoxIds);
+        } else if (selectedLineIds.length > 0) {
+          e.preventDefault();
+          deleteLines(selectedLineIds);
+        }
       }
 
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        key === KEYBOARD_SHORTCUTS.DUPLICATE &&
-        selectedBoxIds.length > 0
-      ) {
-        e.preventDefault();
-        duplicateBoxes(selectedBoxIds);
+      if ((e.ctrlKey || e.metaKey) && key === KEYBOARD_SHORTCUTS.DUPLICATE) {
+        if (selectedBoxIds.length > 0) {
+          e.preventDefault();
+          duplicateBoxes(selectedBoxIds);
+        } else if (selectedLineIds.length > 0) {
+          e.preventDefault();
+          duplicateLines(selectedLineIds);
+        }
       }
 
       if ((e.ctrlKey || e.metaKey) && key === KEYBOARD_SHORTCUTS.SELECT_ALL) {
@@ -83,18 +105,20 @@ export const useToolShortcuts = () => {
         selectAll();
       }
 
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        key === KEYBOARD_SHORTCUTS.COPY &&
-        selectedBoxIds.length > 0
-      ) {
-        e.preventDefault();
-        copyBoxes();
+      if ((e.ctrlKey || e.metaKey) && key === KEYBOARD_SHORTCUTS.COPY) {
+        if (selectedBoxIds.length > 0) {
+          e.preventDefault();
+          copyBoxes();
+        } else if (selectedLineIds.length > 0) {
+          e.preventDefault();
+          copyLines();
+        }
       }
 
       if ((e.ctrlKey || e.metaKey) && key === KEYBOARD_SHORTCUTS.PASTE) {
         e.preventDefault();
         pasteBoxes();
+        pasteLines();
       }
 
       if (
@@ -236,5 +260,11 @@ export const useToolShortcuts = () => {
     artboards,
     boxes,
     updateBox,
+    selectedLineIds,
+    deleteLines,
+    duplicateLines,
+    selectAllLines,
+    copyLines,
+    pasteLines,
   ]);
 };

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import type { BoxState, Box } from "@/types/box";
+import type { Line } from "@/types/line";
 import { STORAGE_KEYS, BOX_CONSTANTS } from "@/lib/constants";
 import {
   getAllDescendants,
@@ -13,6 +14,7 @@ import { calculateAlignedPositions } from "@/features/alignment/utils/alignmentC
 import { calculateDistributedPositions } from "@/features/alignment/utils/distributionCalculations";
 import { calculatePastePosition } from "@/features/artboards/utils/artboardHelpers";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 
 let recordSnapshotFn: (() => void) | null = null;
 export const setRecordSnapshotFn = (fn: () => void) => {
@@ -266,6 +268,23 @@ export const useBoxStore = create<BoxState>()(
                 .map((id) => idMap.get(id))
                 .filter((id): id is string => id !== undefined);
 
+              const lineStore = useLineStore.getState();
+              const allBoxIds = allBoxesToDuplicate.map((b) => b.id);
+              const linesToDuplicate = lineStore.lines.filter(
+                (line) => line.parentId && allBoxIds.includes(line.parentId)
+              );
+
+              if (linesToDuplicate.length > 0) {
+                const duplicatedLines: Line[] = linesToDuplicate.map(
+                  (line) => ({
+                    ...line,
+                    id: crypto.randomUUID(),
+                    parentId: idMap.get(line.parentId!),
+                  })
+                );
+                lineStore.addLines(duplicatedLines);
+              }
+
               return {
                 boxes: [...state.boxes, ...duplicatedBoxes],
                 selectedBoxIds: topLevelDuplicatedIds,
@@ -376,6 +395,24 @@ export const useBoxStore = create<BoxState>()(
               const topLevelPastedIds = state.clipboardBoxIds
                 .map((id) => idMap.get(id))
                 .filter((id): id is string => id !== undefined);
+
+              const lineStore = useLineStore.getState();
+              const allBoxIds = allBoxesToDuplicate.map((b) => b.id);
+              const linesToDuplicate = lineStore.lines.filter(
+                (line) => line.parentId && allBoxIds.includes(line.parentId)
+              );
+
+              if (linesToDuplicate.length > 0) {
+                const duplicatedLines: Line[] = linesToDuplicate.map(
+                  (line) => ({
+                    ...line,
+                    id: crypto.randomUUID(),
+                    parentId: idMap.get(line.parentId!),
+                    artboardId: activeArtboardId || undefined,
+                  })
+                );
+                lineStore.addLines(duplicatedLines);
+              }
 
               return {
                 boxes: [...state.boxes, ...pastedBoxes],

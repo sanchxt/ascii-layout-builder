@@ -1,5 +1,6 @@
 import type { CanvasConstants } from "@/types/canvas";
 import type { BorderStyle } from "@/types/box";
+import type { LineConstants, ArrowHeadStyle, LineOutputMode } from "@/types/line";
 
 export const CANVAS_CONSTANTS: CanvasConstants = {
   /** min zoom (10%) */
@@ -98,11 +99,33 @@ export const ARTBOARD_CONSTANTS = {
   DEFAULT_Y: 100,
 } as const;
 
+export const LINE_CONSTANTS: LineConstants = {
+  /** minimum line length in pixels */
+  MIN_LENGTH: 20,
+  /** snap distance to box edges for connections */
+  CONNECTION_SNAP_DISTANCE: 10,
+  /** click detection tolerance for thin lines */
+  SELECTION_TOLERANCE: 5,
+  /** default line thickness */
+  DEFAULT_THICKNESS: 1,
+  /** default arrow style */
+  DEFAULT_ARROW_STYLE: "none" as ArrowHeadStyle,
+  /** default line style */
+  DEFAULT_LINE_STYLE: "solid" as const,
+  /** default output mode */
+  DEFAULT_OUTPUT_MODE: "ascii" as LineOutputMode,
+  /** selection outline color */
+  SELECTION_OUTLINE_COLOR: "#3b82f6",
+  /** endpoint handle size */
+  ENDPOINT_HANDLE_SIZE: 8,
+} as const;
+
 export const STORAGE_KEYS = {
   CANVAS_STATE: "ascii-layout-builder:canvas-state",
   PROJECT_STATE: "ascii-layout-builder:project-state",
   BOX_STATE: "ascii-layout-builder:box-state",
   ARTBOARD_STATE: "ascii-layout-builder:artboard-state",
+  LINE_STATE: "ascii-layout-builder:line-state",
 } as const;
 
 export const KEYBOARD_SHORTCUTS = {
@@ -117,6 +140,7 @@ export const KEYBOARD_SHORTCUTS = {
   TOOL_BOX: "b",
   TOOL_TEXT: "t",
   TOOL_ARTBOARD: "a",
+  TOOL_LINE: "l",
 
   // actions
   DUPLICATE: "d",

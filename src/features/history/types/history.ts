@@ -1,4 +1,5 @@
 import type { Box } from "@/types/box";
+import type { Line } from "@/types/line";
 import type { Artboard } from "@/types/artboard";
 
 export interface BoxSnapshot {
@@ -7,6 +8,8 @@ export interface BoxSnapshot {
   artboards: Artboard[];
   selectedArtboardIds: string[];
   activeArtboardId: string | null;
+  lines: Line[];
+  selectedLineIds: string[];
   timestamp: number;
 }
 

@@ -38,6 +38,17 @@ import { CanvasControls } from "./CanvasControls";
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { screenToCanvas } from "../utils/coordinateTransform";
 import {
+  useLineStore,
+  setLineRecordSnapshotFn,
+} from "@/features/lines/store/lineStore";
+import { useLineCreation } from "@/features/lines/hooks/useLineCreation";
+import { useLineDrag } from "@/features/lines/hooks/useLineDrag";
+import { useLineDropZone } from "@/features/lines/hooks/useLineDropZone";
+import { Line } from "@/features/lines/components/Line";
+import { LineDropZoneIndicator } from "@/features/lines/components/LineDropZoneIndicator";
+import { isPointNearLine } from "@/features/lines/utils/lineGeometry";
+import { getRootLines } from "@/features/lines/utils/lineHierarchy";
+import {
   getRootBoxes,
   convertToLocalPosition,
   getDeepestBoxAtPoint,
@@ -60,12 +71,39 @@ export const Canvas = ({ children }: CanvasProps) => {
   const selectBox = useBoxStore((state) => state.selectBox);
   const artboards = useArtboardStore((state) => state.artboards);
   const { isArtboardSelected } = useArtboardSelection();
+
+  const lines = useLineStore((state) => state.lines);
+  const selectLine = useLineStore((state) => state.selectLine);
+  const selectedLineIds = useLineStore((state) => state.selectedLineIds);
+  const clearLineSelection = useLineStore((state) => state.clearLineSelection);
+  const {
+    startCreating: startLineCreating,
+    updateCreating: updateLineCreating,
+    finishCreating: finishLineCreating,
+    cancelCreating: cancelLineCreating,
+    tempLine,
+    isCreating: isCreatingLine,
+  } = useLineCreation();
+
+  const {
+    dragState: lineDragState,
+    startDrag: startLineDrag,
+    updateDrag: updateLineDrag,
+    endDrag: endLineDrag,
+    cancelDrag: cancelLineDrag,
+    isDragging: isDraggingLine,
+    getLinePreviewPosition,
+  } = useLineDrag();
+
+  const isLineSelected = (lineId: string) => selectedLineIds.includes(lineId);
+
   const {
     handleMouseDown: handlePanMouseDown,
     handleMouseMove: handlePanMouseMove,
     handleMouseUp: handlePanMouseUp,
     handleWheelPan,
     isSpacebarPressed,
+    getIsSpacebarPressed,
   } = useCanvasPan();
   const { handleWheel } = useCanvasZoom();
   const {
@@ -213,6 +251,7 @@ export const Canvas = ({ children }: CanvasProps) => {
   useEffect(() => {
     setRecordSnapshotFn(recordSnapshot);
     setArtboardRecordSnapshotFn(recordSnapshot);
+    setLineRecordSnapshotFn(recordSnapshot);
   }, []);
 
   useEffect(() => {
@@ -222,13 +261,26 @@ export const Canvas = ({ children }: CanvasProps) => {
           cancelDrag();
         } else if (isDraggingArtboard) {
           cancelArtboardDrag();
+        } else if (isDraggingLine) {
+          cancelLineDrag();
+        } else if (isCreatingLine) {
+          cancelLineCreating();
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDraggingBox, cancelDrag, isDraggingArtboard, cancelArtboardDrag]);
+  }, [
+    isDraggingBox,
+    cancelDrag,
+    isDraggingArtboard,
+    cancelArtboardDrag,
+    isDraggingLine,
+    cancelLineDrag,
+    isCreatingLine,
+    cancelLineCreating,
+  ]);
 
   const getCanvasMousePosition = (clientX: number, clientY: number) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
@@ -249,6 +301,20 @@ export const Canvas = ({ children }: CanvasProps) => {
     currentMousePos: canvasMousePos,
     isDragging: isDraggingBox,
   });
+
+  const currentLinePreview =
+    isDraggingLine && lineDragState.draggedLineId
+      ? getLinePreviewPosition(lineDragState.draggedLineId)
+      : null;
+
+  const lineDropZoneState = useLineDropZone({
+    draggedLineId: lineDragState.draggedLineId,
+    currentMousePos: canvasMousePos,
+    isDragging: isDraggingLine,
+    linePreviewPosition: currentLinePreview,
+  });
+
+  const rootLines = useMemo(() => getRootLines(lines), [lines]);
 
   const currentDelta = useMemo(
     () => ({
@@ -308,8 +374,8 @@ export const Canvas = ({ children }: CanvasProps) => {
       exitEditMode();
     }
 
-    if (isSpacebarPressed) {
-      handlePanMouseDown(e);
+    if (getIsSpacebarPressed()) {
+      handlePanMouseDown(e, true);
       return;
     }
 
@@ -320,12 +386,28 @@ export const Canvas = ({ children }: CanvasProps) => {
     if (interaction.selectedTool === "box") {
       setIsCreatingBox(true);
       startCreating(canvasPoint);
+    } else if (interaction.selectedTool === "line") {
+      startLineCreating(canvasPoint);
     } else if (interaction.selectedTool === "select") {
       const clickedBox = getDeepestBoxAtPoint(canvasPoint, boxes);
 
+      const clickedLine = lines.find((line) =>
+        isPointNearLine(canvasPoint.x, canvasPoint.y, line, undefined, boxes)
+      );
+
       if (clickedBox) {
+        clearLineSelection();
         handleCanvasClick(canvasPoint, e.shiftKey);
+      } else if (clickedLine) {
+        if (!e.shiftKey) {
+          handleCanvasClick(canvasPoint, false);
+        }
+        selectLine(clickedLine.id, e.shiftKey);
       } else {
+        if (!e.shiftKey) {
+          clearLineSelection();
+          handleCanvasClick(canvasPoint, false);
+        }
         setIsDrawingSelection(true);
         startSelection(canvasPoint.x, canvasPoint.y);
       }
@@ -346,13 +428,23 @@ export const Canvas = ({ children }: CanvasProps) => {
       return;
     }
 
+    if (isDraggingLine) {
+      updateLineDrag(canvasPos.x, canvasPos.y);
+      return;
+    }
+
     if (isDrawingSelection) {
       updateSelection(canvasPos.x, canvasPos.y);
       return;
     }
 
-    if (isSpacebarPressed) {
+    if (getIsSpacebarPressed()) {
       handlePanMouseMove(e);
+      return;
+    }
+
+    if (isCreatingLine && interaction.selectedTool === "line") {
+      updateLineCreating(canvasPos);
       return;
     }
 
@@ -382,9 +474,19 @@ export const Canvas = ({ children }: CanvasProps) => {
       return;
     }
 
+    if (isDraggingLine) {
+      endLineDrag();
+      return;
+    }
+
     if (isDrawingSelection) {
       finishSelection(e.shiftKey);
       setIsDrawingSelection(false);
+      return;
+    }
+
+    if (isCreatingLine) {
+      finishLineCreating();
       return;
     }
 
@@ -414,6 +516,7 @@ export const Canvas = ({ children }: CanvasProps) => {
     if (isDraggingArtboard || isDraggingBox) return "grabbing";
     if (isSpacebarPressed) return "grab";
     if (interaction.selectedTool === "box") return "crosshair";
+    if (interaction.selectedTool === "line") return "crosshair";
     if (interaction.selectedTool === "text") return "text";
     return "default";
   };
@@ -438,6 +541,19 @@ export const Canvas = ({ children }: CanvasProps) => {
   ) => {
     const canvasPos = getCanvasMousePosition(clientX, clientY);
     startArtboardDrag(artboardId, canvasPos.x, canvasPos.y);
+  };
+
+  const handleLineDragStart = (
+    lineId: string,
+    clientX: number,
+    clientY: number,
+    handle: "line" | "start" | "end"
+  ) => {
+    if (interaction.selectedTool !== "select") {
+      return;
+    }
+    const canvasPos = getCanvasMousePosition(clientX, clientY);
+    startLineDrag(lineId, canvasPos.x, canvasPos.y, handle);
   };
 
   const getSnappedPreviewPosition = (
@@ -536,9 +652,65 @@ export const Canvas = ({ children }: CanvasProps) => {
                 onDragStart={handleBoxDragStart}
                 isDragging={dragState.draggedBoxIds.includes(box.id)}
                 dragPreviewPosition={boxDragPreview}
+                onLineDragStart={handleLineDragStart}
+                lineDragState={lineDragState}
+                isDraggingLine={isDraggingLine}
+                getLinePreviewPosition={getLinePreviewPosition}
               />
             );
           })}
+
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+            }}
+          >
+            <g style={{ pointerEvents: "auto" }}>
+              {rootLines
+                .filter((line) => line.visible !== false)
+                .sort((a, b) => a.zIndex - b.zIndex)
+                .map((line) => (
+                  <Line
+                    key={line.id}
+                    line={line}
+                    isSelected={isLineSelected(line.id)}
+                    onSelect={(id, multi) => selectLine(id, multi)}
+                    onDragStart={handleLineDragStart}
+                    isDragging={lineDragState.draggedLineId === line.id}
+                    dragPreviewPosition={
+                      isDraggingLine
+                        ? getLinePreviewPosition(line.id) || undefined
+                        : undefined
+                    }
+                    zoom={viewport.zoom}
+                  />
+                ))}
+
+              {tempLine && tempLine.startX !== undefined && (
+                <line
+                  x1={tempLine.startX}
+                  y1={tempLine.startY}
+                  x2={tempLine.endX ?? tempLine.startX}
+                  y2={tempLine.endY ?? tempLine.startY}
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  strokeDasharray="4 4"
+                  style={{ pointerEvents: "none" }}
+                />
+              )}
+            </g>
+          </svg>
+
+          {isDraggingLine && lineDropZoneState.potentialParentId && (
+            <LineDropZoneIndicator
+              targetBoxId={lineDropZoneState.potentialParentId}
+              isValid={lineDropZoneState.isValidDropZone}
+              validationMessage={lineDropZoneState.validationMessage}
+            />
+          )}
 
           {isDraggingBox && dropZoneState.potentialParentId && (
             <DropZoneIndicator

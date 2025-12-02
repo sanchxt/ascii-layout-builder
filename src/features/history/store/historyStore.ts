@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { HistoryState, BoxSnapshot } from "../types/history";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 
 const MAX_HISTORY = 50;
@@ -25,6 +26,7 @@ export const useHistoryStore = create<HistoryState>()(
         const newPast = past.slice(0, -1);
 
         const boxStore = useBoxStore.getState();
+        const lineStore = useLineStore.getState();
         const artboardStore = useArtboardStore.getState();
 
         const currentSnapshot: BoxSnapshot = {
@@ -33,12 +35,19 @@ export const useHistoryStore = create<HistoryState>()(
           artboards: [...artboardStore.artboards],
           selectedArtboardIds: [...artboardStore.selectedArtboardIds],
           activeArtboardId: artboardStore.activeArtboardId,
+          lines: [...lineStore.lines],
+          selectedLineIds: [...lineStore.selectedLineIds],
           timestamp: Date.now(),
         };
 
         useBoxStore.setState({
           boxes: previousSnapshot.boxes,
           selectedBoxIds: previousSnapshot.selectedBoxIds,
+        });
+
+        useLineStore.setState({
+          lines: previousSnapshot.lines || [],
+          selectedLineIds: previousSnapshot.selectedLineIds || [],
         });
 
         useArtboardStore.setState({
@@ -65,6 +74,7 @@ export const useHistoryStore = create<HistoryState>()(
         const newFuture = future.slice(1);
 
         const boxStore = useBoxStore.getState();
+        const lineStore = useLineStore.getState();
         const artboardStore = useArtboardStore.getState();
 
         const currentSnapshot: BoxSnapshot = {
@@ -73,12 +83,19 @@ export const useHistoryStore = create<HistoryState>()(
           artboards: [...artboardStore.artboards],
           selectedArtboardIds: [...artboardStore.selectedArtboardIds],
           activeArtboardId: artboardStore.activeArtboardId,
+          lines: [...lineStore.lines],
+          selectedLineIds: [...lineStore.selectedLineIds],
           timestamp: Date.now(),
         };
 
         useBoxStore.setState({
           boxes: nextSnapshot.boxes,
           selectedBoxIds: nextSnapshot.selectedBoxIds,
+        });
+
+        useLineStore.setState({
+          lines: nextSnapshot.lines || [],
+          selectedLineIds: nextSnapshot.selectedLineIds || [],
         });
 
         useArtboardStore.setState({
@@ -117,6 +134,7 @@ export const useHistoryStore = create<HistoryState>()(
 
 export const recordSnapshot = () => {
   const boxStore = useBoxStore.getState();
+  const lineStore = useLineStore.getState();
   const artboardStore = useArtboardStore.getState();
 
   const snapshot: BoxSnapshot = {
@@ -125,6 +143,8 @@ export const recordSnapshot = () => {
     artboards: JSON.parse(JSON.stringify(artboardStore.artboards)),
     selectedArtboardIds: [...artboardStore.selectedArtboardIds],
     activeArtboardId: artboardStore.activeArtboardId,
+    lines: JSON.parse(JSON.stringify(lineStore.lines)),
+    selectedLineIds: [...lineStore.selectedLineIds],
     timestamp: Date.now(),
   };
 

@@ -2,13 +2,19 @@ import { Settings, Sliders, Code2 } from "lucide-react";
 import { ResizablePanel, PanelAction } from "@/components/ui/resizable-panel";
 import { Navigator } from "./Navigator";
 import { PropertiesContent } from "@/features/boxes/components/PropertiesContent";
+import { LinePropertiesContent } from "@/features/lines/components/LinePropertiesContent";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import { useOutputDrawerStore } from "@/features/output-drawer/store/outputDrawerStore";
 import { cn } from "@/lib/utils";
 
 export const RightSidebar = () => {
   const selectedBoxIds = useBoxStore((state) => state.selectedBoxIds);
-  const hasSelection = selectedBoxIds.length > 0;
+  const selectedLineIds = useLineStore((state) => state.selectedLineIds);
+  const hasBoxSelection = selectedBoxIds.length > 0;
+  const hasLineSelection = selectedLineIds.length > 0;
+  const hasSelection = hasBoxSelection || hasLineSelection;
+  const selectionCount = selectedBoxIds.length + selectedLineIds.length;
 
   const isOutputOpen = useOutputDrawerStore((state) => state.isOpen);
   const toggleOutput = useOutputDrawerStore((state) => state.toggle);
@@ -42,7 +48,7 @@ export const RightSidebar = () => {
         icon={Sliders}
         collapsible={true}
         showDivider={false}
-        badge={hasSelection ? selectedBoxIds.length : undefined}
+        badge={hasSelection ? selectionCount : undefined}
         headerActions={
           hasSelection ? (
             <PanelAction
@@ -53,7 +59,7 @@ export const RightSidebar = () => {
           ) : null
         }
       >
-        <PropertiesContent />
+        {hasLineSelection ? <LinePropertiesContent /> : <PropertiesContent />}
       </ResizablePanel>
     </aside>
   );

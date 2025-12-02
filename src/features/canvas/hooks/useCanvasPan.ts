@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { KEYBOARD_SHORTCUTS, CANVAS_CONSTANTS } from "@/lib/constants";
 
@@ -11,45 +11,59 @@ export const useCanvasPan = () => {
     updatePan,
   } = useCanvasStore();
 
+  const isPanningRef = useRef(false);
+  const lastMousePositionRef = useRef<{ x: number; y: number } | null>(null);
+  const isSpacebarPressedRef = useRef(false);
+
+  isPanningRef.current = interaction.isPanning;
+  lastMousePositionRef.current = interaction.lastMousePosition;
+  isSpacebarPressedRef.current = interaction.isSpacebarPressed;
+
+  const startPan = useCallback(
+    (clientX: number, clientY: number) => {
+      isPanningRef.current = true;
+      lastMousePositionRef.current = { x: clientX, y: clientY };
+      setIsPanning(true);
+      setLastMousePosition({ x: clientX, y: clientY });
+    },
+    [setIsPanning, setLastMousePosition]
+  );
+
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (interaction.isSpacebarPressed && e.button !== 2) {
+    (e: React.MouseEvent, forceStartPan = false) => {
+      if ((forceStartPan || isSpacebarPressedRef.current) && e.button !== 2) {
         e.preventDefault();
-        setIsPanning(true);
-        setLastMousePosition({ x: e.clientX, y: e.clientY });
+        startPan(e.clientX, e.clientY);
       } else if (e.button === 1) {
         e.preventDefault();
-        setIsPanning(true);
-        setLastMousePosition({ x: e.clientX, y: e.clientY });
+        startPan(e.clientX, e.clientY);
       }
     },
-    [interaction.isSpacebarPressed, setIsPanning, setLastMousePosition]
+    [startPan]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (interaction.isPanning && interaction.lastMousePosition) {
-        const deltaX = e.clientX - interaction.lastMousePosition.x;
-        const deltaY = e.clientY - interaction.lastMousePosition.y;
+      if (isPanningRef.current && lastMousePositionRef.current) {
+        const deltaX = e.clientX - lastMousePositionRef.current.x;
+        const deltaY = e.clientY - lastMousePositionRef.current.y;
 
+        lastMousePositionRef.current = { x: e.clientX, y: e.clientY };
         updatePan(deltaX, deltaY);
         setLastMousePosition({ x: e.clientX, y: e.clientY });
       }
     },
-    [
-      interaction.isPanning,
-      interaction.lastMousePosition,
-      updatePan,
-      setLastMousePosition,
-    ]
+    [updatePan, setLastMousePosition]
   );
 
   const handleMouseUp = useCallback(() => {
-    if (interaction.isPanning) {
+    if (isPanningRef.current) {
+      isPanningRef.current = false;
+      lastMousePositionRef.current = null;
       setIsPanning(false);
       setLastMousePosition(null);
     }
-  }, [interaction.isPanning, setIsPanning, setLastMousePosition]);
+  }, [setIsPanning, setLastMousePosition]);
 
   const handleWheelPan = useCallback(
     (e: WheelEvent) => {
@@ -73,9 +87,10 @@ export const useCanvasPan = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === KEYBOARD_SHORTCUTS.SPACEBAR &&
-        !interaction.isSpacebarPressed
+        !isSpacebarPressedRef.current
       ) {
         e.preventDefault();
+        isSpacebarPressedRef.current = true;
         setIsSpacebarPressed(true);
       }
     };
@@ -83,8 +98,11 @@ export const useCanvasPan = () => {
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === KEYBOARD_SHORTCUTS.SPACEBAR) {
         e.preventDefault();
+        isSpacebarPressedRef.current = false;
         setIsSpacebarPressed(false);
-        if (interaction.isPanning) {
+        if (isPanningRef.current) {
+          isPanningRef.current = false;
+          lastMousePositionRef.current = null;
           setIsPanning(false);
           setLastMousePosition(null);
         }
@@ -98,13 +116,7 @@ export const useCanvasPan = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [
-    interaction.isSpacebarPressed,
-    interaction.isPanning,
-    setIsSpacebarPressed,
-    setIsPanning,
-    setLastMousePosition,
-  ]);
+  }, [setIsSpacebarPressed, setIsPanning, setLastMousePosition]);
 
   return {
     handleMouseDown,
@@ -113,5 +125,6 @@ export const useCanvasPan = () => {
     handleWheelPan,
     isPanning: interaction.isPanning,
     isSpacebarPressed: interaction.isSpacebarPressed,
+    getIsSpacebarPressed: () => isSpacebarPressedRef.current,
   };
 };

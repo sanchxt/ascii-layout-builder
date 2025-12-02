@@ -1,4 +1,4 @@
-export type ToolType = "select" | "box" | "text" | "artboard";
+export type ToolType = "select" | "box" | "text" | "artboard" | "line";
 
 export interface CanvasPosition {
   x: number;

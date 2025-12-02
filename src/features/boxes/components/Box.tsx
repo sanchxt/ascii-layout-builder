@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Box as BoxType } from "@/types/box";
 import { BOX_CONSTANTS } from "@/lib/constants";
 import { BoxResizeHandles } from "./BoxResizeHandles";
@@ -7,6 +8,9 @@ import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useBoxStore } from "../store/boxStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import { useLayoutUIStore } from "@/features/layout-system/store/layoutStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
+import { Line } from "@/features/lines/components/Line";
+import { getLinesInBox } from "@/features/lines/utils/lineHierarchy";
 import {
   getChildBoxes,
   getNestingDepth,
@@ -31,6 +35,19 @@ interface BoxProps {
   onDragStart?: (boxId: string, clientX: number, clientY: number) => void;
   isDragging?: boolean;
   dragPreviewPosition?: { x: number; y: number };
+  onLineDragStart?: (
+    lineId: string,
+    clientX: number,
+    clientY: number,
+    handle: "line" | "start" | "end"
+  ) => void;
+  lineDragState?: {
+    draggedLineId: string | null;
+  };
+  isDraggingLine?: boolean;
+  getLinePreviewPosition?: (
+    lineId: string
+  ) => { startX: number; startY: number; endX: number; endY: number } | null;
 }
 
 export const Box = ({
@@ -43,12 +60,19 @@ export const Box = ({
   onDragStart,
   isDragging = false,
   dragPreviewPosition,
+  onLineDragStart,
+  lineDragState,
+  isDraggingLine = false,
+  getLinePreviewPosition,
 }: BoxProps) => {
   const editingBoxId = useCanvasStore(
     (state) => state.interaction.editingBoxId
   );
   const selectedTool = useCanvasStore(
     (state) => state.interaction.selectedTool
+  );
+  const isSpacebarPressed = useCanvasStore(
+    (state) => state.interaction.isSpacebarPressed
   );
   const enterEditMode = useCanvasStore((state) => state.enterEditMode);
   const isEditing = editingBoxId === box.id;
@@ -63,6 +87,15 @@ export const Box = ({
     (state) => state.clearOverflowBoxIds
   );
   const isOverflowing = overflowBoxIds.includes(box.id);
+
+  const allLines = useLineStore((state) => state.lines);
+  const selectLine = useLineStore((state) => state.selectLine);
+  const selectedLineIds = useLineStore((state) => state.selectedLineIds);
+
+  const childLines = useMemo(
+    () => getLinesInBox(box.id, allLines),
+    [box.id, allLines]
+  );
 
   const handleDeleteAllOverflow = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,6 +120,10 @@ export const Box = ({
   const nestingDepth = getNestingDepth(box.id, allBoxes);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isSpacebarPressed) {
+      return;
+    }
+
     e.stopPropagation();
 
     if (isLocked) {
@@ -290,8 +327,46 @@ export const Box = ({
             onDragStart={onDragStart}
             isDragging={false}
             dragPreviewPosition={undefined}
+            onLineDragStart={onLineDragStart}
+            lineDragState={lineDragState}
+            isDraggingLine={isDraggingLine}
+            getLinePreviewPosition={getLinePreviewPosition}
           />
         ))}
+
+        {childLines.length > 0 && (
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+            }}
+          >
+            <g style={{ pointerEvents: "auto" }}>
+              {childLines
+                .filter((line) => line.visible !== false)
+                .sort((a, b) => a.zIndex - b.zIndex)
+                .map((line) => (
+                  <Line
+                    key={line.id}
+                    line={line}
+                    isSelected={selectedLineIds.includes(line.id)}
+                    onSelect={(id, multi) => selectLine(id, multi)}
+                    onDragStart={onLineDragStart}
+                    isDragging={lineDragState?.draggedLineId === line.id}
+                    dragPreviewPosition={
+                      isDraggingLine && getLinePreviewPosition
+                        ? getLinePreviewPosition(line.id) || undefined
+                        : undefined
+                    }
+                    zoom={zoom}
+                    isNested={true}
+                  />
+                ))}
+            </g>
+          </svg>
+        )}
       </div>
 
       {isSelected && !isLocked && (

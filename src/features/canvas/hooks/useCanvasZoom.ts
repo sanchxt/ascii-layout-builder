@@ -2,18 +2,21 @@ import { useCallback } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { CANVAS_CONSTANTS } from "@/lib/constants";
 
+const TRACKPAD_ZOOM_SENSITIVITY = 0.005;
+
 export const useCanvasZoom = () => {
   const { viewport, setZoom, zoomIn, zoomOut, resetZoom } = useCanvasStore();
 
   const handleWheel = useCallback(
     (deltaY: number) => {
-      if (deltaY > 0) {
-        zoomOut();
-      } else {
-        zoomIn();
-      }
+      const zoomFactor = 1 - deltaY * TRACKPAD_ZOOM_SENSITIVITY;
+      const newZoom = Math.max(
+        CANVAS_CONSTANTS.MIN_ZOOM,
+        Math.min(CANVAS_CONSTANTS.MAX_ZOOM, viewport.zoom * zoomFactor)
+      );
+      setZoom(newZoom);
     },
-    [zoomIn, zoomOut]
+    [viewport.zoom, setZoom]
   );
 
   const getZoomPercentage = useCallback(() => {

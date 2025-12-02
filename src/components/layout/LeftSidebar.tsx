@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MousePointer2, Square, Type, Frame } from "lucide-react";
+import { MousePointer2, Square, Type, Frame, Minus } from "lucide-react";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import type { ToolType } from "@/types/canvas";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,12 @@ export const LeftSidebar = () => {
         icon: Frame,
         label: "Artboard",
         shortcut: "A",
+      },
+      {
+        id: "line",
+        icon: Minus,
+        label: "Line",
+        shortcut: "L",
       },
     ];
 

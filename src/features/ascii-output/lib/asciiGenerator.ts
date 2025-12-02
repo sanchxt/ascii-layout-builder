@@ -1,4 +1,5 @@
 import type { Box } from "@/types/box";
+import type { Line } from "@/types/line";
 import type { Artboard } from "@/types/artboard";
 import type {
   AsciiOutput,
@@ -23,11 +24,13 @@ import {
 import { renderBoxBorder } from "./boxRenderer";
 import { resolveAllJunctions } from "./junctionResolver";
 import { renderTextContent } from "./textRenderer";
+import { renderAllLines } from "./lineRenderer";
 
 export function generateAscii(
   boxes: Box[],
   options?: AsciiGenerationOptions,
-  artboard?: Artboard
+  artboard?: Artboard,
+  lines: Line[] = []
 ): AsciiOutput {
   const startTime = Date.now();
 
@@ -40,6 +43,10 @@ export function generateAscii(
   const warnings: string[] = [];
 
   let boxesToRender = boxes;
+  let linesToRender = lines.filter(
+    (line) => line.outputMode === "ascii" && line.visible !== false
+  );
+
   if (artboard) {
     boxesToRender = getBoxesInArtboard(artboard.id, boxes);
 
@@ -48,12 +55,22 @@ export function generateAscii(
       x: box.x - artboard.x,
       y: box.y - artboard.y,
     }));
+
+    linesToRender = linesToRender
+      .filter((line) => line.artboardId === artboard.id)
+      .map((line) => ({
+        ...line,
+        startX: line.startX - artboard.x,
+        startY: line.startY - artboard.y,
+        endX: line.endX - artboard.x,
+        endY: line.endY - artboard.y,
+      }));
   }
 
-  if (boxesToRender.length === 0) {
+  if (boxesToRender.length === 0 && linesToRender.length === 0) {
     const emptyMessage = artboard
-      ? `// Artboard "${artboard.name}" is empty - drag boxes here to see ASCII output!`
-      : "// Empty canvas - create some boxes to see ASCII output!";
+      ? `// Artboard "${artboard.name}" is empty - drag boxes or draw lines here to see ASCII output!`
+      : "// Empty canvas - create some boxes or lines to see ASCII output!";
 
     return {
       content: emptyMessage,
@@ -62,8 +79,8 @@ export function generateAscii(
       dimensions: { width: 0, height: 0 },
       boxCount: 0,
       warnings: artboard
-        ? [`Artboard "${artboard.name}" has no boxes`]
-        : ["No boxes to render"],
+        ? [`Artboard "${artboard.name}" has no content`]
+        : ["No content to render"],
       timestamp: new Date(),
     };
   }
@@ -98,6 +115,17 @@ export function generateAscii(
       grid,
       box,
       boxesToRender,
+      charWidthRatio,
+      charHeightRatio,
+      gridDims.offsetCol,
+      gridDims.offsetRow
+    );
+  }
+
+  if (linesToRender.length > 0) {
+    renderAllLines(
+      grid,
+      linesToRender,
       charWidthRatio,
       charHeightRatio,
       gridDims.offsetCol,
@@ -200,14 +228,16 @@ function renderBox(
 
 export function generateAsciiForBoxes(
   boxes: Box[],
-  options?: AsciiGenerationOptions
+  options?: AsciiGenerationOptions,
+  lines: Line[] = []
 ): AsciiOutput {
-  return generateAscii(boxes, options);
+  return generateAscii(boxes, options, undefined, lines);
 }
 
 export function generateAsciiWithScale(
   boxes: Box[],
-  scale: "compact" | "normal" | "spacious"
+  scale: "compact" | "normal" | "spacious",
+  lines: Line[] = []
 ): AsciiOutput {
   const ratios = {
     compact: { width: 1.5, height: 2.5 },
@@ -217,10 +247,15 @@ export function generateAsciiWithScale(
 
   const { width, height } = ratios[scale];
 
-  return generateAscii(boxes, {
-    charWidthRatio: width,
-    charHeightRatio: height,
-  });
+  return generateAscii(
+    boxes,
+    {
+      charWidthRatio: width,
+      charHeightRatio: height,
+    },
+    undefined,
+    lines
+  );
 }
 
 export function canGenerateAscii(boxes: Box[]): {
@@ -253,15 +288,17 @@ export function canGenerateAscii(boxes: Box[]): {
 export function generateAsciiForArtboard(
   artboard: Artboard,
   boxes: Box[],
-  options?: AsciiGenerationOptions
+  options?: AsciiGenerationOptions,
+  lines: Line[] = []
 ): AsciiOutput {
-  return generateAscii(boxes, options, artboard);
+  return generateAscii(boxes, options, artboard, lines);
 }
 
 export function generateAllArtboards(
   artboards: Artboard[],
   boxes: Box[],
-  options?: AsciiGenerationOptions
+  options?: AsciiGenerationOptions,
+  lines: Line[] = []
 ): Map<string, AsciiOutput> {
   const results = new Map<string, AsciiOutput>();
 
@@ -271,7 +308,7 @@ export function generateAllArtboards(
 
   for (const artboard of sortedArtboards) {
     if (artboard.visible) {
-      const output = generateAsciiForArtboard(artboard, boxes, options);
+      const output = generateAsciiForArtboard(artboard, boxes, options, lines);
       results.set(artboard.id, output);
     }
   }

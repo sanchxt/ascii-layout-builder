@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import type { CodeOutput, CodeGeneratorOptions } from "../types/code";
 import { DEFAULT_CODE_OPTIONS } from "../types/code";
@@ -21,6 +22,7 @@ export function useCodeGeneration(
   options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
 ): UseCodeGenerationReturn {
   const boxes = useBoxStore((state) => state.boxes);
+  const lines = useLineStore((state) => state.lines);
   const activeArtboardId = useArtboardStore((state) => state.activeArtboardId);
   const getArtboard = useArtboardStore((state) => state.getArtboard);
 
@@ -34,9 +36,9 @@ export function useCodeGeneration(
     return {
       html: generateHTML(boxes, artboard, opts),
       css: generateCSS(boxes, artboard, opts),
-      tailwind: generateTailwind(boxes, artboard, opts),
+      tailwind: generateTailwind(boxes, artboard, opts, lines),
     };
-  }, [boxes, activeArtboardId, getArtboard, opts]);
+  }, [boxes, lines, activeArtboardId, getArtboard, opts]);
 
   const generateForArtboard = (artboardId: string): CodeOutput => {
     const artboard = getArtboard(artboardId);
@@ -47,7 +49,7 @@ export function useCodeGeneration(
     return {
       html: generateHTML(boxes, artboard, opts),
       css: generateCSS(boxes, artboard, opts),
-      tailwind: generateTailwind(boxes, artboard, opts),
+      tailwind: generateTailwind(boxes, artboard, opts, lines),
     };
   };
 
@@ -55,7 +57,7 @@ export function useCodeGeneration(
     return {
       html: generateHTML(boxes, undefined, opts),
       css: generateCSS(boxes, undefined, opts),
-      tailwind: generateTailwind(boxes, undefined, opts),
+      tailwind: generateTailwind(boxes, undefined, opts, lines),
     };
   };
 

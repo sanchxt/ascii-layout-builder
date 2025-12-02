@@ -5,9 +5,12 @@ import { useLayersUIStore } from "../store/layersUIStore";
 import { LayerItem } from "./LayerItem";
 import { getRootBoxes } from "../utils/boxHierarchy";
 import { useLayerDragDrop } from "../hooks/useLayerDragDrop";
+import { useLineStore } from "@/features/lines/store/lineStore";
+import { LineLayerItem } from "@/features/lines/components/LineLayerItem";
 
 export const LayersContent = () => {
   const boxes = useBoxStore((state) => state.boxes);
+  const lines = useLineStore((state) => state.lines);
 
   const {
     dragState,
@@ -29,6 +32,16 @@ export const LayersContent = () => {
     return getRootBoxes(boxes).sort((a, b) => a.zIndex - b.zIndex);
   }, [boxes]);
 
+  const rootLines = useMemo(() => {
+    return lines
+      .filter((line) => !line.parentId)
+      .sort((a, b) => a.zIndex - b.zIndex);
+  }, [lines]);
+
+  const getChildLinesForBox = (boxId: string) => {
+    return lines.filter((line) => line.parentId === boxId);
+  };
+
   const filteredRootBoxes = useMemo(() => {
     if (!searchQuery.trim()) {
       return rootBoxes;
@@ -48,6 +61,20 @@ export const LayersContent = () => {
     return rootBoxes.filter(matchesSearch);
   }, [rootBoxes, searchQuery, boxes]);
 
+  const filteredRootLines = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return rootLines;
+    }
+
+    const query = searchQuery.toLowerCase();
+
+    return rootLines.filter((line) => {
+      if (line.name?.toLowerCase().includes(query)) return true;
+      if (line.label?.text?.toLowerCase().includes(query)) return true;
+      return false;
+    });
+  }, [rootLines, searchQuery]);
+
   const handleSearchChange = (value: string) => {
     setLocalSearch(value);
     const timer = setTimeout(() => {
@@ -64,7 +91,9 @@ export const LayersContent = () => {
 
   const handleExpandAll = () => {
     const allBoxIds = boxes
-      .filter((b) => b.children.length > 0)
+      .filter(
+        (b) => b.children.length > 0 || getChildLinesForBox(b.id).length > 0
+      )
       .map((b) => b.id);
     expandAll(allBoxIds);
   };
@@ -119,7 +148,7 @@ export const LayersContent = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {filteredRootBoxes.length === 0 ? (
+        {filteredRootBoxes.length === 0 && filteredRootLines.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-6 text-center">
             <Layers className="w-10 h-10 text-zinc-200 mb-2" />
             <p className="text-xs font-medium text-zinc-500 mb-0.5">
@@ -128,7 +157,7 @@ export const LayersContent = () => {
             <p className="text-[10px] text-zinc-400">
               {searchQuery.trim()
                 ? "Try a different search"
-                : "Create a box to get started"}
+                : "Create a box or line to get started"}
             </p>
           </div>
         ) : (
@@ -139,6 +168,8 @@ export const LayersContent = () => {
                 box={box}
                 depth={0}
                 allBoxes={boxes}
+                childLines={getChildLinesForBox(box.id)}
+                allLines={lines}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
@@ -146,17 +177,23 @@ export const LayersContent = () => {
                 dragState={dragState}
               />
             ))}
+
+            {filteredRootLines.map((line) => (
+              <LineLayerItem key={line.id} line={line} depth={0} />
+            ))}
           </div>
         )}
       </div>
 
-      {searchQuery.trim() && filteredRootBoxes.length > 0 && (
-        <div className="shrink-0 px-3 py-1.5 border-t border-zinc-100 bg-zinc-50/50">
-          <p className="text-[10px] text-zinc-500">
-            {filteredRootBoxes.length} of {rootBoxes.length} layers
-          </p>
-        </div>
-      )}
+      {searchQuery.trim() &&
+        (filteredRootBoxes.length > 0 || filteredRootLines.length > 0) && (
+          <div className="shrink-0 px-3 py-1.5 border-t border-zinc-100 bg-zinc-50/50">
+            <p className="text-[10px] text-zinc-500">
+              {filteredRootBoxes.length + filteredRootLines.length} of{" "}
+              {rootBoxes.length + rootLines.length} layers
+            </p>
+          </div>
+        )}
     </div>
   );
 };

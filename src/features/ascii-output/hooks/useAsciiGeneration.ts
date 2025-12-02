@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import {
   generateAscii,
@@ -21,6 +22,7 @@ export function useAsciiGeneration(
   regenerate: () => void;
 } {
   const boxes = useBoxStore((state) => state.boxes);
+  const lines = useLineStore((state) => state.lines);
   const getArtboard = useArtboardStore((state) => state.getArtboard);
   const [asciiOutput, setAsciiOutput] = useState<AsciiOutput | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -33,6 +35,11 @@ export function useAsciiGeneration(
     return boxes.filter((box) => box.artboardId === artboardId);
   }, [boxes, artboardId]);
 
+  const relevantLines = useMemo(() => {
+    if (!artboardId) return lines;
+    return lines.filter((line) => line.artboardId === artboardId);
+  }, [lines, artboardId]);
+
   const generationCheck = useMemo(() => {
     return canGenerateAscii(boxes);
   }, [boxes]);
@@ -43,21 +50,21 @@ export function useAsciiGeneration(
 
     const timer = setTimeout(() => {
       try {
-        if (boxes.length === 0) {
+        if (boxes.length === 0 && lines.length === 0) {
           setAsciiOutput(null);
           setError(null);
           setIsGenerating(false);
           return;
         }
 
-        if (!generationCheck.canGenerate) {
+        if (boxes.length > 0 && !generationCheck.canGenerate) {
           setError(generationCheck.reason ?? "Cannot generate ASCII");
           setAsciiOutput(null);
           setIsGenerating(false);
           return;
         }
 
-        const output = generateAscii(boxes, options, artboard);
+        const output = generateAscii(boxes, options, artboard, lines);
 
         if (output.warnings.length > 0) {
           console.warn("ASCII Generation Warnings:", output.warnings);
@@ -79,26 +86,34 @@ export function useAsciiGeneration(
     return () => {
       clearTimeout(timer);
     };
-  }, [relevantBoxes, boxes.length, options, generationCheck, artboard]);
+  }, [
+    relevantBoxes,
+    relevantLines,
+    boxes.length,
+    lines.length,
+    options,
+    generationCheck,
+    artboard,
+  ]);
 
   const regenerate = () => {
     try {
       setIsGenerating(true);
       setError(null);
 
-      if (boxes.length === 0) {
+      if (boxes.length === 0 && lines.length === 0) {
         setAsciiOutput(null);
         setError(null);
         return;
       }
 
-      if (!generationCheck.canGenerate) {
+      if (boxes.length > 0 && !generationCheck.canGenerate) {
         setError(generationCheck.reason ?? "Cannot generate ASCII");
         setAsciiOutput(null);
         return;
       }
 
-      const output = generateAscii(boxes, options, artboard);
+      const output = generateAscii(boxes, options, artboard, lines);
       setAsciiOutput(output);
       setError(null);
     } catch (err) {
@@ -149,6 +164,7 @@ export function useAllArtboardsAsciiGeneration(
   regenerate: () => void;
 } {
   const boxes = useBoxStore((state) => state.boxes);
+  const lines = useLineStore((state) => state.lines);
   const artboards = useArtboardStore((state) => state.artboards);
   const [artboardOutputs, setArtboardOutputs] = useState<
     Map<string, AsciiOutput>
@@ -172,7 +188,7 @@ export function useAllArtboardsAsciiGeneration(
           return;
         }
 
-        const outputs = generateAllArtboards(artboards, boxes, options);
+        const outputs = generateAllArtboards(artboards, boxes, options, lines);
         const formatted = formatMultipleArtboards(outputs, artboards);
 
         setArtboardOutputs(outputs);
@@ -195,7 +211,7 @@ export function useAllArtboardsAsciiGeneration(
     return () => {
       clearTimeout(timer);
     };
-  }, [boxes, artboards, options]);
+  }, [boxes, lines, artboards, options]);
 
   const regenerate = () => {
     try {
@@ -210,7 +226,7 @@ export function useAllArtboardsAsciiGeneration(
         return;
       }
 
-      const outputs = generateAllArtboards(artboards, boxes, options);
+      const outputs = generateAllArtboards(artboards, boxes, options, lines);
       const formatted = formatMultipleArtboards(outputs, artboards);
 
       setArtboardOutputs(outputs);

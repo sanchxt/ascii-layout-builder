@@ -10,9 +10,11 @@ import {
   Type,
 } from "lucide-react";
 import type { Box } from "@/types/box";
+import type { Line } from "@/types/line";
 import { useBoxStore } from "../store/boxStore";
 import { useLayersUIStore } from "../store/layersUIStore";
 import { cn } from "@/lib/utils";
+import { LineLayerItem } from "@/features/lines/components/LineLayerItem";
 
 interface DragStateType {
   draggedBoxId: string | null;
@@ -24,6 +26,8 @@ interface LayerItemProps {
   box: Box;
   depth: number;
   allBoxes: Box[];
+  childLines?: Line[];
+  allLines?: Line[];
   onDragStart?: (boxId: string, e: React.DragEvent) => void;
   onDragOver?: (
     boxId: string,
@@ -39,6 +43,8 @@ export const LayerItem = ({
   box,
   depth,
   allBoxes,
+  childLines = [],
+  allLines = [],
   onDragStart,
   onDragOver,
   onDrop,
@@ -59,7 +65,9 @@ export const LayerItem = ({
   const toggleExpanded = useLayersUIStore((state) => state.toggleExpanded);
 
   const isSelected = selectedBoxIds.includes(box.id);
-  const hasChildren = box.children.length > 0;
+  const hasChildBoxes = box.children.length > 0;
+  const hasChildLines = childLines.length > 0;
+  const hasChildren = hasChildBoxes || hasChildLines;
   const expanded = expandedBoxIds.has(box.id);
   const isVisible = box.visible !== false;
   const isLocked = box.locked === true;
@@ -288,12 +296,17 @@ export const LayerItem = ({
           {box.children.map((childId) => {
             const childBox = getBox(childId);
             if (!childBox) return null;
+            const childBoxLines = allLines.filter(
+              (line) => line.parentId === childId
+            );
             return (
               <LayerItem
                 key={childId}
                 box={childBox}
                 depth={depth + 1}
                 allBoxes={allBoxes}
+                childLines={childBoxLines}
+                allLines={allLines}
                 onDragStart={onDragStart}
                 onDragOver={onDragOver}
                 onDrop={onDrop}
@@ -302,6 +315,10 @@ export const LayerItem = ({
               />
             );
           })}
+
+          {childLines.map((line) => (
+            <LineLayerItem key={line.id} line={line} depth={depth + 1} />
+          ))}
         </div>
       )}
     </div>

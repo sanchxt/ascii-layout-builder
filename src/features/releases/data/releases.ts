@@ -3,11 +3,23 @@ import type { Release } from "../types/release";
 export const releases: Release[] = [
   {
     version: "0.1.7",
-    date: "Nov 30, 2025",
+    date: "Dec 2, 2025",
     changes: [
       {
-        text: "Empty canvas on first load (no auto-created artboard)",
+        text: "Lines tool for drawing horizontal and vertical connectors",
+        category: "feature",
+      },
+      {
+        text: "Line nesting inside boxes with depth indicators",
+        category: "feature",
+      },
+      {
+        text: "Empty canvas on first load (no auto created artboard)",
         category: "change",
+      },
+      {
+        text: "Smoother trackpad pinch-to-zoom with proportional sensitivity",
+        category: "fix",
       },
     ],
   },

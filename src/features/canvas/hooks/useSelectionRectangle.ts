@@ -1,9 +1,11 @@
 import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import {
   getRootBoxes,
   getAbsolutePosition,
 } from "@/features/boxes/utils/boxHierarchy";
+import { lineIntersectsRect } from "@/features/lines/utils/lineHierarchy";
 import type { Box } from "@/types/box";
 
 const rectanglesIntersect = (
@@ -29,6 +31,10 @@ export const useSelectionRectangle = () => {
   const boxes = useBoxStore((state) => state.boxes);
   const selectBox = useBoxStore((state) => state.selectBox);
   const clearSelection = useBoxStore((state) => state.clearSelection);
+
+  const lines = useLineStore((state) => state.lines);
+  const selectLine = useLineStore((state) => state.selectLine);
+  const clearLineSelection = useLineStore((state) => state.clearLineSelection);
 
   const startSelection = (canvasX: number, canvasY: number) => {
     startSelectionRect(canvasX, canvasY);
@@ -79,15 +85,46 @@ export const useSelectionRectangle = () => {
 
     rootBoxes.forEach((box) => checkBoxIntersection(box));
 
-    if (selectedBoxIds.length > 0) {
+    const selectedLineIds: string[] = [];
+    const visibleLines = lines.filter(
+      (line) => line.visible !== false && !line.locked
+    );
+
+    visibleLines.forEach((line) => {
+      if (
+        lineIntersectsRect(
+          line,
+          boxes,
+          selectionLeft,
+          selectionTop,
+          selectionWidth,
+          selectionHeight
+        )
+      ) {
+        selectedLineIds.push(line.id);
+      }
+    });
+
+    const hasBoxSelection = selectedBoxIds.length > 0;
+    const hasLineSelection = selectedLineIds.length > 0;
+    const hasAnySelection = hasBoxSelection || hasLineSelection;
+
+    if (hasAnySelection) {
       if (shiftKey) {
         selectedBoxIds.forEach((id) => selectBox(id, true));
+        selectedLineIds.forEach((id) => selectLine(id, true, true));
       } else {
         clearSelection();
+        clearLineSelection();
         selectedBoxIds.forEach((id, index) => selectBox(id, index > 0));
+        selectedLineIds.forEach((id, index) => {
+          const isMulti = hasBoxSelection || index > 0;
+          selectLine(id, isMulti, hasBoxSelection);
+        });
       }
     } else if (!shiftKey) {
       clearSelection();
+      clearLineSelection();
     }
 
     clearSelectionRect();
