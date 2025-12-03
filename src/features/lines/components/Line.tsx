@@ -133,7 +133,7 @@ export const Line = React.memo(function Line({
 
     const color = isSelected
       ? LINE_CONSTANTS.SELECTION_OUTLINE_COLOR
-      : "#374151";
+      : "var(--foreground)";
 
     if (style === "simple") {
       const path = isStart ? "M 10 0 L 0 5 L 10 10" : "M 0 0 L 10 5 L 0 10";
@@ -204,7 +204,7 @@ export const Line = React.memo(function Line({
         y1={startY}
         x2={endX}
         y2={endY}
-        stroke={isSelected ? LINE_CONSTANTS.SELECTION_OUTLINE_COLOR : "#374151"}
+        stroke={isSelected ? LINE_CONSTANTS.SELECTION_OUTLINE_COLOR : "var(--foreground)"}
         strokeWidth={isSelected ? 2 : 1.5}
         strokeDasharray={dashArray !== "none" ? dashArray : undefined}
         markerStart={
@@ -236,7 +236,7 @@ export const Line = React.memo(function Line({
             y={startY - handleSize / 2}
             width={handleSize}
             height={handleSize}
-            fill="white"
+            fill="var(--background)"
             stroke={LINE_CONSTANTS.SELECTION_OUTLINE_COLOR}
             strokeWidth={1.5}
             style={{ cursor: "grab" }}
@@ -248,7 +248,7 @@ export const Line = React.memo(function Line({
             y={endY - handleSize / 2}
             width={handleSize}
             height={handleSize}
-            fill="white"
+            fill="var(--background)"
             stroke={LINE_CONSTANTS.SELECTION_OUTLINE_COLOR}
             strokeWidth={1.5}
             style={{ cursor: "grab" }}
@@ -283,8 +283,8 @@ export const Line = React.memo(function Line({
             y={-12}
             width={line.label.text.length * 7 + 8}
             height={16}
-            fill="white"
-            stroke="#e5e7eb"
+            fill="var(--card)"
+            stroke="var(--border)"
             strokeWidth={1}
             rx={2}
           />
@@ -292,7 +292,7 @@ export const Line = React.memo(function Line({
             x={0}
             y={0}
             fontSize={12}
-            fill="#374151"
+            fill="var(--foreground)"
             style={{ userSelect: "none", pointerEvents: "none" }}
           >
             {line.label.text}
@@ -311,8 +311,8 @@ export const Line = React.memo(function Line({
             width={20}
             height={14}
             rx={2}
-            fill="rgba(255, 255, 255, 0.9)"
-            stroke="#d1d5db"
+            fill="var(--card)"
+            stroke="var(--border)"
             strokeWidth={0.5}
           />
           <text
@@ -320,7 +320,7 @@ export const Line = React.memo(function Line({
             y={2}
             fontSize={9}
             fontFamily="monospace"
-            fill="#9ca3af"
+            fill="var(--muted-foreground)"
             textAnchor="middle"
             style={{ userSelect: "none" }}
           >

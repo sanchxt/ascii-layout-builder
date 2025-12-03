@@ -43,14 +43,14 @@ const PropertyInput = ({
   className?: string;
 }) => (
   <div className={cn("relative", className)}>
-    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 pointer-events-none">
+    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-muted-foreground pointer-events-none">
       {label}
     </span>
     <input
       type="number"
       value={Math.round(value)}
       onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full pl-6 pr-2 py-1.5 text-xs font-mono text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
+      className="w-full pl-6 pr-2 py-1.5 text-xs font-mono text-foreground bg-muted border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring focus:bg-background transition-all"
     />
   </div>
 );
@@ -66,8 +66,8 @@ const PropertySection = ({
 }) => (
   <div className="space-y-2">
     <div className="flex items-center gap-1.5">
-      {Icon && <Icon className="w-3 h-3 text-zinc-400" />}
-      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+      {Icon && <Icon className="w-3 h-3 text-muted-foreground" />}
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         {title}
       </span>
     </div>
@@ -104,8 +104,8 @@ const ArrowButton = ({
       className={cn(
         "flex-1 flex items-center justify-center py-1.5 rounded-md transition-all",
         currentStyle === style
-          ? "bg-white text-zinc-800 shadow-sm"
-          : "text-zinc-500 hover:text-zinc-700"
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
       )}
     >
       {getIcon()}
@@ -129,13 +129,13 @@ export const LinePropertiesContent = () => {
   if (selectedLines.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center mb-2">
-          <Minus className="w-5 h-5 text-zinc-300" />
+        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-2">
+          <Minus className="w-5 h-5 text-muted-foreground/30" />
         </div>
-        <p className="text-xs font-medium text-zinc-500 mb-0.5">
+        <p className="text-xs font-medium text-muted-foreground mb-0.5">
           No line selected
         </p>
-        <p className="text-[10px] text-zinc-400">Select a line to edit</p>
+        <p className="text-[10px] text-muted-foreground/70">Select a line to edit</p>
       </div>
     );
   }
@@ -143,20 +143,20 @@ export const LinePropertiesContent = () => {
   if (selectedLines.length > 1) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-2">
-          <span className="text-lg font-bold text-blue-600">
+        <div className="w-12 h-12 rounded-xl bg-canvas-selection-bg flex items-center justify-center mb-2">
+          <span className="text-lg font-bold text-canvas-selection">
             {selectedLines.length}
           </span>
         </div>
-        <p className="text-xs font-medium text-zinc-700 mb-0.5">
+        <p className="text-xs font-medium text-foreground mb-0.5">
           Multiple lines
         </p>
-        <p className="text-[10px] text-zinc-400 mb-4">Multi-edit coming soon</p>
+        <p className="text-[10px] text-muted-foreground mb-4">Multi-edit coming soon</p>
 
         <div className="w-full space-y-2">
           <button
             onClick={() => deleteLines(selectedLineIds)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-lg transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete All
@@ -187,15 +187,15 @@ export const LinePropertiesContent = () => {
   return (
     <div className="h-full overflow-y-auto">
       <div className="p-3 space-y-4">
-        <div className="flex items-center justify-between px-2 py-1.5 bg-zinc-50 rounded-lg">
-          <span className="text-[10px] text-zinc-500">Direction</span>
+        <div className="flex items-center justify-between px-2 py-1.5 bg-muted rounded-lg">
+          <span className="text-[10px] text-muted-foreground">Direction</span>
           <div className="flex items-center gap-1.5">
             {line.direction === "horizontal" ? (
-              <ArrowRight className="w-3.5 h-3.5 text-zinc-600" />
+              <ArrowRight className="w-3.5 h-3.5 text-foreground" />
             ) : (
-              <ArrowDown className="w-3.5 h-3.5 text-zinc-600" />
+              <ArrowDown className="w-3.5 h-3.5 text-foreground" />
             )}
-            <span className="text-[10px] font-medium text-zinc-700 capitalize">
+            <span className="text-[10px] font-medium text-foreground capitalize">
               {line.direction}
             </span>
           </div>
@@ -239,10 +239,10 @@ export const LinePropertiesContent = () => {
           />
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <PropertySection title="Start Arrow">
-          <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-lg">
+          <div className="flex gap-0.5 p-0.5 bg-muted rounded-lg">
             {(["none", "simple", "filled"] as ArrowHeadStyle[]).map((style) => (
               <ArrowButton
                 key={style}
@@ -256,7 +256,7 @@ export const LinePropertiesContent = () => {
         </PropertySection>
 
         <PropertySection title="End Arrow">
-          <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-lg">
+          <div className="flex gap-0.5 p-0.5 bg-muted rounded-lg">
             {(["none", "simple", "filled"] as ArrowHeadStyle[]).map((style) => (
               <ArrowButton
                 key={style}
@@ -269,10 +269,10 @@ export const LinePropertiesContent = () => {
           </div>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <PropertySection title="Line Style">
-          <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-lg">
+          <div className="flex gap-0.5 p-0.5 bg-muted rounded-lg">
             {(["solid", "dashed", "dotted"] as const).map((style) => (
               <button
                 key={style}
@@ -280,8 +280,8 @@ export const LinePropertiesContent = () => {
                 className={cn(
                   "flex-1 py-1.5 text-[10px] font-medium rounded-md capitalize transition-all",
                   line.lineStyle === style
-                    ? "bg-white text-zinc-800 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {style}
@@ -290,7 +290,7 @@ export const LinePropertiesContent = () => {
           </div>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <PropertySection title="Output Mode" icon={FileCode}>
           <Select
@@ -310,7 +310,7 @@ export const LinePropertiesContent = () => {
           </Select>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <PropertySection title="Label" icon={Type}>
           <div className="space-y-2">
@@ -319,7 +319,7 @@ export const LinePropertiesContent = () => {
               value={line.label?.text || ""}
               onChange={(e) => handleLabelUpdate("text", e.target.value)}
               placeholder="Add label..."
-              className="w-full px-2 py-1.5 text-xs bg-zinc-50 border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
+              className="w-full px-2 py-1.5 text-xs text-foreground bg-muted border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring focus:bg-background transition-all placeholder:text-muted-foreground"
             />
             {line.label?.text && (
               <Select
@@ -341,26 +341,26 @@ export const LinePropertiesContent = () => {
           </div>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         {(line.startConnection || line.endConnection) && (
           <>
-            <div className="space-y-1 px-2 py-1.5 bg-blue-50 rounded-lg">
-              <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
+            <div className="space-y-1 px-2 py-1.5 bg-canvas-selection-bg rounded-lg">
+              <span className="text-[10px] font-semibold text-canvas-selection uppercase tracking-wider">
                 Connections
               </span>
               {line.startConnection && (
-                <p className="text-[10px] text-blue-600">
+                <p className="text-[10px] text-canvas-selection">
                   Start: {line.startConnection.side} of box
                 </p>
               )}
               {line.endConnection && (
-                <p className="text-[10px] text-blue-600">
+                <p className="text-[10px] text-canvas-selection">
                   End: {line.endConnection.side} of box
                 </p>
               )}
             </div>
-            <div className="h-px bg-zinc-100" />
+            <div className="h-px bg-border" />
           </>
         )}
 
@@ -370,8 +370,8 @@ export const LinePropertiesContent = () => {
             className={cn(
               "flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors",
               line.locked
-                ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
+                ? "bg-warning/20 text-warning-foreground border-warning hover:bg-warning/30"
+                : "bg-background text-foreground border-border hover:bg-muted"
             )}
           >
             {line.locked ? (
@@ -384,7 +384,7 @@ export const LinePropertiesContent = () => {
 
           <button
             onClick={() => duplicateLines([line.id])}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-background border border-border rounded-lg hover:bg-muted transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             Duplicate
@@ -393,14 +393,14 @@ export const LinePropertiesContent = () => {
 
         <button
           onClick={() => deleteLines([line.id])}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 rounded-lg transition-colors"
         >
           <Trash2 className="w-3.5 h-3.5" />
           Delete
         </button>
 
         <div className="pt-2 text-center">
-          <span className="text-[9px] text-zinc-300 font-mono">{line.id}</span>
+          <span className="text-[9px] text-muted-foreground/50 font-mono">{line.id}</span>
         </div>
       </div>
     </div>

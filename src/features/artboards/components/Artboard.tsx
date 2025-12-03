@@ -89,8 +89,8 @@ export const Artboard: FC<ArtboardProps> = ({
         className={cn(
           "absolute bottom-full left-0 mb-1 px-2 py-0.5 rounded-t-sm text-[10px] font-semibold tracking-wide transition-colors flex items-center gap-2 select-none",
           isSelected
-            ? "bg-blue-500 text-white shadow-sm"
-            : "text-zinc-500 group-hover:text-zinc-800"
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "text-muted-foreground group-hover:text-foreground"
         )}
         style={{
           cursor: artboard.locked
@@ -104,14 +104,14 @@ export const Artboard: FC<ArtboardProps> = ({
         <span
           className={cn(
             "font-normal opacity-70",
-            isSelected ? "text-blue-100" : "text-zinc-400"
+            isSelected ? "text-primary-foreground/70" : "text-muted-foreground"
           )}
         >
           {artboard.width}×{artboard.height}
         </span>
         {hasOverflow && (
           <div
-            className="w-1.5 h-1.5 rounded-full bg-amber-400"
+            className="w-1.5 h-1.5 rounded-full bg-canvas-warning"
             title="Content overflow"
           />
         )}
@@ -120,11 +120,11 @@ export const Artboard: FC<ArtboardProps> = ({
       <div
         data-artboard-boundary
         className={cn(
-          "absolute inset-0 bg-white transition-all",
+          "absolute inset-0 bg-card transition-all",
           isSelected
-            ? "ring-2 ring-blue-500 shadow-lg shadow-blue-500/10"
-            : "shadow-sm border border-zinc-200 hover:border-zinc-300",
-          artboard.locked && "bg-zinc-50/50"
+            ? "ring-2 ring-primary shadow-lg shadow-primary/10"
+            : "shadow-sm border border-border hover:border-muted-foreground/30",
+          artboard.locked && "bg-muted/50"
         )}
         style={{
           cursor: artboard.locked
@@ -138,7 +138,8 @@ export const Artboard: FC<ArtboardProps> = ({
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)",
+              backgroundImage:
+                "radial-gradient(var(--border) 1px, transparent 1px)",
               backgroundSize: "20px 20px",
               opacity: 0.5,
             }}

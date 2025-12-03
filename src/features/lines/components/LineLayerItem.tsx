@@ -84,7 +84,7 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
     <div className="select-none relative">
       {depth > 0 && (
         <div
-          className="absolute top-0 bottom-0 border-l border-zinc-200"
+          className="absolute top-0 bottom-0 border-l border-border"
           style={{ left: `${depth * 16 + 11}px` }}
         />
       )}
@@ -93,8 +93,8 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
         className={cn(
           "group flex items-center h-9 pr-2 cursor-pointer transition-colors relative border-b border-transparent",
           isSelected
-            ? "bg-blue-50/80 text-blue-700"
-            : "hover:bg-zinc-50 text-zinc-700",
+            ? "bg-canvas-selection-bg text-canvas-selection"
+            : "hover:bg-muted text-foreground",
           !isVisible && "opacity-50"
         )}
         style={{ paddingLeft: `${depth * 16 + 6}px` }}
@@ -106,7 +106,7 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
         <Minus
           className={cn(
             "w-3.5 h-3.5 mr-2 shrink-0 -rotate-45",
-            isSelected ? "text-blue-500" : "text-zinc-400"
+            isSelected ? "text-canvas-selection" : "text-muted-foreground"
           )}
         />
 
@@ -119,7 +119,7 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={handleEditComplete}
               onKeyDown={handleEditKeyDown}
-              className="w-full px-1 py-0.5 text-xs bg-white border border-blue-500 rounded focus:outline-none shadow-sm"
+              className="w-full px-1 py-0.5 text-xs bg-background border border-canvas-selection rounded focus:outline-none shadow-sm text-foreground"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
@@ -140,27 +140,27 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
           <button
             onClick={handleToggleLock}
             className={cn(
-              "p-1 rounded hover:bg-zinc-200 transition-colors",
-              isLocked && "text-amber-600 bg-amber-50 hover:bg-amber-100"
+              "p-1 rounded hover:bg-accent transition-colors",
+              isLocked && "text-warning-foreground bg-warning/20 hover:bg-warning/30"
             )}
             title={isLocked ? "Unlock" : "Lock"}
           >
             {isLocked ? (
               <Lock className="w-3 h-3" />
             ) : (
-              <LockOpen className="w-3 h-3 text-zinc-400" />
+              <LockOpen className="w-3 h-3 text-muted-foreground" />
             )}
           </button>
 
           <button
             onClick={handleToggleVisibility}
-            className="p-1 rounded hover:bg-zinc-200 transition-colors"
+            className="p-1 rounded hover:bg-accent transition-colors"
             title={isVisible ? "Hide" : "Show"}
           >
             {isVisible ? (
-              <Eye className="w-3 h-3 text-zinc-400" />
+              <Eye className="w-3 h-3 text-muted-foreground" />
             ) : (
-              <EyeOff className="w-3 h-3 text-zinc-400" />
+              <EyeOff className="w-3 h-3 text-muted-foreground" />
             )}
           </button>
         </div>

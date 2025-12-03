@@ -16,14 +16,12 @@ export const SelectionRectangle = ({
 
   return (
     <div
-      className="absolute pointer-events-none"
+      className="absolute pointer-events-none border-2 border-dashed border-canvas-selection bg-canvas-selection-bg"
       style={{
         left: `${left}px`,
         top: `${top}px`,
         width: `${width}px`,
         height: `${height}px`,
-        border: "2px dashed #3b82f6",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
         zIndex: 9999,
       }}
     />

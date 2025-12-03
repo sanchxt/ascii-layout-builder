@@ -5,9 +5,11 @@ import { InlineCommandInput } from "@/features/commands/components/InlineCommand
 import { useInlineCommand } from "@/features/commands/hooks/useInlineCommand";
 import { OutputDrawer } from "@/features/output-drawer/components/OutputDrawer";
 import { LayoutPanel } from "@/features/layout-system/components/LayoutPanel";
+import { useThemeEffect } from "@/features/theme/hooks/useThemeEffect";
 
 function App() {
   useInlineCommand();
+  useThemeEffect();
 
   return (
     <AppLayout>

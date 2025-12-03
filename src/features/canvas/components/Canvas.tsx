@@ -576,7 +576,7 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-zinc-50/50">
+    <div className="relative w-full h-full overflow-hidden bg-canvas-background">
       <div
         ref={canvasRef}
         className="absolute inset-0"
@@ -695,7 +695,7 @@ export const Canvas = ({ children }: CanvasProps) => {
                   y1={tempLine.startY}
                   x2={tempLine.endX ?? tempLine.startX}
                   y2={tempLine.endY ?? tempLine.startY}
-                  stroke="#3b82f6"
+                  stroke="var(--canvas-selection)"
                   strokeWidth={2}
                   strokeDasharray="4 4"
                   style={{ pointerEvents: "none" }}
@@ -739,7 +739,7 @@ export const Canvas = ({ children }: CanvasProps) => {
 
           {tempBox && (
             <div
-              className="absolute border-2 border-dashed border-blue-500 bg-blue-50/30 pointer-events-none"
+              className="absolute border-2 border-dashed border-canvas-selection bg-canvas-selection-bg pointer-events-none"
               style={{
                 left: tempBox.x,
                 top: tempBox.y,
@@ -755,22 +755,22 @@ export const Canvas = ({ children }: CanvasProps) => {
 
           {boxes.length === 0 && !tempBox && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-              <div className="flex flex-col items-center gap-4 text-zinc-400">
+              <div className="flex flex-col items-center gap-4 text-muted-foreground">
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 shadow-sm flex items-center justify-center">
-                      <Square className="w-6 h-6 text-zinc-400" />
+                    <div className="w-12 h-12 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center">
+                      <Square className="w-6 h-6 text-muted-foreground" />
                     </div>
                     <span className="text-xs font-medium">Box Tool (B)</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 shadow-sm flex items-center justify-center">
-                      <MousePointer2 className="w-6 h-6 text-zinc-400" />
+                    <div className="w-12 h-12 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center">
+                      <MousePointer2 className="w-6 h-6 text-muted-foreground" />
                     </div>
                     <span className="text-xs font-medium">Select (V)</span>
                   </div>
                 </div>
-                <p className="text-sm text-zinc-400 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   Start by selecting a tool or dragging on the canvas
                 </p>
               </div>

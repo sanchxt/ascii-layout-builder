@@ -1,4 +1,4 @@
-import { Settings, Sliders, Code2 } from "lucide-react";
+import { Settings, Sliders, Code2, Palette, X } from "lucide-react";
 import { ResizablePanel, PanelAction } from "@/components/ui/resizable-panel";
 import { Navigator } from "./Navigator";
 import { PropertiesContent } from "@/features/boxes/components/PropertiesContent";
@@ -6,6 +6,8 @@ import { LinePropertiesContent } from "@/features/lines/components/LinePropertie
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useLineStore } from "@/features/lines/store/lineStore";
 import { useOutputDrawerStore } from "@/features/output-drawer/store/outputDrawerStore";
+import { useThemeStore } from "@/features/theme/store/themeStore";
+import { ThemeBuilder } from "@/features/theme/components/ThemeBuilder";
 import { cn } from "@/lib/utils";
 
 export const RightSidebar = () => {
@@ -19,10 +21,15 @@ export const RightSidebar = () => {
   const isOutputOpen = useOutputDrawerStore((state) => state.isOpen);
   const toggleOutput = useOutputDrawerStore((state) => state.toggle);
 
+  const isThemeBuilderOpen = useThemeStore((state) => state.isThemeBuilderOpen);
+  const setThemeBuilderOpen = useThemeStore(
+    (state) => state.setThemeBuilderOpen
+  );
+
   return (
-    <aside className="w-72 flex flex-col border-l border-zinc-200/80 bg-linear-to-b from-zinc-50 to-zinc-100/50 overflow-hidden">
-      <div className="shrink-0 h-10 px-3 flex items-center justify-between border-b border-zinc-200/80 bg-white/60">
-        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+    <aside className="w-72 flex flex-col border-l border-border bg-gradient-to-b from-sidebar to-sidebar/80 overflow-hidden">
+      <div className="shrink-0 h-10 px-3 flex items-center justify-between border-b border-sidebar-border bg-card/60">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
           Design
         </span>
         <button
@@ -30,8 +37,8 @@ export const RightSidebar = () => {
           className={cn(
             "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all",
             isOutputOpen
-              ? "bg-blue-50 text-blue-600"
-              : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100"
+              ? "bg-accent text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
           )}
           title="Toggle Output Panel (ASCII & Code)"
         >
@@ -61,6 +68,27 @@ export const RightSidebar = () => {
       >
         {hasLineSelection ? <LinePropertiesContent /> : <PropertiesContent />}
       </ResizablePanel>
+
+      {isThemeBuilderOpen && (
+        <div className="absolute inset-0 z-50 bg-sidebar flex flex-col">
+          <div className="shrink-0 h-10 px-3 flex items-center justify-between border-b border-sidebar-border bg-card/60">
+            <div className="flex items-center gap-2">
+              <Palette className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">
+                Theme Builder
+              </span>
+            </div>
+            <button
+              onClick={() => setThemeBuilderOpen(false)}
+              className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
+              title="Close Theme Builder"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <ThemeBuilder />
+        </div>
+      )}
     </aside>
   );
 };

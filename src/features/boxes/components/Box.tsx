@@ -226,7 +226,7 @@ export const Box = ({
       onDoubleClick={handleDoubleClick}
     >
       <div
-        className="w-full h-full bg-white/50 backdrop-blur-sm relative"
+        className="w-full h-full bg-canvas-box-bg backdrop-blur-sm relative"
         style={{
           border: borderStyle,
           padding: box.padding,
@@ -234,7 +234,7 @@ export const Box = ({
       >
         {nestingDepth > 0 && (
           <div
-            className="absolute top-1 right-1 text-xs font-mono text-gray-400 bg-white/70 px-1 rounded pointer-events-none"
+            className="absolute top-1 right-1 text-xs font-mono text-muted-foreground bg-card/70 px-1 rounded pointer-events-none"
             title={`Nesting depth: ${nestingDepth}`}
           >
             L{nestingDepth}
@@ -243,7 +243,7 @@ export const Box = ({
 
         {isLocked && (
           <div
-            className="absolute top-1 left-1 bg-gray-900/80 text-white px-1.5 py-0.5 rounded flex items-center gap-1 pointer-events-none"
+            className="absolute top-1 left-1 bg-primary text-primary-foreground px-1.5 py-0.5 rounded flex items-center gap-1 pointer-events-none"
             title="This box is locked"
           >
             <Lock className="w-3 h-3" />
@@ -310,7 +310,7 @@ export const Box = ({
         )}
 
         {!isEditing && !box.text.value && isSelected && (
-          <div className="text-xs text-gray-400 italic">
+          <div className="text-xs text-muted-foreground italic">
             Double-click to add text
           </div>
         )}
@@ -383,10 +383,10 @@ export const Box = ({
 const getBorderStyleCSS = (borderStyle: BoxType["borderStyle"]): string => {
   switch (borderStyle) {
     case "single":
-      return "2px solid #94a3b8";
+      return "2px solid var(--canvas-box-border)";
     case "double":
-      return "4px double #94a3b8";
+      return "4px double var(--canvas-box-border)";
     case "dashed":
-      return "2px dashed #94a3b8";
+      return "2px dashed var(--canvas-box-border)";
   }
 };

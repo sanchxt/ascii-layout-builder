@@ -170,13 +170,13 @@ export const LayerItem = ({
     <div className="select-none relative">
       {depth > 0 && (
         <div
-          className="absolute top-0 bottom-0 border-l border-zinc-200"
+          className="absolute top-0 bottom-0 border-l border-border"
           style={{ left: `${depth * 16 + 11}px` }}
         />
       )}
 
       {isDropTarget && dropPosition === "before" && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 z-20" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-canvas-selection z-20" />
       )}
 
       <div
@@ -188,13 +188,13 @@ export const LayerItem = ({
         className={cn(
           "group flex items-center h-9 pr-2 cursor-pointer transition-colors relative border-b border-transparent",
           isSelected
-            ? "bg-blue-50/80 text-blue-700"
-            : "hover:bg-zinc-50 text-zinc-700",
+            ? "bg-canvas-selection-bg text-canvas-selection"
+            : "hover:bg-muted text-foreground",
           !isVisible && "opacity-50",
-          isDragging && "opacity-40 bg-zinc-100",
+          isDragging && "opacity-40 bg-muted",
           isDropTarget &&
             dropPosition === "inside" &&
-            "bg-blue-50 ring-1 ring-inset ring-blue-300"
+            "bg-canvas-selection-bg ring-1 ring-inset ring-canvas-selection/50"
         )}
         style={{ paddingLeft: `${depth * 16 + 6}px` }}
         onClick={handleClick}
@@ -204,12 +204,12 @@ export const LayerItem = ({
           {hasChildren ? (
             <button
               onClick={handleToggleExpand}
-              className="hover:bg-zinc-200 rounded p-0.5 transition-colors"
+              className="hover:bg-accent rounded p-0.5 transition-colors"
             >
               {expanded ? (
-                <ChevronDown className="w-3 h-3 text-zinc-500" />
+                <ChevronDown className="w-3 h-3 text-muted-foreground" />
               ) : (
-                <ChevronRight className="w-3 h-3 text-zinc-500" />
+                <ChevronRight className="w-3 h-3 text-muted-foreground" />
               )}
             </button>
           ) : null}
@@ -219,14 +219,14 @@ export const LayerItem = ({
           <Type
             className={cn(
               "w-3.5 h-3.5 mr-2 shrink-0",
-              isSelected ? "text-blue-500" : "text-zinc-400"
+              isSelected ? "text-canvas-selection" : "text-muted-foreground"
             )}
           />
         ) : (
           <Square
             className={cn(
               "w-3.5 h-3.5 mr-2 shrink-0",
-              isSelected ? "text-blue-500" : "text-zinc-400"
+              isSelected ? "text-canvas-selection" : "text-muted-foreground"
             )}
           />
         )}
@@ -240,7 +240,7 @@ export const LayerItem = ({
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={handleEditComplete}
               onKeyDown={handleEditKeyDown}
-              className="w-full px-1 py-0.5 text-xs bg-white border border-blue-500 rounded focus:outline-none shadow-sm"
+              className="w-full px-1 py-0.5 text-xs bg-background border border-canvas-selection rounded focus:outline-none shadow-sm text-foreground"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
@@ -261,34 +261,34 @@ export const LayerItem = ({
           <button
             onClick={handleToggleLock}
             className={cn(
-              "p-1 rounded hover:bg-zinc-200 transition-colors",
-              isLocked && "text-amber-600 bg-amber-50 hover:bg-amber-100"
+              "p-1 rounded hover:bg-accent transition-colors",
+              isLocked && "text-warning-foreground bg-warning/20 hover:bg-warning/30"
             )}
             title={isLocked ? "Unlock" : "Lock"}
           >
             {isLocked ? (
               <Lock className="w-3 h-3" />
             ) : (
-              <LockOpen className="w-3 h-3 text-zinc-400" />
+              <LockOpen className="w-3 h-3 text-muted-foreground" />
             )}
           </button>
 
           <button
             onClick={handleToggleVisibility}
-            className="p-1 rounded hover:bg-zinc-200 transition-colors"
+            className="p-1 rounded hover:bg-accent transition-colors"
             title={isVisible ? "Hide" : "Show"}
           >
             {isVisible ? (
-              <Eye className="w-3 h-3 text-zinc-400" />
+              <Eye className="w-3 h-3 text-muted-foreground" />
             ) : (
-              <EyeOff className="w-3 h-3 text-zinc-400" />
+              <EyeOff className="w-3 h-3 text-muted-foreground" />
             )}
           </button>
         </div>
       </div>
 
       {isDropTarget && dropPosition === "after" && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 z-20" />
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-canvas-selection z-20" />
       )}
 
       {hasChildren && expanded && (

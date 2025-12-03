@@ -38,9 +38,9 @@ export const DropZoneIndicator = ({
         style={{
           borderColor: isValid
             ? BOX_CONSTANTS.NESTING_HIGHLIGHT_COLOR
-            : "#ef4444",
+            : "var(--canvas-invalid)",
           boxShadow: isValid
-            ? `0 0 0 4px ${BOX_CONSTANTS.NESTING_HIGHLIGHT_COLOR}33`
+            ? `0 0 0 4px color-mix(in oklch, ${BOX_CONSTANTS.NESTING_HIGHLIGHT_COLOR} 20%, transparent)`
             : "none",
         }}
       />
@@ -61,7 +61,7 @@ export const DropZoneIndicator = ({
       {!isValid && validationMessage && (
         <div
           className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2
-                     bg-red-500 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap"
+                     bg-canvas-invalid text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap"
           style={{
             zIndex: 10000,
           }}
@@ -71,7 +71,7 @@ export const DropZoneIndicator = ({
             <div
               className="absolute top-full left-1/2 transform -translate-x-1/2
                          w-0 h-0 border-l-4 border-r-4 border-t-4
-                         border-transparent border-t-red-500"
+                         border-transparent border-t-canvas-invalid"
             />
           </div>
         </div>
@@ -80,7 +80,7 @@ export const DropZoneIndicator = ({
       {isValid && (
         <div
           className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2
-                     bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap"
+                     bg-canvas-valid text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap"
           style={{
             zIndex: 10000,
           }}
@@ -103,7 +103,7 @@ export const DropZoneIndicator = ({
             <div
               className="absolute top-full left-1/2 transform -translate-x-1/2
                          w-0 h-0 border-l-4 border-r-4 border-t-4
-                         border-transparent border-t-green-500"
+                         border-transparent border-t-canvas-valid"
             />
           </div>
         </div>

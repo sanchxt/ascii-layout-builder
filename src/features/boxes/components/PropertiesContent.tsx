@@ -52,14 +52,14 @@ const PropertyInput = ({
   className?: string;
 }) => (
   <div className={cn("relative", className)}>
-    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 pointer-events-none">
+    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-muted-foreground pointer-events-none">
       {label}
     </span>
     <input
       type="number"
       value={Math.round(value)}
       onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full pl-6 pr-2 py-1.5 text-xs font-mono text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
+      className="w-full pl-6 pr-2 py-1.5 text-xs font-mono text-foreground bg-muted border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring focus:bg-background transition-all"
     />
   </div>
 );
@@ -75,8 +75,8 @@ const PropertySection = ({
 }) => (
   <div className="space-y-2">
     <div className="flex items-center gap-1.5">
-      {Icon && <Icon className="w-3 h-3 text-zinc-400" />}
-      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+      {Icon && <Icon className="w-3 h-3 text-muted-foreground" />}
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         {title}
       </span>
     </div>
@@ -101,11 +101,11 @@ export const PropertiesContent = () => {
   if (selectedBoxes.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center mb-2">
-          <BoxSelect className="w-5 h-5 text-zinc-300" />
+        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-2">
+          <BoxSelect className="w-5 h-5 text-muted-foreground/30" />
         </div>
-        <p className="text-xs font-medium text-zinc-500 mb-0.5">No selection</p>
-        <p className="text-[10px] text-zinc-400">Select an element to edit</p>
+        <p className="text-xs font-medium text-muted-foreground mb-0.5">No selection</p>
+        <p className="text-[10px] text-muted-foreground/70">Select an element to edit</p>
       </div>
     );
   }
@@ -113,20 +113,20 @@ export const PropertiesContent = () => {
   if (selectedBoxes.length > 1) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-2">
-          <span className="text-lg font-bold text-blue-600">
+        <div className="w-12 h-12 rounded-xl bg-canvas-selection-bg flex items-center justify-center mb-2">
+          <span className="text-lg font-bold text-canvas-selection">
             {selectedBoxes.length}
           </span>
         </div>
-        <p className="text-xs font-medium text-zinc-700 mb-0.5">
+        <p className="text-xs font-medium text-foreground mb-0.5">
           Multiple items
         </p>
-        <p className="text-[10px] text-zinc-400 mb-4">Multi-edit coming soon</p>
+        <p className="text-[10px] text-muted-foreground mb-4">Multi-edit coming soon</p>
 
         <div className="w-full space-y-2">
           <button
             onClick={() => deleteBoxes(selectedBoxIds)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-lg transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete All
@@ -190,10 +190,10 @@ export const PropertiesContent = () => {
           </div>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <PropertySection title="Border">
-          <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-lg">
+          <div className="flex gap-0.5 p-0.5 bg-muted rounded-lg">
             {(["single", "double", "dashed"] as BorderStyle[]).map((style) => (
               <button
                 key={style}
@@ -201,8 +201,8 @@ export const PropertiesContent = () => {
                 className={cn(
                   "flex-1 py-1.5 text-[10px] font-medium rounded-md capitalize transition-all",
                   box.borderStyle === style
-                    ? "bg-white text-zinc-800 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {style}
@@ -211,13 +211,13 @@ export const PropertiesContent = () => {
           </div>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <CompactLayoutSection box={box} updateBox={updateBox} />
 
         <ChildLayoutControls box={box} boxes={boxes} updateBox={updateBox} />
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <PropertySection title="Typography" icon={Type}>
           <div className="space-y-2">
@@ -229,14 +229,14 @@ export const PropertiesContent = () => {
                     text: { ...box.text, fontSize: e.target.value as any },
                   })
                 }
-                className="flex-1 px-2 py-1.5 text-xs bg-zinc-50 border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 px-2 py-1.5 text-xs text-foreground bg-muted border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="small">Small</option>
                 <option value="medium">Medium</option>
                 <option value="large">Large</option>
               </select>
 
-              <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-md">
+              <div className="flex gap-0.5 p-0.5 bg-muted rounded-md">
                 {[
                   { value: "left", icon: AlignLeft },
                   { value: "center", icon: AlignCenter },
@@ -252,8 +252,8 @@ export const PropertiesContent = () => {
                     className={cn(
                       "p-1.5 rounded transition-all",
                       box.text.alignment === value
-                        ? "bg-white text-zinc-800 shadow-sm"
-                        : "text-zinc-400 hover:text-zinc-600"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -263,7 +263,7 @@ export const PropertiesContent = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-zinc-400 font-mono">
+              <span className="text-[10px] text-muted-foreground font-mono">
                 {box.text.value.length}/{TEXT_CONSTANTS.MAX_LENGTH}
               </span>
               {box.text.value && (
@@ -273,7 +273,7 @@ export const PropertiesContent = () => {
                       text: { ...box.text, value: "", formatting: [] },
                     })
                   }
-                  className="text-[10px] text-red-500 hover:text-red-600 font-medium"
+                  className="text-[10px] text-destructive hover:text-destructive/80 font-medium"
                 >
                   Clear
                 </button>
@@ -282,11 +282,11 @@ export const PropertiesContent = () => {
           </div>
         </PropertySection>
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <div className="flex items-center justify-between py-1">
-          <span className="text-[10px] text-zinc-500">Nesting Level</span>
-          <span className="text-[10px] font-mono text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">
+          <span className="text-[10px] text-muted-foreground">Nesting Level</span>
+          <span className="text-[10px] font-mono text-foreground bg-muted px-2 py-0.5 rounded">
             L{getNestingDepth(box.id, boxes)}
           </span>
         </div>
@@ -294,14 +294,14 @@ export const PropertiesContent = () => {
         {box.parentId && (
           <button
             onClick={() => detachFromParent(box.id)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-accent border border-border rounded-lg transition-colors"
           >
             <ArrowUpFromLine className="w-3.5 h-3.5" />
             Detach
           </button>
         )}
 
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-border" />
 
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -309,8 +309,8 @@ export const PropertiesContent = () => {
             className={cn(
               "flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors",
               box.locked
-                ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
+                ? "bg-warning/20 text-warning-foreground border-warning hover:bg-warning/30"
+                : "bg-background text-foreground border-border hover:bg-muted"
             )}
           >
             {box.locked ? (
@@ -323,7 +323,7 @@ export const PropertiesContent = () => {
 
           <button
             onClick={() => duplicateBoxes([box.id])}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-background border border-border rounded-lg hover:bg-muted transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             Duplicate
@@ -332,14 +332,14 @@ export const PropertiesContent = () => {
 
         <button
           onClick={() => deleteBoxes([box.id])}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 rounded-lg transition-colors"
         >
           <Trash2 className="w-3.5 h-3.5" />
           Delete
         </button>
 
         <div className="pt-2 text-center">
-          <span className="text-[9px] text-zinc-300 font-mono">{box.id}</span>
+          <span className="text-[9px] text-muted-foreground/50 font-mono">{box.id}</span>
         </div>
       </div>
     </div>
@@ -386,15 +386,15 @@ function CompactLayoutSection({ box, updateBox }: CompactLayoutSectionProps) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <LayoutGrid className="w-3 h-3 text-zinc-400" />
-          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <LayoutGrid className="w-3 h-3 text-muted-foreground" />
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             Layout
           </span>
         </div>
         {hasLayout && (
           <button
             onClick={() => openLayoutPanel(box.id)}
-            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-canvas-selection hover:text-canvas-selection/80 hover:bg-canvas-selection-bg rounded transition-colors"
           >
             <Settings2 className="w-3 h-3" />
             Edit
@@ -402,14 +402,14 @@ function CompactLayoutSection({ box, updateBox }: CompactLayoutSectionProps) {
         )}
       </div>
 
-      <div className="flex gap-0.5 p-0.5 bg-zinc-100 rounded-lg">
+      <div className="flex gap-0.5 p-0.5 bg-muted rounded-lg">
         <button
           onClick={() => handleLayoutTypeChange("none")}
           className={cn(
             "flex-1 py-1.5 text-[10px] font-medium rounded-md transition-all",
             layoutType === "none"
-              ? "bg-white text-zinc-800 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-700"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           None
@@ -419,8 +419,8 @@ function CompactLayoutSection({ box, updateBox }: CompactLayoutSectionProps) {
           className={cn(
             "flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium rounded-md transition-all",
             layoutType === "flex"
-              ? "bg-white text-zinc-800 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-700"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Columns className="w-3 h-3" />
@@ -431,8 +431,8 @@ function CompactLayoutSection({ box, updateBox }: CompactLayoutSectionProps) {
           className={cn(
             "flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium rounded-md transition-all",
             layoutType === "grid"
-              ? "bg-white text-zinc-800 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-700"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <LayoutGrid className="w-3 h-3" />
@@ -443,21 +443,21 @@ function CompactLayoutSection({ box, updateBox }: CompactLayoutSectionProps) {
       {hasLayout && (
         <div
           onClick={() => openLayoutPanel(box.id)}
-          className="flex items-center gap-2 px-2.5 py-2 bg-zinc-50 rounded-lg border border-zinc-100 cursor-pointer hover:bg-zinc-100 transition-colors"
+          className="flex items-center gap-2 px-2.5 py-2 bg-muted rounded-lg border border-border cursor-pointer hover:bg-accent transition-colors"
         >
           {box.layout?.type === "flex" && (
             <>
               {box.layout.direction === "row" ? (
-                <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
               ) : (
-                <ArrowDown className="w-3.5 h-3.5 text-zinc-400" />
+                <ArrowDown className="w-3.5 h-3.5 text-muted-foreground" />
               )}
             </>
           )}
           {box.layout?.type === "grid" && (
-            <LayoutGrid className="w-3.5 h-3.5 text-zinc-400" />
+            <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground" />
           )}
-          <span className="text-[11px] text-zinc-600">
+          <span className="text-[11px] text-foreground">
             {getLayoutSummary()}
           </span>
         </div>
@@ -496,11 +496,11 @@ function ChildLayoutControls({
 
   return (
     <>
-      <div className="h-px bg-zinc-100" />
+      <div className="h-px bg-border" />
       <PropertySection title="Child Layout" icon={AlignVerticalJustifyCenter}>
         <div className="space-y-2">
           <div className="space-y-1.5">
-            <Label className="text-xs text-zinc-500">Align Self</Label>
+            <Label className="text-xs text-muted-foreground">Align Self</Label>
             <Select
               value={box.layoutChildProps?.alignSelf || "inherit"}
               onValueChange={handleAlignSelfChange}

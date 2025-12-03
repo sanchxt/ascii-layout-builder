@@ -39,6 +39,19 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-canvas-background: var(--canvas-background);
+  --color-canvas-grid: var(--canvas-grid);
+  --color-canvas-selection: var(--canvas-selection);
+  --color-canvas-selection-bg: var(--canvas-selection-bg);
+  --color-canvas-box-bg: var(--canvas-box-bg);
+  --color-canvas-box-border: var(--canvas-box-border);
+  --color-canvas-valid: var(--canvas-valid);
+  --color-canvas-invalid: var(--canvas-invalid);
+  --color-canvas-warning: var(--canvas-warning);
+  --color-canvas-guide-align: var(--canvas-guide-align);
+  --color-canvas-guide-spacing: var(--canvas-guide-spacing);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 }
 
 :root {
@@ -74,6 +87,31 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Canvas colors */
+  --canvas-background: oklch(0.98 0 0);
+  --canvas-grid: oklch(0 0 0 / 10%);
+
+  /* Selection/Accent colors */
+  --canvas-selection: oklch(0.59 0.2 255);
+  --canvas-selection-bg: oklch(0.59 0.2 255 / 10%);
+
+  /* Box colors */
+  --canvas-box-bg: oklch(1 0 0 / 50%);
+  --canvas-box-border: oklch(0.65 0 0);
+
+  /* Interactive colors */
+  --canvas-valid: oklch(0.65 0.2 145);
+  --canvas-invalid: oklch(0.65 0.2 25);
+  --canvas-warning: oklch(0.7 0.15 60);
+
+  /* Warning colors for UI elements */
+  --warning: oklch(0.8 0.15 80);
+  --warning-foreground: oklch(0.35 0.1 60);
+
+  /* Guide colors */
+  --canvas-guide-align: oklch(0.65 0.25 330);
+  --canvas-guide-spacing: oklch(0.6 0.25 0);
 }
 
 .dark {
@@ -108,6 +146,18 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Canvas colors - dark mode */
+  --canvas-background: oklch(0.18 0 0);
+  --canvas-grid: oklch(1 0 0 / 8%);
+  --canvas-selection: oklch(0.65 0.2 255);
+  --canvas-selection-bg: oklch(0.65 0.2 255 / 15%);
+  --canvas-box-bg: oklch(0.25 0 0 / 50%);
+  --canvas-box-border: oklch(0.5 0 0);
+
+  /* Warning colors for UI elements - dark mode */
+  --warning: oklch(0.5 0.15 70);
+  --warning-foreground: oklch(0.85 0.12 80);
 }
 
 @layer base {
@@ -119,10 +169,19 @@
   }
 }
 
+/* Smooth theme transitions */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 200ms ease-out, color 200ms ease-out,
+    border-color 200ms ease-out, fill 200ms ease-out, stroke 200ms ease-out !important;
+}
+
 /* Custom Scrollbar Styling for Sidebar */
 .sidebar-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #d4d4d8 transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 .sidebar-scroll::-webkit-scrollbar {
@@ -135,12 +194,12 @@
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background-color: #d4d4d8;
+  background-color: var(--border);
   border-radius: 3px;
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #a1a1aa;
+  background-color: var(--muted-foreground);
 }
 
 /* Minimal scrollbar for panels */
@@ -153,12 +212,12 @@ aside ::-webkit-scrollbar-track {
 }
 
 aside ::-webkit-scrollbar-thumb {
-  background-color: rgba(161, 161, 170, 0.4);
+  background-color: var(--border);
   border-radius: 2px;
 }
 
 aside ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(161, 161, 170, 0.7);
+  background-color: var(--muted-foreground);
 }
 
 /* Smooth transitions for interactive elements */

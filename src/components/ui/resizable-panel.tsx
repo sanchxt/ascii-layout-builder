@@ -81,7 +81,7 @@ export const ResizablePanel = ({
   return (
     <div
       ref={panelRef}
-      className={cn("flex flex-col bg-white/80 backdrop-blur-sm", className)}
+      className={cn("flex flex-col bg-card/80 backdrop-blur-sm", className)}
       style={{
         height: isCollapsed ? "auto" : panelHeight,
         transition: isDragging ? "none" : "height 200ms ease-out",
@@ -91,14 +91,14 @@ export const ResizablePanel = ({
         onClick={handleHeaderClick}
         className={cn(
           "h-11 px-3 flex items-center justify-between shrink-0",
-          "border-b border-zinc-100",
-          "bg-linear-to-b from-zinc-50/80 to-white/60",
-          collapsible && "cursor-pointer hover:bg-zinc-50/80 transition-colors"
+          "border-b border-border",
+          "bg-gradient-to-b from-muted/80 to-card/60",
+          collapsible && "cursor-pointer hover:bg-muted/80 transition-colors"
         )}
       >
         <div className="flex items-center gap-2">
           {collapsible && (
-            <div className="w-4 h-4 flex items-center justify-center text-zinc-400">
+            <div className="w-4 h-4 flex items-center justify-center text-muted-foreground">
               {isCollapsed ? (
                 <ChevronRight className="w-3.5 h-3.5" />
               ) : (
@@ -107,13 +107,16 @@ export const ResizablePanel = ({
             </div>
           )}
           {Icon && (
-            <Icon className="w-3.5 h-3.5 text-zinc-500" strokeWidth={2} />
+            <Icon
+              className="w-3.5 h-3.5 text-muted-foreground"
+              strokeWidth={2}
+            />
           )}
-          <span className="text-xs font-semibold text-zinc-700 tracking-wide">
+          <span className="text-xs font-semibold text-foreground tracking-wide">
             {title}
           </span>
           {badge !== undefined && (
-            <span className="text-[10px] font-medium text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
               {badge}
             </span>
           )}
@@ -138,17 +141,17 @@ export const ResizablePanel = ({
           onMouseDown={handleMouseDown}
           className={cn(
             "h-1.5 shrink-0 cursor-ns-resize group relative",
-            "bg-linear-to-b from-zinc-100/50 to-zinc-200/50",
-            "hover:from-blue-100 hover:to-blue-200",
+            "bg-gradient-to-b from-border/50 to-border",
+            "hover:from-primary/20 hover:to-primary/30",
             "transition-colors duration-150",
-            isDragging && "from-blue-200 to-blue-300"
+            isDragging && "from-primary/30 to-primary/40"
           )}
         >
           <div
             className={cn(
               "absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 mx-auto w-8 rounded-full",
-              "bg-zinc-300 group-hover:bg-blue-400 transition-colors",
-              isDragging && "bg-blue-500"
+              "bg-border group-hover:bg-primary/60 transition-colors",
+              isDragging && "bg-primary"
             )}
           />
         </div>
@@ -175,10 +178,10 @@ export const PanelAction = ({
     title={title}
     className={cn(
       "p-1.5 rounded-md transition-all duration-150",
-      "hover:bg-zinc-100 active:scale-95",
+      "hover:bg-accent active:scale-95",
       active
-        ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-        : "text-zinc-400 hover:text-zinc-600"
+        ? "text-primary bg-accent hover:bg-accent/80"
+        : "text-muted-foreground hover:text-foreground"
     )}
   >
     <Icon className="w-3.5 h-3.5" />

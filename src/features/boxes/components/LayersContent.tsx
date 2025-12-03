@@ -100,48 +100,48 @@ export const LayersContent = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="shrink-0 px-2 py-1.5 border-b border-zinc-100 bg-zinc-50/30 flex items-center gap-1">
+      <div className="shrink-0 px-2 py-1.5 border-b border-border bg-muted/30 flex items-center gap-1">
         {isSearchOpen ? (
           <div className="flex-1 relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search layers..."
               value={localSearch}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-7 pr-7 py-1 text-xs bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-7 pr-7 py-1 text-xs bg-background text-foreground border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring"
               autoFocus
             />
             <button
               onClick={handleClearSearch}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-zinc-100"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-accent"
             >
-              <X className="w-3 h-3 text-zinc-400" />
+              <X className="w-3 h-3 text-muted-foreground" />
             </button>
           </div>
         ) : (
           <>
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="p-1.5 rounded-md hover:bg-zinc-100 transition-colors"
+              className="p-1.5 rounded-md hover:bg-accent transition-colors"
               title="Search layers"
             >
-              <Search className="w-3.5 h-3.5 text-zinc-500" />
+              <Search className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
             <div className="flex-1" />
             <button
               onClick={handleExpandAll}
-              className="p-1.5 rounded-md hover:bg-zinc-100 transition-colors"
+              className="p-1.5 rounded-md hover:bg-accent transition-colors"
               title="Expand All"
             >
-              <ChevronsDown className="w-3.5 h-3.5 text-zinc-500" />
+              <ChevronsDown className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
             <button
               onClick={collapseAll}
-              className="p-1.5 rounded-md hover:bg-zinc-100 transition-colors"
+              className="p-1.5 rounded-md hover:bg-accent transition-colors"
               title="Collapse All"
             >
-              <ChevronsUp className="w-3.5 h-3.5 text-zinc-500" />
+              <ChevronsUp className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           </>
         )}
@@ -150,11 +150,11 @@ export const LayersContent = () => {
       <div className="flex-1 overflow-y-auto">
         {filteredRootBoxes.length === 0 && filteredRootLines.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-            <Layers className="w-10 h-10 text-zinc-200 mb-2" />
-            <p className="text-xs font-medium text-zinc-500 mb-0.5">
+            <Layers className="w-10 h-10 text-muted-foreground/30 mb-2" />
+            <p className="text-xs font-medium text-muted-foreground mb-0.5">
               {searchQuery.trim() ? "No matches" : "No layers"}
             </p>
-            <p className="text-[10px] text-zinc-400">
+            <p className="text-[10px] text-muted-foreground/70">
               {searchQuery.trim()
                 ? "Try a different search"
                 : "Create a box or line to get started"}
@@ -187,8 +187,8 @@ export const LayersContent = () => {
 
       {searchQuery.trim() &&
         (filteredRootBoxes.length > 0 || filteredRootLines.length > 0) && (
-          <div className="shrink-0 px-3 py-1.5 border-t border-zinc-100 bg-zinc-50/50">
-            <p className="text-[10px] text-zinc-500">
+          <div className="shrink-0 px-3 py-1.5 border-t border-border bg-muted/50">
+            <p className="text-[10px] text-muted-foreground">
               {filteredRootBoxes.length + filteredRootLines.length} of{" "}
               {rootBoxes.length + rootLines.length} layers
             </p>

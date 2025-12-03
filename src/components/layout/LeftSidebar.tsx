@@ -43,7 +43,7 @@ export const LeftSidebar = () => {
 
   return (
     <div className="absolute top-4 left-4 flex flex-col gap-2 z-40">
-      <div className="bg-white rounded-xl shadow-lg border border-zinc-200/80 p-1.5 flex flex-col gap-1 backdrop-blur-sm">
+      <div className="bg-card rounded-xl shadow-lg border border-border p-1.5 flex flex-col gap-1 backdrop-blur-sm">
         {tools.map((tool) => {
           const isActive = interaction.selectedTool === tool.id;
           return (
@@ -55,16 +55,18 @@ export const LeftSidebar = () => {
                 className={cn(
                   "h-10 w-10 rounded-lg transition-all duration-200",
                   isActive
-                    ? "bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100"
-                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                    ? "bg-accent text-primary shadow-sm ring-1 ring-ring/20"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 )}
               >
                 <tool.icon className="h-5 w-5" />
               </Button>
 
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-border shadow-md">
                 {tool.label}{" "}
-                <span className="text-zinc-500 ml-1">{tool.shortcut}</span>
+                <span className="text-muted-foreground ml-1">
+                  {tool.shortcut}
+                </span>
               </div>
             </div>
           );

@@ -31,7 +31,7 @@ export function SmartGuides({
 
 function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
   const isVertical = guide.type === "vertical";
-  const color = "#ec4899";
+  const color = "var(--canvas-guide-align)";
 
   const style: React.CSSProperties = isVertical
     ? {
@@ -41,7 +41,7 @@ function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
         bottom: 0,
         width: "1px",
         backgroundColor: color,
-        boxShadow: "0 0 2px rgba(255,255,255,0.5)",
+        boxShadow: "0 0 2px var(--background)",
       }
     : {
         position: "absolute",
@@ -50,7 +50,7 @@ function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
         right: 0,
         height: "1px",
         backgroundColor: color,
-        boxShadow: "0 0 2px rgba(255,255,255,0.5)",
+        boxShadow: "0 0 2px var(--background)",
       };
 
   return <div style={style} />;
@@ -58,7 +58,7 @@ function AlignmentGuideLine({ guide }: { guide: SmartGuide }) {
 
 function SpacingGuideLine({ guide }: { guide: SpacingGuide }) {
   const { startPoint, endPoint, distance } = guide;
-  const color = "#f43f5e";
+  const color = "var(--canvas-guide-spacing)";
 
   const midpoint = {
     x: (startPoint.x + endPoint.x) / 2,

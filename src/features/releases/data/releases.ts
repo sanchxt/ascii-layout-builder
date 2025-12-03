@@ -2,6 +2,24 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.1.8",
+    date: "Dec 3, 2025",
+    changes: [
+      {
+        text: "Theme system with 6 presets (Light, Dark, High Contrast, Midnight Blue, Warm Sepia, Forest)",
+        category: "feature",
+      },
+      {
+        text: "Custom theme builder with full color customization",
+        category: "feature",
+      },
+      {
+        text: "Theme toggle in toolbar with quick preset switching",
+        category: "feature",
+      },
+    ],
+  },
+  {
     version: "0.1.7",
     date: "Dec 2, 2025",
     changes: [

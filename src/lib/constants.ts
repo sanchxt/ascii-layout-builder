@@ -1,6 +1,10 @@
 import type { CanvasConstants } from "@/types/canvas";
 import type { BorderStyle } from "@/types/box";
-import type { LineConstants, ArrowHeadStyle, LineOutputMode } from "@/types/line";
+import type {
+  LineConstants,
+  ArrowHeadStyle,
+  LineOutputMode,
+} from "@/types/line";
 
 export const CANVAS_CONSTANTS: CanvasConstants = {
   /** min zoom (10%) */
@@ -14,7 +18,7 @@ export const CANVAS_CONSTANTS: CanvasConstants = {
   /** grid cell size */
   GRID_SIZE: 20,
   /** grid color */
-  GRID_COLOR: "rgba(0, 0, 0, 0.1)",
+  GRID_COLOR: "var(--canvas-grid, rgba(0, 0, 0, 0.1))",
   /** grid dot size */
   GRID_DOT_SIZE: 1,
   /** wheel pan sensitivity */
@@ -41,7 +45,7 @@ export const BOX_CONSTANTS = {
   /** selection outline width */
   SELECTION_OUTLINE_WIDTH: 2,
   /** selection outline color */
-  SELECTION_OUTLINE_COLOR: "#3b82f6",
+  SELECTION_OUTLINE_COLOR: "var(--canvas-selection, #3b82f6)",
 
   /** maximum nesting depth */
   MAX_NESTING_DEPTH: 5,
@@ -50,7 +54,7 @@ export const BOX_CONSTANTS = {
   /** pixel threshold outside parent bounds to trigger detach */
   AUTO_DETACH_THRESHOLD: 20,
   /** color for valid drop zone highlight */
-  NESTING_HIGHLIGHT_COLOR: "#10b981",
+  NESTING_HIGHLIGHT_COLOR: "var(--canvas-valid, #10b981)",
   /** padding around grouped boxes when creating parent */
   GROUP_PADDING: 40,
   /** opacity for drag preview */
@@ -71,7 +75,7 @@ export const TEXT_CONSTANTS = {
 export const ARTBOARD_CONSTANTS = {
   SPACING: 100,
   /** artboard border color */
-  BORDER_COLOR: "#9ca3af",
+  BORDER_COLOR: "var(--border, #9ca3af)",
   /** artboard border thickness */
   BORDER_THICKNESS: 2,
   /** artboard border dash pattern */
@@ -79,9 +83,9 @@ export const ARTBOARD_CONSTANTS = {
   /** artboard label height */
   LABEL_HEIGHT: 40,
   /** artboard label bg color */
-  LABEL_BG: "#f3f4f6",
+  LABEL_BG: "var(--muted, #f3f4f6)",
   /** selected artboard border color */
-  SELECTED_BORDER_COLOR: "#3b82f6",
+  SELECTED_BORDER_COLOR: "var(--canvas-selection, #3b82f6)",
   /** artboard label font size */
   LABEL_FONT_SIZE: 14,
 
@@ -115,7 +119,7 @@ export const LINE_CONSTANTS: LineConstants = {
   /** default output mode */
   DEFAULT_OUTPUT_MODE: "ascii" as LineOutputMode,
   /** selection outline color */
-  SELECTION_OUTLINE_COLOR: "#3b82f6",
+  SELECTION_OUTLINE_COLOR: "var(--canvas-selection, #3b82f6)",
   /** endpoint handle size */
   ENDPOINT_HANDLE_SIZE: 8,
 } as const;
@@ -189,17 +193,17 @@ export const ALIGNMENT_CONSTANTS = {
   /** max distance to show spacing guides in px */
   SPACING_GUIDE_MAX_DISTANCE: 200,
   /** smart guide color */
-  SMART_GUIDE_COLOR: "#a855f7",
+  SMART_GUIDE_COLOR: "var(--canvas-guide-align, #a855f7)",
   /** smart guide thickness */
   SMART_GUIDE_THICKNESS: 1,
   /** smart guide dash pattern */
   SMART_GUIDE_DASH: "4 4",
   /** spacing guide color */
-  SPACING_GUIDE_COLOR: "#6366f1",
+  SPACING_GUIDE_COLOR: "var(--canvas-guide-spacing, #6366f1)",
   /** spacing label background */
-  SPACING_LABEL_BG: "#1f2937",
+  SPACING_LABEL_BG: "var(--primary, #1f2937)",
   /** spacing label text color */
-  SPACING_LABEL_COLOR: "#ffffff",
+  SPACING_LABEL_COLOR: "var(--primary-foreground, #ffffff)",
 } as const;
 
 export const ALIGNMENT_SHORTCUTS = {

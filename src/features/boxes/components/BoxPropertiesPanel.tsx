@@ -31,7 +31,7 @@ export const BoxPropertiesPanel = () => {
 
   if (selectedBoxes.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-zinc-400 p-8 text-center">
+      <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 text-center">
         <BoxSelect className="w-8 h-8 mb-2 opacity-50" />
         <p className="text-sm">Select an element to edit properties</p>
       </div>
@@ -41,13 +41,13 @@ export const BoxPropertiesPanel = () => {
   if (selectedBoxes.length > 1) {
     return (
       <div className="h-full p-6 flex flex-col items-center justify-center text-center">
-        <div className="bg-blue-50 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mb-3">
+        <div className="bg-canvas-selection-bg text-canvas-selection w-12 h-12 rounded-full flex items-center justify-center mb-3">
           <span className="font-bold text-lg">{selectedBoxes.length}</span>
         </div>
-        <div className="text-sm font-medium text-zinc-900">
+        <div className="text-sm font-medium text-foreground">
           Multiple items selected
         </div>
-        <div className="text-xs text-zinc-500 mt-1">
+        <div className="text-xs text-muted-foreground mt-1">
           Multi-editing is coming soon
         </div>
       </div>
@@ -68,7 +68,7 @@ export const BoxPropertiesPanel = () => {
     children: React.ReactNode;
   }) => (
     <div className="space-y-1.5">
-      <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </label>
       {children}
@@ -88,10 +88,10 @@ export const BoxPropertiesPanel = () => {
   }) => (
     <div className="relative flex items-center group">
       {Icon && (
-        <Icon className="absolute left-2 w-3 h-3 text-zinc-400 group-focus-within:text-blue-500" />
+        <Icon className="absolute left-2 w-3 h-3 text-muted-foreground group-focus-within:text-ring" />
       )}
       {label && (
-        <span className="absolute left-2 text-[10px] font-mono text-zinc-400 group-focus-within:text-blue-500">
+        <span className="absolute left-2 text-[10px] font-mono text-muted-foreground group-focus-within:text-ring">
           {label}
         </span>
       )}
@@ -100,7 +100,7 @@ export const BoxPropertiesPanel = () => {
         value={Math.round(value)}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className={cn(
-          "w-full bg-zinc-50 border border-zinc-200 rounded-md py-1.5 text-xs font-mono text-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all",
+          "w-full bg-muted border border-border rounded-md py-1.5 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-all",
           Icon || label ? "pl-7 pr-2" : "px-2"
         )}
       />
@@ -157,10 +157,10 @@ export const BoxPropertiesPanel = () => {
         </InputGroup>
       </div>
 
-      <div className="h-px bg-zinc-100" />
+      <div className="h-px bg-border" />
 
       <InputGroup label="Border Style">
-        <div className="flex bg-zinc-50 p-1 rounded-md border border-zinc-200">
+        <div className="flex bg-muted p-1 rounded-md border border-border">
           {(["single", "double", "dashed"] as BorderStyle[]).map((style) => (
             <button
               key={style}
@@ -168,8 +168,8 @@ export const BoxPropertiesPanel = () => {
               className={cn(
                 "flex-1 py-1 text-xs rounded-sm capitalize transition-all",
                 box.borderStyle === style
-                  ? "bg-white text-blue-600 shadow-sm font-medium"
-                  : "text-zinc-500 hover:text-zinc-900"
+                  ? "bg-background text-canvas-selection shadow-sm font-medium"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {style}
@@ -178,7 +178,7 @@ export const BoxPropertiesPanel = () => {
         </div>
       </InputGroup>
 
-      <div className="h-px bg-zinc-100" />
+      <div className="h-px bg-border" />
 
       <InputGroup label="Typography">
         <div className="space-y-3">
@@ -191,14 +191,14 @@ export const BoxPropertiesPanel = () => {
                     text: { ...box.text, fontSize: e.target.value as any },
                   })
                 }
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-md py-1.5 px-2 text-xs text-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-muted border border-border rounded-md py-1.5 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="small">Small (12px)</option>
                 <option value="medium">Medium (14px)</option>
                 <option value="large">Large (20px)</option>
               </select>
             </div>
-            <div className="flex bg-zinc-50 rounded-md border border-zinc-200 p-0.5">
+            <div className="flex bg-muted rounded-md border border-border p-0.5">
               {[
                 { value: "left", icon: AlignLeft },
                 { value: "center", icon: AlignCenter },
@@ -214,8 +214,8 @@ export const BoxPropertiesPanel = () => {
                   className={cn(
                     "p-1.5 rounded-sm transition-all",
                     box.text.alignment === value
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-zinc-400 hover:text-zinc-700"
+                      ? "bg-background text-canvas-selection shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Icon size={14} />
@@ -225,7 +225,7 @@ export const BoxPropertiesPanel = () => {
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-[10px] text-zinc-400">
+            <span className="text-[10px] text-muted-foreground">
               {box.text.value.length} / {TEXT_CONSTANTS.MAX_LENGTH} chars
             </span>
             {box.text.value && (
@@ -235,7 +235,7 @@ export const BoxPropertiesPanel = () => {
                     text: { ...box.text, value: "", formatting: [] },
                   })
                 }
-                className="text-[10px] text-red-500 hover:text-red-600 font-medium"
+                className="text-[10px] text-destructive hover:text-destructive/80 font-medium"
               >
                 Clear Text
               </button>
@@ -244,14 +244,14 @@ export const BoxPropertiesPanel = () => {
         </div>
       </InputGroup>
 
-      <div className="h-px bg-zinc-100" />
+      <div className="h-px bg-border" />
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-zinc-700">
+          <span className="text-xs font-medium text-foreground">
             Hierarchy Level
           </span>
-          <span className="text-xs font-mono bg-zinc-100 px-2 py-0.5 rounded text-zinc-600">
+          <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground">
             L{getNestingDepth(box.id, boxes)}
           </span>
         </div>
@@ -259,7 +259,7 @@ export const BoxPropertiesPanel = () => {
         {box.parentId && (
           <button
             onClick={() => detachFromParent(box.id)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:border-zinc-300 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-foreground bg-background border border-border rounded-md hover:bg-muted hover:border-border transition-all"
           >
             <ArrowUpFromLine size={14} />
             Detach from Parent
@@ -272,27 +272,27 @@ export const BoxPropertiesPanel = () => {
             className={cn(
               "flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium rounded-md border transition-all",
               box.locked
-                ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
+                ? "bg-warning/20 text-warning-foreground border-warning hover:bg-warning/30"
+                : "bg-background text-foreground border-border hover:bg-muted"
             )}
           >
             {box.locked ? <Lock size={14} /> : <Unlock size={14} />}
             {box.locked ? "Unlock" : "Lock"}
           </button>
 
-          <button className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-all">
+          <button className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-foreground bg-background border border-border rounded-md hover:bg-muted transition-all">
             <Copy size={14} />
             Duplicate
           </button>
         </div>
 
-        <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-100 rounded-md hover:bg-red-100 transition-all">
+        <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md hover:bg-destructive/20 transition-all">
           <Trash2 size={14} />
           Delete Element
         </button>
       </div>
 
-      <div className="text-[10px] text-zinc-300 font-mono text-center pt-4">
+      <div className="text-[10px] text-muted-foreground/50 font-mono text-center pt-4">
         ID: {box.id}
       </div>
     </div>
