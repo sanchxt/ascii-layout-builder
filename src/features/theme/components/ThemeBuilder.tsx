@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Sun,
   Moon,
@@ -18,7 +18,11 @@ import {
   COLOR_LABELS,
   type ThemeColors,
 } from "../types/theme";
-import { applyTheme, applySingleColor } from "../utils/themeApplication";
+import {
+  applyTheme,
+  applySingleColor,
+  subscribeToSystemColorScheme,
+} from "../utils/themeApplication";
 import { ThemePresetCard } from "./ThemePresetCard";
 import { ColorInput } from "./ColorInput";
 import { cn } from "@/lib/utils";
@@ -31,6 +35,11 @@ export function ThemeBuilder() {
   const [newThemeName, setNewThemeName] = useState("");
   const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : false
+  );
 
   const mode = useThemeStore((state) => state.mode);
   const activeThemeId = useThemeStore((state) => state.activeThemeId);
@@ -48,6 +57,29 @@ export function ThemeBuilder() {
 
   const activeTheme = getActiveTheme();
   const isActiveCustom = isCustomTheme(activeTheme);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToSystemColorScheme(() => {
+      setSystemPrefersDark(
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      );
+    });
+    return unsubscribe;
+  }, []);
+
+  const filteredPresets = useMemo(() => {
+    if (mode === "system") {
+      return THEME_PRESETS.filter((p) => p.isDark === systemPrefersDark);
+    }
+    return THEME_PRESETS.filter((p) => p.isDark === (mode === "dark"));
+  }, [mode, systemPrefersDark]);
+
+  const filteredCustomThemes = useMemo(() => {
+    if (mode === "system") {
+      return customThemes.filter((t) => t.isDark === systemPrefersDark);
+    }
+    return customThemes.filter((t) => t.isDark === (mode === "dark"));
+  }, [mode, systemPrefersDark, customThemes]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups((prev) => {
@@ -185,7 +217,7 @@ export function ThemeBuilder() {
           Presets
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {THEME_PRESETS.map((theme) => (
+          {filteredPresets.map((theme) => (
             <ThemePresetCard
               key={theme.id}
               theme={theme}
@@ -279,16 +311,24 @@ export function ThemeBuilder() {
             </div>
           )}
 
-          {customThemes.length === 0 ? (
+          {filteredCustomThemes.length === 0 ? (
             <div className="text-center py-4 text-xs text-muted-foreground">
-              <p>No custom themes yet.</p>
+              <p>
+                No{" "}
+                {mode === "system"
+                  ? systemPrefersDark
+                    ? "dark"
+                    : "light"
+                  : mode}{" "}
+                custom themes yet.
+              </p>
               <p className="mt-1">
                 Click "New" to create one based on the current theme.
               </p>
             </div>
           ) : (
             <div className="space-y-1">
-              {customThemes.map((theme) => (
+              {filteredCustomThemes.map((theme) => (
                 <div
                   key={theme.id}
                   className={cn(

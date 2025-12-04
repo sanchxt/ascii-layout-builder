@@ -1,5 +1,6 @@
 import { Toolbar } from "./Toolbar";
 import { RightSidebar } from "./RightSidebar";
+import { ThemeEditorModal } from "@/features/theme/components/ThemeEditorModal";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
 
         <RightSidebar />
       </div>
+
+      <ThemeEditorModal />
     </div>
   );
 };

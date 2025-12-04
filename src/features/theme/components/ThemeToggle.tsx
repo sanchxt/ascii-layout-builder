@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Sun,
   Moon,
@@ -10,12 +10,18 @@ import {
 } from "lucide-react";
 import { useThemeStore } from "../store/themeStore";
 import { THEME_PRESETS } from "../presets/themePresets";
-import { isCustomTheme } from "../types/theme";
+import { isCustomTheme, type ThemeMode } from "../types/theme";
+import { subscribeToSystemColorScheme } from "../utils/themeApplication";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : false
+  );
 
   const activeThemeId = useThemeStore((state) => state.activeThemeId);
   const mode = useThemeStore((state) => state.mode);
@@ -26,6 +32,29 @@ export function ThemeToggle() {
   const getActiveTheme = useThemeStore((state) => state.getActiveTheme);
 
   const activeTheme = getActiveTheme();
+
+  useEffect(() => {
+    const unsubscribe = subscribeToSystemColorScheme(() => {
+      setSystemPrefersDark(
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      );
+    });
+    return unsubscribe;
+  }, []);
+
+  const filteredPresets = useMemo(() => {
+    if (mode === "system") {
+      return THEME_PRESETS.filter((p) => p.isDark === systemPrefersDark);
+    }
+    return THEME_PRESETS.filter((p) => p.isDark === (mode === "dark"));
+  }, [mode, systemPrefersDark]);
+
+  const filteredCustomThemes = useMemo(() => {
+    if (mode === "system") {
+      return customThemes.filter((t) => t.isDark === systemPrefersDark);
+    }
+    return customThemes.filter((t) => t.isDark === (mode === "dark"));
+  }, [mode, systemPrefersDark, customThemes]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -76,19 +105,8 @@ export function ThemeToggle() {
     setIsOpen(false);
   };
 
-  const handleModeSelect = (newMode: "light" | "dark" | "system") => {
+  const handleModeSelect = (newMode: ThemeMode) => {
     setMode(newMode);
-    if (newMode === "system") {
-      setIsOpen(false);
-      return;
-    }
-    const matchingTheme = THEME_PRESETS.find(
-      (t) => t.isDark === (newMode === "dark")
-    );
-    if (matchingTheme) {
-      setActiveTheme(matchingTheme.id);
-    }
-    setIsOpen(false);
   };
 
   const handleCustomize = () => {
@@ -148,7 +166,7 @@ export function ThemeToggle() {
               Presets
             </div>
             <div className="space-y-0.5">
-              {THEME_PRESETS.map((theme) => (
+              {filteredPresets.map((theme) => (
                 <button
                   key={theme.id}
                   onClick={() => handleThemeSelect(theme.id)}
@@ -177,13 +195,13 @@ export function ThemeToggle() {
             </div>
           </div>
 
-          {customThemes.length > 0 && (
+          {filteredCustomThemes.length > 0 && (
             <div className="p-2 border-b border-border max-h-32 overflow-y-auto">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1.5">
                 My Themes
               </div>
               <div className="space-y-0.5">
-                {customThemes.map((theme) => (
+                {filteredCustomThemes.map((theme) => (
                   <button
                     key={theme.id}
                     onClick={() => handleThemeSelect(theme.id)}

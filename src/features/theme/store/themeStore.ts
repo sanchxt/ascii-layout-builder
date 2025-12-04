@@ -5,10 +5,17 @@ import type {
   ThemeMode,
   ThemeColors,
   CustomTheme,
+  ThemePreset,
 } from "../types/theme";
 import { THEME_PRESETS, DEFAULT_THEME_ID } from "../presets/themePresets";
+import { applyTheme } from "../utils/themeApplication";
+
+const getFirstMatchingPreset = (isDark: boolean): ThemePreset => {
+  return THEME_PRESETS.find((p) => p.isDark === isDark) || THEME_PRESETS[0];
+};
 
 const MAX_CUSTOM_THEMES = 10;
+const MAX_RECENT_COLORS = 8;
 
 interface ThemeState {
   activeThemeId: string;
@@ -19,10 +26,14 @@ interface ThemeState {
 
   isThemeBuilderOpen: boolean;
 
+  recentColors: string[];
+
   setActiveTheme: (themeId: string) => void;
   setMode: (mode: ThemeMode) => void;
   setThemeBuilderOpen: (isOpen: boolean) => void;
   toggleThemeBuilder: () => void;
+
+  addRecentColor: (color: string) => void;
 
   createCustomTheme: (name: string, baseThemeId: string) => string | null;
   updateCustomTheme: (id: string, updates: Partial<ThemeColors>) => void;
@@ -44,10 +55,46 @@ export const useThemeStore = create<ThemeState>()(
       mode: "system",
       customThemes: [],
       isThemeBuilderOpen: false,
+      recentColors: [],
 
       setActiveTheme: (themeId) => set({ activeThemeId: themeId }),
 
-      setMode: (mode) => set({ mode }),
+      addRecentColor: (color) => {
+        set((state) => {
+          const filtered = state.recentColors.filter((c) => c !== color);
+          const newColors = [color, ...filtered].slice(0, MAX_RECENT_COLORS);
+          return { recentColors: newColors };
+        });
+      },
+
+      setMode: (mode) => {
+        const state = get();
+        const activeTheme = state.getActiveTheme();
+        const prefersDark =
+          typeof window !== "undefined" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        let newActiveThemeId = state.activeThemeId;
+
+        if (mode === "light" && activeTheme.isDark) {
+          newActiveThemeId = getFirstMatchingPreset(false).id;
+        } else if (mode === "dark" && !activeTheme.isDark) {
+          newActiveThemeId = getFirstMatchingPreset(true).id;
+        } else if (mode === "system") {
+          if (activeTheme.isDark !== prefersDark) {
+            newActiveThemeId = getFirstMatchingPreset(prefersDark).id;
+          }
+        }
+
+        set({ mode, activeThemeId: newActiveThemeId });
+
+        const newTheme = [...THEME_PRESETS, ...state.customThemes].find(
+          (t) => t.id === newActiveThemeId
+        );
+        if (newTheme) {
+          applyTheme(newTheme);
+        }
+      },
 
       setThemeBuilderOpen: (isOpen) => set({ isThemeBuilderOpen: isOpen }),
 
@@ -180,6 +227,7 @@ export const useThemeStore = create<ThemeState>()(
         activeThemeId: state.activeThemeId,
         mode: state.mode,
         customThemes: state.customThemes,
+        recentColors: state.recentColors,
       }),
     }
   )

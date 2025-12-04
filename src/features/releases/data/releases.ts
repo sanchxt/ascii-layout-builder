@@ -2,6 +2,28 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.1.9",
+    date: "Dec 4, 2025",
+    changes: [
+      {
+        text: "Fullscreen Theme Editor with live UI preview and WCAG contrast ratios",
+        category: "feature",
+      },
+      {
+        text: "Enhanced color picker with eyedropper, hex input, and recent colors",
+        category: "feature",
+      },
+      {
+        text: "Theme dropdown now will not close when switching between Light/Dark/System modes. Sorry for the inconvenience :)",
+        category: "fix",
+      },
+      {
+        text: "Mode aware theme filtering: Light/Dark modes show only matching presets",
+        category: "improvement",
+      },
+    ],
+  },
+  {
     version: "0.1.8",
     date: "Dec 3, 2025",
     changes: [

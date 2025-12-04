@@ -64,7 +64,7 @@ export const Toolbar = () => {
           to="/releases"
           className="hidden sm:inline-flex px-2 py-1 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
         >
-          v0.1.8
+          v0.1.9
         </Link>
         <ThemeToggle />
         <Button
