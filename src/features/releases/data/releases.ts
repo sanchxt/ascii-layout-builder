@@ -18,6 +18,10 @@ export const releases: Release[] = [
         category: "fix",
       },
       {
+        text: "Releases page now uses theme colors and includes theme toggle",
+        category: "fix",
+      },
+      {
         text: "Mode aware theme filtering: Light/Dark modes show only matching presets",
         category: "improvement",
       },
