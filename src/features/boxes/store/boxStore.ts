@@ -496,6 +496,54 @@ export const useBoxStore = create<BoxState>()(
           );
         },
 
+        nestBox: (childId, parentId, localX, localY) => {
+          recordSnapshot();
+          set(
+            (state) => {
+              const validation = canNestBox(childId, parentId, state.boxes);
+              if (!validation.canNest) {
+                console.warn(`Cannot nest box: ${validation.reason}`);
+                return state;
+              }
+
+              const childBox = state.boxes.find((b) => b.id === childId);
+              const parentBox = state.boxes.find((b) => b.id === parentId);
+
+              if (!childBox || !parentBox) return state;
+
+              const updatedBoxes = state.boxes.map((box) => {
+                if (box.id === childId) {
+                  return {
+                    ...box,
+                    parentId,
+                    artboardId: parentBox.artboardId,
+                    x: localX,
+                    y: localY,
+                  };
+                } else if (box.id === parentId) {
+                  if (!box.children.includes(childId)) {
+                    return {
+                      ...box,
+                      children: [...box.children, childId],
+                    };
+                  }
+                  return box;
+                } else if (box.id === childBox.parentId) {
+                  return {
+                    ...box,
+                    children: box.children.filter((id) => id !== childId),
+                  };
+                }
+                return box;
+              });
+
+              return { boxes: updatedBoxes };
+            },
+            false,
+            "box/nestBox"
+          );
+        },
+
         detachFromParent: (childId) => {
           recordSnapshot();
           set(

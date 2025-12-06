@@ -2,6 +2,24 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.1.10",
+    date: "Dec 6, 2025",
+    changes: [
+      {
+        text: "Consistent mouse wheel zoom (5% per notch) with smoother trackpad support",
+        category: "fix",
+      },
+      {
+        text: "Click zoom percentage to input a custom value (10-500%)",
+        category: "feature",
+      },
+      {
+        text: "Lines now appear on top of boxes when dragging onto drop zones",
+        category: "fix",
+      },
+    ],
+  },
+  {
     version: "0.1.9",
     date: "Dec 4, 2025",
     changes: [

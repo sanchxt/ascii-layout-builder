@@ -78,6 +78,7 @@ export interface BoxState {
   resetBoxes: () => void;
 
   setParent: (childId: string, parentId: string) => void;
+  nestBox: (childId: string, parentId: string, localX: number, localY: number) => void;
   detachFromParent: (childId: string) => void;
   groupBoxes: (boxIds: string[]) => void;
   ungroupBox: (parentId: string) => void;

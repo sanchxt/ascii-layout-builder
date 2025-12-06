@@ -154,6 +154,46 @@ export const isBoxInsideParent = (childBox: Box, parentBox: Box): boolean => {
   );
 };
 
+export const isPositionInsideParent = (
+  absoluteX: number,
+  absoluteY: number,
+  childWidth: number,
+  childHeight: number,
+  parentBox: Box,
+  allBoxes: Box[]
+): boolean => {
+  const parentAbsPos = getAbsolutePosition(parentBox, allBoxes);
+  const borderWidth = getBorderWidth(parentBox.borderStyle);
+  const threshold = BOX_CONSTANTS.AUTO_DETACH_THRESHOLD;
+
+  const childCenterX = absoluteX + childWidth / 2;
+  const childCenterY = absoluteY + childHeight / 2;
+
+  const parentLeft =
+    parentAbsPos.x + borderWidth + parentBox.padding - threshold;
+  const parentRight =
+    parentAbsPos.x +
+    parentBox.width -
+    borderWidth -
+    parentBox.padding +
+    threshold;
+  const parentTop =
+    parentAbsPos.y + borderWidth + parentBox.padding - threshold;
+  const parentBottom =
+    parentAbsPos.y +
+    parentBox.height -
+    borderWidth -
+    parentBox.padding +
+    threshold;
+
+  return (
+    childCenterX >= parentLeft &&
+    childCenterX <= parentRight &&
+    childCenterY >= parentTop &&
+    childCenterY <= parentBottom
+  );
+};
+
 export const convertToParentRelative = (
   boxX: number,
   boxY: number,

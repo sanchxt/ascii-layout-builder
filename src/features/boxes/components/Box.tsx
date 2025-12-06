@@ -346,6 +346,7 @@ export const Box = ({
             <g style={{ pointerEvents: "auto" }}>
               {childLines
                 .filter((line) => line.visible !== false)
+                .filter((line) => lineDragState?.draggedLineId !== line.id)
                 .sort((a, b) => a.zIndex - b.zIndex)
                 .map((line) => (
                   <Line
