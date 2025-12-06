@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import {
   ZoomIn,
   ZoomOut,
@@ -13,15 +14,49 @@ import { cn } from "@/lib/utils";
 
 export const CanvasControls = () => {
   const {
+    zoom,
     zoomIn,
     zoomOut,
     resetZoom,
+    setZoom,
     getZoomPercentage,
     canZoomIn,
     canZoomOut,
   } = useCanvasZoom();
   const { viewport, toggleGrid, toggleSnapToGrid, toggleSmartGuides } =
     useCanvasStore();
+
+  const [isEditingZoom, setIsEditingZoom] = useState(false);
+  const [zoomInputValue, setZoomInputValue] = useState("");
+  const zoomInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingZoom && zoomInputRef.current) {
+      zoomInputRef.current.focus();
+      zoomInputRef.current.select();
+    }
+  }, [isEditingZoom]);
+
+  const handleZoomClick = () => {
+    setZoomInputValue(Math.round(zoom * 100).toString());
+    setIsEditingZoom(true);
+  };
+
+  const handleZoomSubmit = () => {
+    const parsed = parseInt(zoomInputValue, 10);
+    if (!isNaN(parsed) && parsed >= 10 && parsed <= 500) {
+      setZoom(parsed / 100);
+    }
+    setIsEditingZoom(false);
+  };
+
+  const handleZoomKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleZoomSubmit();
+    } else if (e.key === "Escape") {
+      setIsEditingZoom(false);
+    }
+  };
 
   const ControlButton = ({
     onClick,
@@ -54,13 +89,31 @@ export const CanvasControls = () => {
           <ZoomIn className="h-4 w-4" />
         </ControlButton>
 
-        <button
-          onClick={resetZoom}
-          title="Reset Zoom"
-          className="py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors text-center font-mono"
-        >
-          {getZoomPercentage()}
-        </button>
+        <div className="relative h-5 w-8 flex items-center justify-center">
+          {isEditingZoom ? (
+            <input
+              ref={zoomInputRef}
+              type="text"
+              value={zoomInputValue}
+              onChange={(e) =>
+                setZoomInputValue(e.target.value.replace(/[^0-9]/g, ""))
+              }
+              onBlur={handleZoomSubmit}
+              onKeyDown={handleZoomKeyDown}
+              className="absolute inset-0 text-[10px] font-bold text-foreground bg-accent text-center font-mono border-none outline-none rounded"
+              title="Enter zoom percentage (10-500)"
+              maxLength={3}
+            />
+          ) : (
+            <button
+              onClick={handleZoomClick}
+              title="Click to set custom zoom"
+              className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors text-center font-mono"
+            >
+              {getZoomPercentage()}
+            </button>
+          )}
+        </div>
 
         <ControlButton
           onClick={zoomOut}

@@ -11,8 +11,8 @@ export const CANVAS_CONSTANTS: CanvasConstants = {
   MIN_ZOOM: 0.1,
   /** max zoom (500%) */
   MAX_ZOOM: 5,
-  /** zoom increment/decrement */
-  ZOOM_STEP: 0.1,
+  /** zoom increment/decrement (5%) */
+  ZOOM_STEP: 0.05,
   /** default zoom (100%) */
   DEFAULT_ZOOM: 1,
   /** grid cell size */

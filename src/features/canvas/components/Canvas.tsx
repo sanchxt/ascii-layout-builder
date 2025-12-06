@@ -52,6 +52,7 @@ import {
   getRootBoxes,
   convertToLocalPosition,
   getDeepestBoxAtPoint,
+  isPositionInsideParent,
 } from "@/features/boxes/utils/boxHierarchy";
 import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
@@ -68,6 +69,8 @@ export const Canvas = ({ children }: CanvasProps) => {
 
   const boxes = useBoxStore((state) => state.boxes);
   const updateBox = useBoxStore((state) => state.updateBox);
+  const nestBox = useBoxStore((state) => state.nestBox);
+  const detachFromParent = useBoxStore((state) => state.detachFromParent);
   const selectBox = useBoxStore((state) => state.selectBox);
   const artboards = useArtboardStore((state) => state.artboards);
   const { isArtboardSelected } = useArtboardSelection();
@@ -160,6 +163,26 @@ export const Canvas = ({ children }: CanvasProps) => {
         } else {
           targetParentId = box.parentId || null;
         }
+        if (targetParentId && !dropZoneState.isValidDropZone) {
+          const currentParent = boxes.find((b) => b.id === targetParentId);
+          if (currentParent) {
+            const hasLayout =
+              currentParent.layout && currentParent.layout.type !== "none";
+            if (!hasLayout) {
+              const isInside = isPositionInsideParent(
+                finalAbsX,
+                finalAbsY,
+                box.width,
+                box.height,
+                currentParent,
+                boxes
+              );
+              if (!isInside) {
+                targetParentId = null;
+              }
+            }
+          }
+        }
         if (targetParentId) {
           const targetParent =
             boxes.find((b) => b.id === targetParentId) || null;
@@ -169,13 +192,13 @@ export const Canvas = ({ children }: CanvasProps) => {
             targetParent,
             boxes
           );
-          updateBox(id, {
-            parentId: targetParentId,
-            artboardId: undefined,
-            x: newLocalPos.x,
-            y: newLocalPos.y,
-          });
+          nestBox(id, targetParentId, newLocalPos.x, newLocalPos.y);
           return;
+        }
+        // If box had a parent but targetParentId is null, detach from parent first
+        // This ensures the parent's children array is properly cleaned up
+        if (box.parentId && !targetParentId) {
+          detachFromParent(id);
         }
         const boxCenterX = finalAbsX + box.width / 2;
         const boxCenterY = finalAbsY + box.height / 2;
@@ -315,6 +338,12 @@ export const Canvas = ({ children }: CanvasProps) => {
   });
 
   const rootLines = useMemo(() => getRootLines(lines), [lines]);
+
+  const draggedNestedLine = useMemo(() => {
+    if (!isDraggingLine || !lineDragState.draggedLineId) return null;
+    const line = lines.find((l) => l.id === lineDragState.draggedLineId);
+    return line?.parentId ? line : null;
+  }, [isDraggingLine, lineDragState.draggedLineId, lines]);
 
   const currentDelta = useMemo(
     () => ({
@@ -666,6 +695,7 @@ export const Canvas = ({ children }: CanvasProps) => {
               width: "100%",
               height: "100%",
               overflow: "visible",
+              zIndex: isDraggingLine ? 9999 : undefined,
             }}
           >
             <g style={{ pointerEvents: "auto" }}>
@@ -688,6 +718,22 @@ export const Canvas = ({ children }: CanvasProps) => {
                     zoom={viewport.zoom}
                   />
                 ))}
+
+              {draggedNestedLine && (
+                <Line
+                  key={`drag-preview-${draggedNestedLine.id}`}
+                  line={draggedNestedLine}
+                  isSelected={isLineSelected(draggedNestedLine.id)}
+                  onSelect={(id, multi) => selectLine(id, multi)}
+                  onDragStart={handleLineDragStart}
+                  isDragging={true}
+                  dragPreviewPosition={
+                    getLinePreviewPosition(draggedNestedLine.id) || undefined
+                  }
+                  zoom={viewport.zoom}
+                  isNested={false}
+                />
+              )}
 
               {tempLine && tempLine.startX !== undefined && (
                 <line
