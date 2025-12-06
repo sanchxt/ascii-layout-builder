@@ -17,6 +17,10 @@ export const releases: Release[] = [
         text: "Lines now appear on top of boxes when dragging onto drop zones",
         category: "fix",
       },
+      {
+        text: "Output drawer (ASCII & Code panels) now respects theme colors",
+        category: "fix",
+      },
     ],
   },
   {

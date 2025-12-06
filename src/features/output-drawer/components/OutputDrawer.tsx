@@ -28,7 +28,7 @@ export const OutputDrawer = () => {
       closeOnEscape={true}
     >
       <div className="h-full flex flex-col">
-        <div className="shrink-0 border-b border-zinc-200 bg-gradient-to-b from-zinc-50 to-white">
+        <div className="shrink-0 border-b border-border bg-card">
           <div className="flex">
             {TABS.map((tab) => (
               <button
@@ -39,8 +39,8 @@ export const OutputDrawer = () => {
                   "text-sm font-medium transition-all duration-200",
                   "border-b-2 -mb-px",
                   activeTab === tab.id
-                    ? "text-zinc-900 border-zinc-900 bg-white"
-                    : "text-zinc-500 border-transparent hover:text-zinc-700 hover:bg-zinc-50"
+                    ? "text-foreground border-foreground bg-background"
+                    : "text-muted-foreground border-transparent hover:text-foreground hover:bg-accent"
                 )}
               >
                 {tab.icon}

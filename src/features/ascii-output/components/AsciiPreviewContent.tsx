@@ -83,9 +83,9 @@ export const AsciiPreviewContent = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="shrink-0 px-3 py-2 border-b border-zinc-100 bg-zinc-50/30">
+      <div className="shrink-0 px-3 py-2 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
-          <div className="flex-1 flex gap-0.5 p-0.5 bg-zinc-100/80 rounded-lg">
+          <div className="flex-1 flex gap-0.5 p-0.5 bg-muted rounded-lg">
             <button
               onClick={() => {
                 setViewMode("canvas");
@@ -94,8 +94,8 @@ export const AsciiPreviewContent = () => {
               className={cn(
                 "flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all",
                 viewMode === "canvas"
-                  ? "bg-white text-zinc-800 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-700"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
               title="All Canvas"
             >
@@ -111,8 +111,8 @@ export const AsciiPreviewContent = () => {
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all",
                   viewMode === "all-artboards"
-                    ? "bg-white text-zinc-800 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
                 title="All Artboards"
               >
@@ -128,15 +128,15 @@ export const AsciiPreviewContent = () => {
               disabled={!hasContent || isGenerating}
               className={cn(
                 "p-1.5 rounded-md transition-all",
-                "hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed",
-                copySuccess && "bg-green-50 text-green-600"
+                "hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed",
+                copySuccess && "bg-canvas-valid/10 text-canvas-valid"
               )}
               title="Copy to clipboard"
             >
               {copySuccess ? (
                 <Check className="w-3.5 h-3.5" />
               ) : (
-                <Copy className="w-3.5 h-3.5 text-zinc-500" />
+                <Copy className="w-3.5 h-3.5 text-muted-foreground" />
               )}
             </button>
 
@@ -144,10 +144,10 @@ export const AsciiPreviewContent = () => {
               <button
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                 disabled={!hasContent || isGenerating}
-                className="p-1.5 rounded-md hover:bg-zinc-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-md hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Download"
               >
-                <Download className="w-3.5 h-3.5 text-zinc-500" />
+                <Download className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
               {showDownloadMenu && (
                 <>
@@ -155,19 +155,19 @@ export const AsciiPreviewContent = () => {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowDownloadMenu(false)}
                   />
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-zinc-200 rounded-lg shadow-lg z-20 py-1 min-w-[100px]">
+                  <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 py-1 min-w-[100px]">
                     <button
                       onClick={() => handleDownload("md")}
-                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-zinc-50 flex items-center gap-2"
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-accent flex items-center gap-2"
                     >
-                      <FileText className="w-3 h-3 text-zinc-400" />
+                      <FileText className="w-3 h-3 text-muted-foreground" />
                       .md
                     </button>
                     <button
                       onClick={() => handleDownload("txt")}
-                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-zinc-50 flex items-center gap-2"
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-accent flex items-center gap-2"
                     >
-                      <FileText className="w-3 h-3 text-zinc-400" />
+                      <FileText className="w-3 h-3 text-muted-foreground" />
                       .txt
                     </button>
                   </div>
@@ -192,7 +192,7 @@ export const AsciiPreviewContent = () => {
                   setSelectedArtboardId(e.target.value);
                 }
               }}
-              className="w-full px-2 py-1.5 text-xs bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 text-xs bg-card border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="canvas">Entire Canvas</option>
               {artboards.map((artboard) => (
@@ -207,24 +207,24 @@ export const AsciiPreviewContent = () => {
 
       <div className="flex-1 overflow-auto p-3">
         {error && (
-          <div className="flex items-start gap-2 p-2 bg-red-50 border border-red-100 rounded-lg text-red-700 text-xs">
+          <div className="flex items-start gap-2 p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-xs">
             <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             <div>
               <p className="font-medium">Error</p>
-              <p className="text-red-600 text-[10px]">{error}</p>
+              <p className="text-destructive text-[10px]">{error}</p>
             </div>
           </div>
         )}
 
         {!error && !hasContent && !isGenerating && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center mb-2">
-              <Grid3X3 className="w-5 h-5 text-zinc-300" />
+            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-2">
+              <Grid3X3 className="w-5 h-5 text-muted-foreground/50" />
             </div>
-            <p className="text-xs font-medium text-zinc-500 mb-0.5">
+            <p className="text-xs font-medium text-muted-foreground mb-0.5">
               No content
             </p>
-            <p className="text-[10px] text-zinc-400">
+            <p className="text-[10px] text-muted-foreground/70">
               Create boxes to see ASCII output
             </p>
           </div>
@@ -232,14 +232,14 @@ export const AsciiPreviewContent = () => {
 
         {isGenerating && !hasContent && (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-5 h-5 text-zinc-300 animate-spin" />
+            <Loader2 className="w-5 h-5 text-muted-foreground/50 animate-spin" />
           </div>
         )}
 
         {!isAllArtboards && asciiOutput && (
           <div className="space-y-2">
             {asciiOutput.warnings.length > 0 && (
-              <div className="p-2 bg-amber-50 border border-amber-100 rounded-md text-[10px] text-amber-700">
+              <div className="p-2 bg-warning border border-warning/50 rounded-md text-[10px] text-warning-foreground">
                 {asciiOutput.warnings.map((warning, i) => (
                   <p key={i}>{warning}</p>
                 ))}
@@ -249,16 +249,16 @@ export const AsciiPreviewContent = () => {
             <div
               className="relative rounded-lg overflow-hidden"
               style={{
-                backgroundImage: `radial-gradient(circle, #e4e4e7 1px, transparent 1px)`,
+                backgroundImage: `radial-gradient(circle, var(--border) 1px, transparent 1px)`,
                 backgroundSize: "8px 8px",
               }}
             >
-              <pre className="p-3 font-mono text-[10px] leading-tight text-zinc-700 overflow-x-auto whitespace-pre bg-white/90">
+              <pre className="p-3 font-mono text-[10px] leading-tight text-foreground overflow-x-auto whitespace-pre bg-card/90">
                 {asciiOutput.content}
               </pre>
             </div>
 
-            <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
               <span>
                 {asciiOutput.dimensions.width}×{asciiOutput.dimensions.height}
               </span>
@@ -271,18 +271,18 @@ export const AsciiPreviewContent = () => {
 
         {isAllArtboards && allArtboardsGeneration.formattedOutput && (
           <div className="space-y-2">
-            <div className="p-2 bg-blue-50 border border-blue-100 rounded-md text-[10px] text-blue-700">
+            <div className="p-2 bg-primary/10 border border-primary/20 rounded-md text-[10px] text-primary">
               {allArtboardsGeneration.artboardOutputs.size} artboard(s)
             </div>
 
             <div
               className="relative rounded-lg overflow-hidden"
               style={{
-                backgroundImage: `radial-gradient(circle, #e4e4e7 1px, transparent 1px)`,
+                backgroundImage: `radial-gradient(circle, var(--border) 1px, transparent 1px)`,
                 backgroundSize: "8px 8px",
               }}
             >
-              <pre className="p-3 font-mono text-[10px] leading-tight text-zinc-700 overflow-x-auto whitespace-pre bg-white/90">
+              <pre className="p-3 font-mono text-[10px] leading-tight text-foreground overflow-x-auto whitespace-pre bg-card/90">
                 {allArtboardsGeneration.formattedOutput}
               </pre>
             </div>

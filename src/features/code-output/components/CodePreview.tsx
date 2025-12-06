@@ -48,8 +48,8 @@ export function CodePreview() {
   const isEmpty = !currentContent.trim();
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="flex items-center border-b border-zinc-200">
+    <div className="h-full flex flex-col bg-card">
+      <div className="flex items-center border-b border-border">
         <div className="flex-1 flex">
           {TAB_CONFIG.map((tab) => (
             <button
@@ -58,8 +58,8 @@ export function CodePreview() {
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors",
                 activeTab === tab.id
-                  ? "text-blue-600 border-blue-600"
-                  : "text-zinc-500 border-transparent hover:text-zinc-700"
+                  ? "text-primary border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground"
               )}
             >
               {tab.icon}
@@ -75,13 +75,13 @@ export function CodePreview() {
             className={cn(
               "p-1.5 rounded transition-colors",
               isEmpty
-                ? "text-zinc-300 cursor-not-allowed"
-                : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100"
+                ? "text-muted-foreground/50 cursor-not-allowed"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
             )}
             title="Copy to clipboard"
           >
             {copied ? (
-              <Check className="w-4 h-4 text-green-600" />
+              <Check className="w-4 h-4 text-canvas-valid" />
             ) : (
               <Copy className="w-4 h-4" />
             )}
@@ -92,8 +92,8 @@ export function CodePreview() {
             className={cn(
               "p-1.5 rounded transition-colors",
               isEmpty
-                ? "text-zinc-300 cursor-not-allowed"
-                : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100"
+                ? "text-muted-foreground/50 cursor-not-allowed"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
             )}
             title="Download file"
           >
@@ -104,7 +104,7 @@ export function CodePreview() {
 
       <div className="flex-1 overflow-auto">
         {isEmpty ? (
-          <div className="h-full flex flex-col items-center justify-center text-zinc-400 p-4">
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4">
             <Code className="w-8 h-8 mb-2" />
             <p className="text-sm text-center">
               No code to display.
@@ -113,14 +113,14 @@ export function CodePreview() {
             </p>
           </div>
         ) : (
-          <pre className="p-4 text-xs font-mono text-zinc-700 whitespace-pre-wrap break-words">
+          <pre className="p-4 text-xs font-mono text-foreground whitespace-pre-wrap break-words">
             {currentContent}
           </pre>
         )}
       </div>
 
       {!isEmpty && (
-        <div className="px-4 py-2 border-t border-zinc-200 bg-zinc-50 text-[10px] text-zinc-500">
+        <div className="px-4 py-2 border-t border-border bg-muted text-[10px] text-muted-foreground">
           {activeTab === "tailwind" && (
             <span>HTML with Tailwind CSS classes</span>
           )}
