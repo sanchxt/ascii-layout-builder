@@ -3,6 +3,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import { useLineStore } from "@/features/lines/store/lineStore";
+import { useCommandStore } from "@/features/commands/store/commandStore";
 import {
   KEYBOARD_SHORTCUTS,
   CANVAS_CONSTANTS,
@@ -43,6 +44,11 @@ export const useToolShortcuts = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when command palette is open
+      if (useCommandStore.getState().isOpen) {
+        return;
+      }
+
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement

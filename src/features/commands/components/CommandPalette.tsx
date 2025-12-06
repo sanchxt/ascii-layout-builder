@@ -1,40 +1,33 @@
-import { useRef, useEffect } from "react";
-import {
-  Search,
-  LayoutGrid,
-  MousePointer2,
-  Square,
-  Type,
-  Frame,
-  Columns,
-  Grid,
-  Command,
-} from "lucide-react";
+import { useRef, useEffect, useMemo } from "react";
+import { Clock, Sparkles, LayoutGrid } from "lucide-react";
 import { useCommandPalette } from "../hooks/useCommandPalette";
-import type { Command as CommandType } from "../types/command";
+import { CommandPaletteInput } from "./CommandPaletteInput";
+import { CommandSection } from "./CommandSection";
+import { CommandItem } from "./CommandItem";
+import { LayoutPreviewGrid } from "./LayoutPreviewCard";
+import { SelectionContextBar } from "./SelectionContextBar";
+import {
+  groupSearchResults,
+  groupByCategory,
+  getRecentCommands,
+} from "../registry/searchUtils";
 import { cn } from "@/lib/utils";
-
-const iconMap: Record<string, React.ReactNode> = {
-  MousePointer2: <MousePointer2 className="w-4 h-4" />,
-  Square: <Square className="w-4 h-4" />,
-  Type: <Type className="w-4 h-4" />,
-  Frame: <Frame className="w-4 h-4" />,
-  Columns: <Columns className="w-4 h-4" />,
-  Grid: <Grid className="w-4 h-4" />,
-};
 
 export function CommandPalette() {
   const {
     isOpen,
     query,
     selectedIndex,
-    mode,
-    filteredCommands,
+    searchResults,
+    allCommands,
+    recentCommands,
     layoutSuggestions,
+    isLayoutMode,
+    selectionContext,
     close,
     setQuery,
     executeCommand,
-    switchToLayoutMode,
+    onQuickAction,
   } = useCommandPalette();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,196 +48,188 @@ export function CommandPalette() {
     }
   }, [selectedIndex]);
 
+  const recentCommandsList = useMemo(() => {
+    if (query.trim()) return [];
+    return getRecentCommands(allCommands, recentCommands, 5);
+  }, [allCommands, recentCommands, query]);
+
+  const groupedResults = useMemo(() => {
+    if (query.trim()) {
+      return groupSearchResults(searchResults);
+    }
+    return groupByCategory(allCommands);
+  }, [query, searchResults, allCommands]);
+
+  const layoutCommands = useMemo(() => {
+    return allCommands.filter(
+      (cmd) => cmd.category === "layout" && cmd.meta?.layoutPreview
+    );
+  }, [allCommands]);
+
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      close();
-    }
-  };
-
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    if (
-      e.key === "ArrowUp" ||
-      e.key === "ArrowDown" ||
-      e.key === "Enter" ||
-      e.key === "Tab"
-    ) {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Enter") {
       e.preventDefault();
     }
   };
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/50"
-      onClick={handleBackdropClick}
-    >
-      <div className="w-full max-w-lg bg-white rounded-lg shadow-2xl border border-zinc-200 overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-200">
-          {mode === "search" ? (
-            <Search className="w-5 h-5 text-zinc-400" />
-          ) : (
-            <LayoutGrid className="w-5 h-5 text-blue-500" />
-          )}
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleInputKeyDown}
-            placeholder={
-              mode === "search"
-                ? "Search commands..."
-                : 'Enter layout (e.g., "flex row 3" or "grid 2x3")'
-            }
-            className="flex-1 text-sm bg-transparent border-none outline-none placeholder:text-zinc-400"
-          />
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => switchToLayoutMode()}
-              className={cn(
-                "px-2 py-1 text-xs rounded",
-                mode === "layout"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-              )}
-            >
-              Layout
-            </button>
-          </div>
-        </div>
+  let runningIndex = 0;
 
-        <div ref={listRef} className="max-h-80 overflow-y-auto">
-          {mode === "search" ? (
-            filteredCommands.length > 0 ? (
-              <div className="py-2">
-                {filteredCommands.map((command, index) => (
-                  <CommandItem
-                    key={command.id}
-                    command={command}
-                    isSelected={index === selectedIndex}
-                    onClick={() => executeCommand(command.id)}
-                    dataIndex={index}
-                  />
-                ))}
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={close}
+      />
+
+      <div
+        className={cn(
+          "relative w-full max-w-xl rounded-xl shadow-2xl border overflow-hidden",
+          "bg-popover border-border",
+          "animate-in fade-in slide-in-from-top-4 duration-200"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CommandPaletteInput
+          ref={inputRef}
+          query={query}
+          setQuery={setQuery}
+          placeholder={
+            isLayoutMode
+              ? 'Type layout (e.g., "flex row 3" or "grid 2x2")'
+              : "Search commands..."
+          }
+          isLayoutMode={isLayoutMode}
+          onKeyDown={handleInputKeyDown}
+        />
+
+        {selectionContext.hasSelection && (
+          <SelectionContextBar
+            context={selectionContext}
+            onQuickAction={onQuickAction}
+          />
+        )}
+
+        <div ref={listRef} className="max-h-[60vh] overflow-y-auto">
+          {isLayoutMode && layoutSuggestions.length > 0 && (
+            <div className="p-3 border-b border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Suggestions
+                </span>
               </div>
-            ) : (
-              <div className="py-8 text-center text-zinc-500 text-sm">
-                No commands found
-              </div>
-            )
-          ) : (
-            <div className="py-2">
-              {layoutSuggestions.length > 0 ? (
-                layoutSuggestions.map((suggestion, index) => (
+              <div className="space-y-1">
+                {layoutSuggestions.map((suggestion) => (
                   <button
                     key={suggestion}
-                    data-index={index}
-                    onClick={() => {
-                      setQuery(suggestion);
-                      inputRef.current?.focus();
-                    }}
+                    onClick={() => setQuery(suggestion)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-2 text-sm text-left",
-                      index === selectedIndex
-                        ? "bg-blue-50 text-blue-900"
-                        : "hover:bg-zinc-50"
+                      "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
+                      "text-foreground hover:bg-accent"
                     )}
                   >
-                    <LayoutGrid className="w-4 h-4 text-zinc-400" />
-                    <span className="font-mono">{suggestion}</span>
+                    <LayoutGrid className="w-4 h-4 text-muted-foreground" />
+                    <code className="font-mono text-xs">{suggestion}</code>
                   </button>
-                ))
-              ) : query.trim() ? (
-                <div className="py-4 px-4">
-                  <p className="text-sm text-zinc-600 mb-2">
-                    Press Enter to create layout:
-                  </p>
-                  <p className="font-mono text-sm bg-zinc-100 px-2 py-1 rounded">
-                    {query}
-                  </p>
-                </div>
-              ) : (
-                <div className="py-4 px-4 text-sm text-zinc-500">
-                  <p className="mb-2">Examples:</p>
-                  <ul className="space-y-1 font-mono text-xs">
-                    <li>flex row 3</li>
-                    <li>flex col 4</li>
-                    <li>grid 2x3</li>
-                    <li>grid 3x3 gap=24</li>
-                  </ul>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           )}
+
+          {(!query.trim() || isLayoutMode) && layoutCommands.length > 0 && (
+            <LayoutPreviewGrid
+              commands={layoutCommands}
+              selectedIndex={selectedIndex}
+              startIndex={
+                !query.trim() && recentCommandsList.length > 0
+                  ? recentCommandsList.length
+                  : 0
+              }
+              onCommandClick={executeCommand}
+            />
+          )}
+
+          {!query.trim() && recentCommandsList.length > 0 && (
+            <div className="py-1">
+              <div className="flex items-center gap-2 px-4 py-2">
+                <Clock className="w-3 h-3 text-muted-foreground/70" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Recent
+                </span>
+                <div className="flex-1 h-px bg-border/50" />
+              </div>
+              <div className="space-y-0.5">
+                {recentCommandsList.map((command) => {
+                  const dataIndex = runningIndex++;
+                  return (
+                    <CommandItem
+                      key={command.id}
+                      command={command}
+                      isSelected={selectedIndex === dataIndex}
+                      onClick={() => executeCommand(command.id)}
+                      dataIndex={dataIndex}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {groupedResults.length > 0 ? (
+            groupedResults.map((group) => {
+              if (group.id === "layout" && (!query.trim() || isLayoutMode)) {
+                return null;
+              }
+
+              const startIndex = runningIndex;
+              runningIndex += group.commands.length;
+
+              return (
+                <CommandSection
+                  key={group.id}
+                  group={group}
+                  searchResults={query.trim() ? searchResults : undefined}
+                  selectedIndex={selectedIndex}
+                  startIndex={startIndex}
+                  onCommandClick={executeCommand}
+                />
+              );
+            })
+          ) : query.trim() ? (
+            <div className="py-12 text-center">
+              <p className="text-muted-foreground text-sm">No commands found</p>
+              <p className="text-muted-foreground/60 text-xs mt-1">
+                Try a different search term
+              </p>
+            </div>
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-zinc-200 bg-zinc-50 text-xs text-zinc-500">
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-zinc-300 rounded text-[10px]">
-              ↑↓
-            </kbd>
-            Navigate
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-zinc-300 rounded text-[10px]">
-              ↵
-            </kbd>
-            Select
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-zinc-300 rounded text-[10px]">
-              Tab
-            </kbd>
-            Switch mode
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-zinc-300 rounded text-[10px]">
-              Esc
-            </kbd>
-            Close
-          </span>
-        </div>
+        <CommandPaletteFooter />
       </div>
     </div>
   );
 }
 
-interface CommandItemProps {
-  command: CommandType;
-  isSelected: boolean;
-  onClick: () => void;
-  dataIndex: number;
+function CommandPaletteFooter() {
+  return (
+    <div className="flex items-center gap-4 px-4 py-2.5 border-t border-border bg-muted/30">
+      <FooterHint keys="↑↓" label="Navigate" />
+      <FooterHint keys="↵" label="Select" />
+      <FooterHint keys="esc" label="Close" />
+    </div>
+  );
 }
 
-function CommandItem({
-  command,
-  isSelected,
-  onClick,
-  dataIndex,
-}: CommandItemProps) {
+function FooterHint({ keys, label }: { keys: string; label: string }) {
   return (
-    <button
-      data-index={dataIndex}
-      onClick={onClick}
-      className={cn(
-        "w-full flex items-center gap-3 px-4 py-2 text-sm text-left",
-        isSelected ? "bg-blue-50 text-blue-900" : "hover:bg-zinc-50"
-      )}
-    >
-      <span className="text-zinc-400">
-        {command.icon && iconMap[command.icon] ? (
-          iconMap[command.icon]
-        ) : (
-          <Command className="w-4 h-4" />
-        )}
-      </span>
-      <span className="flex-1">{command.label}</span>
-      {command.shortcut && (
-        <kbd className="px-1.5 py-0.5 bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-500">
-          {command.shortcut}
-        </kbd>
-      )}
-    </button>
+    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <kbd className="px-1.5 py-0.5 bg-background border border-border rounded text-[10px] font-mono">
+        {keys}
+      </kbd>
+      <span>{label}</span>
+    </span>
   );
 }

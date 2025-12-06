@@ -2,6 +2,24 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.1.11",
+    date: "Dec 6, 2025",
+    changes: [
+      {
+        text: "Redesigned command palette (Ctrl+K) with unified search, visual layout cards, and 40+ commands",
+        category: "feature",
+      },
+      {
+        text: "Selection context bar showing quick actions (Group, Align, Delete) when items are selected",
+        category: "feature",
+      },
+      {
+        text: "Fuzzy search with smart ranking and recent commands tracking",
+        category: "improvement",
+      },
+    ],
+  },
+  {
     version: "0.1.10",
     date: "Dec 6, 2025",
     changes: [
