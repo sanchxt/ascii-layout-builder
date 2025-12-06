@@ -2,9 +2,13 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
-    version: "0.1.11",
-    date: "Dec 6, 2025",
+    version: "0.1.10",
+    date: "Dec 7, 2025",
     changes: [
+      {
+        text: "Click zoom percentage to input a custom value (10-500%)",
+        category: "feature",
+      },
       {
         text: "Redesigned command palette (Ctrl+K) with unified search, visual layout cards, and 40+ commands",
         category: "feature",
@@ -17,19 +21,9 @@ export const releases: Release[] = [
         text: "Fuzzy search with smart ranking and recent commands tracking",
         category: "improvement",
       },
-    ],
-  },
-  {
-    version: "0.1.10",
-    date: "Dec 6, 2025",
-    changes: [
       {
         text: "Consistent mouse wheel zoom (5% per notch) with smoother trackpad support",
         category: "fix",
-      },
-      {
-        text: "Click zoom percentage to input a custom value (10-500%)",
-        category: "feature",
       },
       {
         text: "Lines now appear on top of boxes when dragging onto drop zones",
