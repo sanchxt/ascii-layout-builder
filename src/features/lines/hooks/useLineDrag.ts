@@ -10,6 +10,10 @@ import {
   convertLineToParentRelative,
   canNestLine,
 } from "../utils/lineHierarchy";
+import {
+  getAbsolutePosition,
+  getNestingDepth,
+} from "@/features/boxes/utils/boxHierarchy";
 import { CANVAS_CONSTANTS } from "@/lib/constants";
 
 interface LineDragState {
@@ -45,23 +49,39 @@ export const useLineDrag = () => {
 
   const findContainingBox = useCallback(
     (x: number, y: number, excludeBoxId?: string): Box | null => {
-      const sortedBoxes = [...boxes]
-        .filter((b) => b.visible !== false && !b.locked)
-        .sort((a, b) => b.zIndex - a.zIndex);
+      const visibleBoxes = boxes.filter(
+        (b) => b.visible !== false && !b.locked
+      );
 
-      for (const box of sortedBoxes) {
+      let deepestBox: Box | null = null;
+      let maxDepth = -1;
+
+      for (const box of visibleBoxes) {
         if (excludeBoxId && box.id === excludeBoxId) continue;
 
+        const absPos = getAbsolutePosition(box, boxes);
+
         if (
-          x >= box.x &&
-          x <= box.x + box.width &&
-          y >= box.y &&
-          y <= box.y + box.height
+          x >= absPos.x &&
+          x <= absPos.x + box.width &&
+          y >= absPos.y &&
+          y <= absPos.y + box.height
         ) {
-          return box;
+          const depth = getNestingDepth(box.id, boxes);
+          if (depth > maxDepth) {
+            maxDepth = depth;
+            deepestBox = box;
+          } else if (
+            depth === maxDepth &&
+            deepestBox &&
+            box.zIndex > deepestBox.zIndex
+          ) {
+            deepestBox = box;
+          }
         }
       }
-      return null;
+
+      return deepestBox;
     },
     [boxes]
   );

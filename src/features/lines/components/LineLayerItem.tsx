@@ -7,9 +7,18 @@ import { cn } from "@/lib/utils";
 interface LineLayerItemProps {
   line: Line;
   depth: number;
+  onDragStart?: (lineId: string, e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  isDragging?: boolean;
 }
 
-export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
+export const LineLayerItem = ({
+  line,
+  depth,
+  onDragStart,
+  onDragEnd,
+  isDragging = false,
+}: LineLayerItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +89,18 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
     toggleLineLock(line.id);
   };
 
+  const handleDragStartLocal = (e: React.DragEvent) => {
+    if (isEditing || isLocked) {
+      e.preventDefault();
+      return;
+    }
+    onDragStart?.(line.id, e);
+  };
+
+  const handleDragEndLocal = () => {
+    onDragEnd?.();
+  };
+
   return (
     <div className="select-none relative">
       {depth > 0 && (
@@ -90,12 +111,16 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
       )}
 
       <div
+        draggable={!isEditing && !isLocked}
+        onDragStart={handleDragStartLocal}
+        onDragEnd={handleDragEndLocal}
         className={cn(
           "group flex items-center h-9 pr-2 cursor-pointer transition-colors relative border-b border-transparent",
           isSelected
             ? "bg-canvas-selection-bg text-canvas-selection"
             : "hover:bg-muted text-foreground",
-          !isVisible && "opacity-50"
+          !isVisible && "opacity-50",
+          isDragging && "opacity-40 bg-muted"
         )}
         style={{ paddingLeft: `${depth * 16 + 6}px` }}
         onClick={handleClick}
@@ -141,7 +166,8 @@ export const LineLayerItem = ({ line, depth }: LineLayerItemProps) => {
             onClick={handleToggleLock}
             className={cn(
               "p-1 rounded hover:bg-accent transition-colors",
-              isLocked && "text-warning-foreground bg-warning/20 hover:bg-warning/30"
+              isLocked &&
+                "text-warning-foreground bg-warning/20 hover:bg-warning/30"
             )}
             title={isLocked ? "Unlock" : "Lock"}
           >

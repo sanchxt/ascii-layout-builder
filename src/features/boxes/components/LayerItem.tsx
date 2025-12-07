@@ -15,6 +15,7 @@ import { useBoxStore } from "../store/boxStore";
 import { useLayersUIStore } from "../store/layersUIStore";
 import { cn } from "@/lib/utils";
 import { LineLayerItem } from "@/features/lines/components/LineLayerItem";
+import type { LineDragState } from "@/features/lines/hooks/useLineLayerDragDrop";
 
 interface DragStateType {
   draggedBoxId: string | null;
@@ -37,6 +38,11 @@ interface LayerItemProps {
   onDrop?: (boxId: string, e: React.DragEvent) => void;
   onDragEnd?: () => void;
   dragState?: DragStateType;
+  onLineDragStart?: (lineId: string, e: React.DragEvent) => void;
+  onLineDragOverBox?: (boxId: string, e: React.DragEvent) => void;
+  onLineDropOnBox?: (boxId: string, e: React.DragEvent) => void;
+  onLineDragEnd?: () => void;
+  lineDragState?: LineDragState;
 }
 
 export const LayerItem = ({
@@ -50,6 +56,11 @@ export const LayerItem = ({
   onDrop,
   onDragEnd,
   dragState,
+  onLineDragStart,
+  onLineDragOverBox,
+  onLineDropOnBox,
+  onLineDragEnd,
+  lineDragState,
 }: LayerItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
@@ -75,6 +86,9 @@ export const LayerItem = ({
   const isDragging = dragState?.draggedBoxId === box.id;
   const isDropTarget = dragState?.dropTargetBoxId === box.id;
   const dropPosition = isDropTarget ? dragState?.dropPosition : null;
+
+  const isLineDropTarget = lineDragState?.dropTargetBoxId === box.id;
+  const isLineDropValid = isLineDropTarget && lineDragState?.isValidDropZone;
 
   const getDisplayName = () => {
     if (box.name) return box.name;
@@ -148,6 +162,11 @@ export const LayerItem = ({
   };
 
   const handleDragOverLocal = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes("application/line-id")) {
+      onLineDragOverBox?.(box.id, e);
+      return;
+    }
+
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const height = rect.height;
@@ -159,6 +178,11 @@ export const LayerItem = ({
   };
 
   const handleDropLocal = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes("application/line-id")) {
+      onLineDropOnBox?.(box.id, e);
+      return;
+    }
+
     onDrop?.(box.id, e);
   };
 
@@ -194,7 +218,8 @@ export const LayerItem = ({
           isDragging && "opacity-40 bg-muted",
           isDropTarget &&
             dropPosition === "inside" &&
-            "bg-canvas-selection-bg ring-1 ring-inset ring-canvas-selection/50"
+            "bg-canvas-selection-bg ring-1 ring-inset ring-canvas-selection/50",
+          isLineDropValid && "bg-accent ring-1 ring-inset ring-primary/50"
         )}
         style={{ paddingLeft: `${depth * 16 + 6}px` }}
         onClick={handleClick}
@@ -262,7 +287,8 @@ export const LayerItem = ({
             onClick={handleToggleLock}
             className={cn(
               "p-1 rounded hover:bg-accent transition-colors",
-              isLocked && "text-warning-foreground bg-warning/20 hover:bg-warning/30"
+              isLocked &&
+                "text-warning-foreground bg-warning/20 hover:bg-warning/30"
             )}
             title={isLocked ? "Unlock" : "Lock"}
           >
@@ -312,12 +338,24 @@ export const LayerItem = ({
                 onDrop={onDrop}
                 onDragEnd={onDragEnd}
                 dragState={dragState}
+                onLineDragStart={onLineDragStart}
+                onLineDragOverBox={onLineDragOverBox}
+                onLineDropOnBox={onLineDropOnBox}
+                onLineDragEnd={onLineDragEnd}
+                lineDragState={lineDragState}
               />
             );
           })}
 
           {childLines.map((line) => (
-            <LineLayerItem key={line.id} line={line} depth={depth + 1} />
+            <LineLayerItem
+              key={line.id}
+              line={line}
+              depth={depth + 1}
+              onDragStart={onLineDragStart}
+              onDragEnd={onLineDragEnd}
+              isDragging={lineDragState?.draggedLineId === line.id}
+            />
           ))}
         </div>
       )}

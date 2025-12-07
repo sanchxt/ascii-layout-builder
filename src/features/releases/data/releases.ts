@@ -2,6 +2,20 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.1.11",
+    date: "Dec 7, 2025",
+    changes: [
+      {
+        text: "Lines can now be re-parented via drag-drop in the Layers panel",
+        category: "feature",
+      },
+      {
+        text: "Fixed line nesting into nested boxes - lines now correctly nest in the target child box instead of ancestors",
+        category: "fix",
+      },
+    ],
+  },
+  {
     version: "0.1.10",
     date: "Dec 7, 2025",
     changes: [

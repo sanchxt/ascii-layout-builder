@@ -7,6 +7,7 @@ import { getRootBoxes } from "../utils/boxHierarchy";
 import { useLayerDragDrop } from "../hooks/useLayerDragDrop";
 import { useLineStore } from "@/features/lines/store/lineStore";
 import { LineLayerItem } from "@/features/lines/components/LineLayerItem";
+import { useLineLayerDragDrop } from "@/features/lines/hooks/useLineLayerDragDrop";
 
 export const LayersContent = () => {
   const boxes = useBoxStore((state) => state.boxes);
@@ -19,6 +20,14 @@ export const LayersContent = () => {
     handleDrop,
     handleDragEnd,
   } = useLayerDragDrop();
+
+  const {
+    lineDragState,
+    handleLineDragStart,
+    handleLineDragOverBox,
+    handleLineDropOnBox,
+    handleLineDragEnd,
+  } = useLineLayerDragDrop();
 
   const searchQuery = useLayersUIStore((state) => state.searchQuery);
   const setSearchQuery = useLayersUIStore((state) => state.setSearchQuery);
@@ -175,11 +184,23 @@ export const LayersContent = () => {
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
                 dragState={dragState}
+                onLineDragStart={handleLineDragStart}
+                onLineDragOverBox={handleLineDragOverBox}
+                onLineDropOnBox={handleLineDropOnBox}
+                onLineDragEnd={handleLineDragEnd}
+                lineDragState={lineDragState}
               />
             ))}
 
             {filteredRootLines.map((line) => (
-              <LineLayerItem key={line.id} line={line} depth={0} />
+              <LineLayerItem
+                key={line.id}
+                line={line}
+                depth={0}
+                onDragStart={handleLineDragStart}
+                onDragEnd={handleLineDragEnd}
+                isDragging={lineDragState.draggedLineId === line.id}
+              />
             ))}
           </div>
         )}
