@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-type OutputTab = "ascii" | "code";
+export type OutputTab = "ascii" | "code" | "animation";
 
 interface OutputDrawerState {
   isOpen: boolean;

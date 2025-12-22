@@ -8,6 +8,9 @@ import {
   Grid3X3,
   Layers,
   FileText,
+  Map,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   useAsciiGeneration,
@@ -19,6 +22,7 @@ import {
   downloadAsciiAsMarkdown,
   downloadAsciiAsText,
 } from "../utils/fileDownload";
+import { CanvasMinimap } from "./CanvasMinimap";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "canvas" | "artboard" | "all-artboards";
@@ -32,6 +36,7 @@ export const AsciiPreviewContent = () => {
   );
   const [copySuccess, setCopySuccess] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(true);
 
   const canvasGeneration = useAsciiGeneration(
     undefined,
@@ -201,6 +206,29 @@ export const AsciiPreviewContent = () => {
                 </option>
               ))}
             </select>
+          </div>
+        )}
+      </div>
+
+      {/* Canvas Minimap Section */}
+      <div className="shrink-0 border-b border-border">
+        <button
+          onClick={() => setShowMinimap(!showMinimap)}
+          className="w-full px-3 py-1.5 flex items-center justify-between text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            <Map className="w-3 h-3" />
+            Canvas Overview
+          </span>
+          {showMinimap ? (
+            <ChevronUp className="w-3 h-3" />
+          ) : (
+            <ChevronDown className="w-3 h-3" />
+          )}
+        </button>
+        {showMinimap && (
+          <div className="px-3 pb-3">
+            <CanvasMinimap className="w-full" height={100} />
           </div>
         )}
       </div>

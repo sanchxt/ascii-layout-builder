@@ -34,7 +34,7 @@ export function useCodeGeneration(
       : undefined;
 
     return {
-      html: generateHTML(boxes, artboard, opts),
+      html: generateHTML(boxes, artboard, opts, lines),
       css: generateCSS(boxes, artboard, opts),
       tailwind: generateTailwind(boxes, artboard, opts, lines),
     };
@@ -47,7 +47,7 @@ export function useCodeGeneration(
     }
 
     return {
-      html: generateHTML(boxes, artboard, opts),
+      html: generateHTML(boxes, artboard, opts, lines),
       css: generateCSS(boxes, artboard, opts),
       tailwind: generateTailwind(boxes, artboard, opts, lines),
     };
@@ -55,7 +55,7 @@ export function useCodeGeneration(
 
   const generateAll = (): CodeOutput => {
     return {
-      html: generateHTML(boxes, undefined, opts),
+      html: generateHTML(boxes, undefined, opts, lines),
       css: generateCSS(boxes, undefined, opts),
       tailwind: generateTailwind(boxes, undefined, opts, lines),
     };

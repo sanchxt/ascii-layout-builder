@@ -19,9 +19,16 @@ import {
   Columns,
   ArrowRight,
   ArrowDown,
+  Play,
+  RotateCcw,
+  Eye,
+  RotateCw,
+  Scale,
 } from "lucide-react";
 import { useBoxStore } from "../store/boxStore";
 import { useSidebarUIStore } from "@/components/layout/store/sidebarUIStore";
+import { useAnimationStore } from "@/features/animation/store/animationStore";
+import { InheritanceSelector } from "@/features/animation/components/InheritanceSelector";
 import type { BorderStyle, Box } from "@/types/box";
 import type { FlexAlign } from "@/features/layout-system/types/layout";
 import {
@@ -93,11 +100,59 @@ export const PropertiesContent = () => {
   const deleteBoxes = useBoxStore((state) => state.deleteBoxes);
   const duplicateBoxes = useBoxStore((state) => state.duplicateBoxes);
 
+  // Animation state hooks
+  const editorMode = useAnimationStore((s) => s.editorMode);
+  const activeState = useAnimationStore((s) => s.getActiveState());
+  const updateStateElement = useAnimationStore((s) => s.updateStateElement);
+  const isAnimationModeActive = editorMode === "animation" && activeState !== null;
+
   const selectedBoxes = useMemo(
     () => boxes.filter((box) => selectedBoxIds.includes(box.id)),
     [boxes, selectedBoxIds]
   );
 
+  // Get first box (may be undefined - checked in early returns below)
+  const box = selectedBoxes[0];
+
+  // Always call this hook - safe even when box is undefined
+  // This must be called before any early returns to satisfy React's Rules of Hooks
+  const stateElement = useMemo(() => {
+    if (!box || !isAnimationModeActive || !activeState) return null;
+    return activeState.elements.find((e) => e.elementId === box.id) || null;
+  }, [box, isAnimationModeActive, activeState]);
+
+  // Convert handlers to useCallback - they must be called before early returns
+  const handleUpdate = useCallback(
+    (field: string, value: any) => {
+      if (!box) return;
+      updateBox(box.id, { [field]: value });
+    },
+    [box, updateBox]
+  );
+
+  // Handle updating state element properties
+  const handleStateElementUpdate = useCallback(
+    (field: "opacity" | "scale" | "rotation" | "visible", value: number | boolean) => {
+      if (!activeState || !stateElement || !box) return;
+      updateStateElement(activeState.id, box.id, { [field]: value });
+    },
+    [activeState, stateElement, box, updateStateElement]
+  );
+
+  // Reset single element to match current box position
+  const handleResetElement = useCallback(() => {
+    if (!activeState || !box) return;
+    updateStateElement(activeState.id, box.id, {
+      x: box.x,
+      y: box.y,
+      opacity: 1,
+      scale: 1,
+      rotation: 0,
+      visible: box.visible !== false,
+    });
+  }, [activeState, box, updateStateElement]);
+
+  // Early returns - AFTER all hooks have been called
   if (selectedBoxes.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
@@ -136,15 +191,146 @@ export const PropertiesContent = () => {
     );
   }
 
-  const box = selectedBoxes[0];
-
-  const handleUpdate = (field: string, value: any) => {
-    updateBox(box.id, { [field]: value });
-  };
+  // At this point, box is guaranteed to be defined (selectedBoxes.length === 1)
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="p-3 space-y-4">
+        {/* Animation State Section - shown when editing a state */}
+        {isAnimationModeActive && stateElement && (
+          <>
+            <div className="p-2.5 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <Play className="w-3.5 h-3.5 text-purple-400 fill-current" />
+                  <span className="text-[10px] font-semibold text-purple-400 uppercase tracking-wider">
+                    State Properties
+                  </span>
+                </div>
+                <button
+                  onClick={handleResetElement}
+                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-purple-400 hover:bg-purple-500/20 rounded transition-colors"
+                  title="Reset to layout position"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Reset
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {/* Opacity */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      Opacity
+                    </span>
+                    <span className="text-[10px] font-mono text-foreground">
+                      {Math.round(stateElement.opacity * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={stateElement.opacity}
+                    onChange={(e) =>
+                      handleStateElementUpdate("opacity", parseFloat(e.target.value))
+                    }
+                    className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  />
+                </div>
+
+                {/* Scale */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Scale className="w-3 h-3" />
+                      Scale
+                    </span>
+                    <span className="text-[10px] font-mono text-foreground">
+                      {Math.round(stateElement.scale * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="2"
+                    step="0.01"
+                    value={stateElement.scale}
+                    onChange={(e) =>
+                      handleStateElementUpdate("scale", parseFloat(e.target.value))
+                    }
+                    className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  />
+                </div>
+
+                {/* Rotation */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <RotateCw className="w-3 h-3" />
+                      Rotation
+                    </span>
+                    <span className="text-[10px] font-mono text-foreground">
+                      {Math.round(stateElement.rotation)}°
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-180"
+                    max="180"
+                    step="1"
+                    value={stateElement.rotation}
+                    onChange={(e) =>
+                      handleStateElementUpdate("rotation", parseFloat(e.target.value))
+                    }
+                    className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  />
+                </div>
+
+                {/* Visibility toggle */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-muted-foreground">Visible</span>
+                  <button
+                    onClick={() =>
+                      handleStateElementUpdate("visible", !stateElement.visible)
+                    }
+                    className={cn(
+                      "w-8 h-4 rounded-full transition-colors relative",
+                      stateElement.visible
+                        ? "bg-purple-500"
+                        : "bg-muted-foreground/30"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform",
+                        stateElement.visible
+                          ? "translate-x-4.5 left-0.5"
+                          : "translate-x-0.5"
+                      )}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Inheritance selector for nested elements */}
+            {box.parentId && activeState && (
+              <InheritanceSelector
+                stateId={activeState.id}
+                elementId={box.id}
+                currentMode={stateElement.inheritanceMode}
+                hasParent={!!box.parentId}
+                className="pt-2 border-t border-purple-500/20"
+              />
+            )}
+            <div className="h-px bg-border" />
+          </>
+        )}
+
         <PropertySection title="Transform" icon={Move}>
           <div className="grid grid-cols-2 gap-2">
             <PropertyInput

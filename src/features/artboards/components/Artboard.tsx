@@ -1,8 +1,10 @@
 import { type FC, useMemo } from "react";
 import type { Artboard as ArtboardType } from "@/types/artboard";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
+import { useLineStore } from "@/features/lines/store/lineStore";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useArtboardStore } from "../store/artboardStore";
+import { useAnimationStore } from "@/features/animation/store/animationStore";
 import { getBoxesInArtboard, getBoxOverflow } from "../utils/artboardHelpers";
 import { cn } from "@/lib/utils";
 
@@ -23,10 +25,15 @@ export const Artboard: FC<ArtboardProps> = ({
   isDragging = false,
 }) => {
   const selectArtboard = useArtboardStore((state) => state.selectArtboard);
+  const setActiveArtboard = useArtboardStore((state) => state.setActiveArtboard);
   const boxes = useBoxStore((state) => state.boxes);
+  const clearBoxSelection = useBoxStore((state) => state.clearSelection);
+  const clearLineSelection = useLineStore((state) => state.clearLineSelection);
   const isSpacebarPressed = useCanvasStore(
     (state) => state.interaction.isSpacebarPressed
   );
+  const editorMode = useAnimationStore((s) => s.editorMode);
+  const isPreviewMode = editorMode === "preview";
 
   const hasOverflow = useMemo(() => {
     const artboardBoxes = getBoxesInArtboard(artboard.id, boxes);
@@ -34,6 +41,11 @@ export const Artboard: FC<ArtboardProps> = ({
   }, [artboard, boxes]);
 
   const handleArtboardClick = (e: React.MouseEvent) => {
+    // Block interactions in preview mode
+    if (isPreviewMode) {
+      return;
+    }
+
     const target = e.target as HTMLElement;
     const isArtboardFrame =
       target.hasAttribute("data-artboard-boundary") ||
@@ -41,11 +53,23 @@ export const Artboard: FC<ArtboardProps> = ({
       target.closest("[data-artboard-label]") !== null;
 
     if (isArtboardFrame) {
+      // Clear box/line selection when selecting artboard (unless shift is pressed)
+      if (!e.shiftKey) {
+        clearBoxSelection();
+        clearLineSelection();
+      }
       selectArtboard(artboard.id, e.shiftKey);
+      // Also set as active artboard for Navigator/States context
+      setActiveArtboard(artboard.id);
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Block interactions in preview mode
+    if (isPreviewMode) {
+      return;
+    }
+
     if (isSpacebarPressed) return;
 
     if (artboard.locked) return;

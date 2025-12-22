@@ -52,6 +52,22 @@
   --color-canvas-guide-spacing: var(--canvas-guide-spacing);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-state-accent: var(--state-accent);
+  --color-state-accent-foreground: var(--state-accent-foreground);
+  --color-syntax-plain: var(--syntax-plain);
+  --color-syntax-comment: var(--syntax-comment);
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-function: var(--syntax-function);
+  --color-syntax-operator: var(--syntax-operator);
+  --color-syntax-punctuation: var(--syntax-punctuation);
+  --color-syntax-property: var(--syntax-property);
+  --color-syntax-tag: var(--syntax-tag);
+  --color-syntax-attr-name: var(--syntax-attr-name);
+  --color-syntax-attr-value: var(--syntax-attr-value);
+  --color-syntax-class-name: var(--syntax-class-name);
+  --color-syntax-builtin: var(--syntax-builtin);
 }
 
 :root {
@@ -112,6 +128,26 @@
   /* Guide colors */
   --canvas-guide-align: oklch(0.65 0.25 330);
   --canvas-guide-spacing: oklch(0.6 0.25 0);
+
+  /* Animation state accent colors */
+  --state-accent: oklch(0.59 0.2 290);
+  --state-accent-foreground: oklch(0.35 0.15 290);
+
+  /* Syntax highlighting colors - light mode */
+  --syntax-plain: oklch(0.25 0 0);
+  --syntax-comment: oklch(0.5 0.02 145);
+  --syntax-keyword: oklch(0.45 0.22 290);
+  --syntax-string: oklch(0.42 0.17 145);
+  --syntax-number: oklch(0.5 0.2 55);
+  --syntax-function: oklch(0.45 0.2 250);
+  --syntax-operator: oklch(0.4 0.18 25);
+  --syntax-punctuation: oklch(0.4 0 0);
+  --syntax-property: oklch(0.45 0.18 200);
+  --syntax-tag: oklch(0.5 0.2 20);
+  --syntax-attr-name: oklch(0.5 0.17 75);
+  --syntax-attr-value: oklch(0.42 0.17 145);
+  --syntax-class-name: oklch(0.48 0.2 55);
+  --syntax-builtin: oklch(0.45 0.2 250);
 }
 
 .dark {
@@ -158,6 +194,26 @@
   /* Warning colors for UI elements - dark mode */
   --warning: oklch(0.5 0.15 70);
   --warning-foreground: oklch(0.85 0.12 80);
+
+  /* Animation state accent colors - dark mode */
+  --state-accent: oklch(0.65 0.22 290);
+  --state-accent-foreground: oklch(0.85 0.12 290);
+
+  /* Syntax highlighting colors - dark mode */
+  --syntax-plain: oklch(0.88 0.01 260);
+  --syntax-comment: oklch(0.55 0.03 145);
+  --syntax-keyword: oklch(0.72 0.18 290);
+  --syntax-string: oklch(0.72 0.15 145);
+  --syntax-number: oklch(0.78 0.18 55);
+  --syntax-function: oklch(0.72 0.18 250);
+  --syntax-operator: oklch(0.78 0.15 25);
+  --syntax-punctuation: oklch(0.65 0 0);
+  --syntax-property: oklch(0.72 0.16 200);
+  --syntax-tag: oklch(0.72 0.18 20);
+  --syntax-attr-name: oklch(0.78 0.15 75);
+  --syntax-attr-value: oklch(0.72 0.15 145);
+  --syntax-class-name: oklch(0.78 0.18 55);
+  --syntax-builtin: oklch(0.72 0.18 250);
 }
 
 @layer base {
@@ -233,5 +289,72 @@ aside ::-webkit-scrollbar-thumb:hover {
   .hover-lift:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Responsive sidebar transitions */
+  .sidebar-slide {
+    transition: transform 300ms ease-out, opacity 200ms ease-out;
+  }
+
+  .sidebar-slide-enter {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  .sidebar-slide-enter-active {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .sidebar-slide-exit {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .sidebar-slide-exit-active {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  /* Backdrop fade transition */
+  .backdrop-fade {
+    transition: opacity 200ms ease-out;
+  }
+
+  /* Full-screen drawer transition for mobile */
+  .drawer-fullscreen {
+    transition: transform 300ms ease-out, opacity 200ms ease-out;
+  }
+
+  /* Panel peek animation for slide-over discovery */
+  @keyframes panel-peek {
+    0%, 100% { transform: translateX(100%); }
+    50% { transform: translateX(calc(100% - 4px)); }
+  }
+
+  .panel-peek-hint {
+    animation: panel-peek 2s ease-in-out;
+    animation-delay: 1s;
+    animation-fill-mode: forwards;
+  }
+
+  /* Grab handle pulse animation */
+  @keyframes grab-handle-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
+
+  .grab-handle-pulse {
+    animation: grab-handle-pulse 2s ease-in-out infinite;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-slide,
+  .drawer-fullscreen,
+  .backdrop-fade,
+  .panel-transition {
+    transition: none !important;
   }
 }

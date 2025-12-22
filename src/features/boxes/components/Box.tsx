@@ -11,6 +11,8 @@ import { useLayoutUIStore } from "@/features/layout-system/store/layoutStore";
 import { useLineStore } from "@/features/lines/store/lineStore";
 import { Line } from "@/features/lines/components/Line";
 import { getLinesInBox } from "@/features/lines/utils/lineHierarchy";
+import { useStateRendering } from "@/features/animation/hooks/useStateRendering";
+import { useAnimationStore } from "@/features/animation/store/animationStore";
 import {
   getChildBoxes,
   getNestingDepth,
@@ -97,6 +99,13 @@ export const Box = ({
     [box.id, allLines]
   );
 
+  // Get animation state element data (returns null if not in animation mode)
+  const stateElement = useStateRendering(box.id);
+
+  // Preview mode - block interactions
+  const editorMode = useAnimationStore((s) => s.editorMode);
+  const isPreviewMode = editorMode === "preview";
+
   const handleDeleteAllOverflow = (e: React.MouseEvent) => {
     e.stopPropagation();
     overflowBoxIds.forEach((id) => {
@@ -105,7 +114,10 @@ export const Box = ({
     clearOverflowBoxIds();
   };
 
-  const isVisible = box.visible !== false;
+  // Use state element visibility when in animation mode
+  const isVisible = stateElement
+    ? stateElement.visible !== false
+    : box.visible !== false;
   const ancestors = getAncestors(box.id, allBoxes);
   const hasHiddenAncestor = ancestors.some(
     (ancestor) => ancestor.visible === false
@@ -120,6 +132,12 @@ export const Box = ({
   const nestingDepth = getNestingDepth(box.id, allBoxes);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Block interactions in preview mode
+    if (isPreviewMode) {
+      e.stopPropagation();
+      return;
+    }
+
     if (isSpacebarPressed) {
       return;
     }
@@ -149,6 +167,12 @@ export const Box = ({
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
+    // Block interactions in preview mode
+    if (isPreviewMode) {
+      e.stopPropagation();
+      return;
+    }
+
     e.stopPropagation();
     enterEditMode(box.id);
   };
@@ -185,23 +209,37 @@ export const Box = ({
       };
     }
   } else {
+    // Use state element position when in animation mode, otherwise use box position
+    const effectiveX = stateElement ? stateElement.x : box.x;
+    const effectiveY = stateElement ? stateElement.y : box.y;
+
     if (parentBox) {
       position = {
-        left: box.x,
-        top: box.y,
+        left: effectiveX,
+        top: effectiveY,
       };
     } else if (artboardOffset) {
       position = {
-        left: artboardOffset.x + box.x,
-        top: artboardOffset.y + box.y,
+        left: artboardOffset.x + effectiveX,
+        top: artboardOffset.y + effectiveY,
       };
     } else {
       position = {
-        left: box.x,
-        top: box.y,
+        left: effectiveX,
+        top: effectiveY,
       };
     }
   }
+
+  // Calculate effective opacity and transforms from state element
+  const effectiveOpacity = stateElement
+    ? stateElement.opacity * (isDragging ? 0.5 : 1)
+    : isDragging
+    ? 0.5
+    : 1;
+  const effectiveScale = stateElement?.scale ?? 1;
+  const effectiveRotation = stateElement?.rotation ?? 0;
+  const hasTransform = effectiveScale !== 1 || effectiveRotation !== 0;
 
   return (
     <div
@@ -209,8 +247,8 @@ export const Box = ({
       style={{
         left: position.left,
         top: position.top,
-        width: box.width,
-        height: box.height,
+        width: stateElement?.width ?? box.width,
+        height: stateElement?.height ?? box.height,
         cursor: isLocked
           ? "not-allowed"
           : isEditing
@@ -219,7 +257,11 @@ export const Box = ({
           ? "grabbing"
           : "move",
         zIndex: box.zIndex,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: effectiveOpacity,
+        transform: hasTransform
+          ? `scale(${effectiveScale}) rotate(${effectiveRotation}deg)`
+          : undefined,
+        transformOrigin: hasTransform ? "center center" : undefined,
       }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}

@@ -1,103 +1,134 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Save, Share2, Undo2, Redo2, Code2 } from "lucide-react";
+import { Code2, PanelRight } from "lucide-react";
 import { LayoutToolbarMenu } from "@/features/commands/components/LayoutToolbarMenu";
 import { useOutputDrawerStore } from "@/features/output-drawer/store/outputDrawerStore";
+import { useSidebarUIStore } from "./store/sidebarUIStore";
+import { usePanelState } from "@/lib/store/panelCoordinatorStore";
+import { useIsDesktop } from "@/lib/useMediaQuery";
 import { ThemeToggle } from "@/features/theme/components/ThemeToggle";
+import { ModeToggle } from "@/features/animation/components";
+import { ToolbarOverflowMenu } from "./ToolbarOverflowMenu";
+import { releases } from "@/features/releases/data/releases";
 import { cn } from "@/lib/utils";
 
 export const Toolbar = () => {
-  const isOutputOpen = useOutputDrawerStore((state) => state.isOpen);
-  const toggleOutput = useOutputDrawerStore((state) => state.toggle);
+  const isDesktop = useIsDesktop();
+
+  // Desktop state from stores (for usePanelState)
+  const desktopOutputOpen = useOutputDrawerStore((state) => state.isOpen);
+  const desktopOutputOpen_ = useOutputDrawerStore((state) => state.open);
+  const desktopOutputClose = useOutputDrawerStore((state) => state.close);
+
+  const desktopSidebarOpen = useSidebarUIStore((state) => state.rightSidebarOpen);
+  const setDesktopSidebarOpen = useSidebarUIStore((state) => state.setRightSidebarOpen);
+
+  // Unified panel states via coordinator
+  const { isOpen: isOutputOpen, toggle: toggleOutput } = usePanelState(
+    "outputDrawer",
+    isDesktop,
+    desktopOutputOpen,
+    (open) => open ? desktopOutputOpen_() : desktopOutputClose()
+  );
+
+  const { isOpen: isSidebarOpen, toggle: toggleSidebar } = usePanelState(
+    "rightSidebar",
+    isDesktop,
+    desktopSidebarOpen,
+    setDesktopSidebarOpen
+  );
 
   return (
-    <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 z-50 relative">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-foreground">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">W</span>
+    <header className="h-12 border-b border-border bg-card flex items-center px-3 z-50 relative">
+      {/* LEFT SECTION - Logo, Layout Menu */}
+      <div className="flex items-center gap-2 min-w-0 shrink">
+        {/* Logo */}
+        <div className="flex items-center gap-1.5 text-foreground shrink-0">
+          <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-xs">W</span>
           </div>
-          <span className="font-bold tracking-tight hidden sm:inline-block">
-            WARPSCEW
-          </span>
         </div>
 
-        <div className="h-6 w-px bg-border mx-2" />
+        {/* Divider */}
+        <div className="h-5 w-px bg-border hidden sm:block shrink-0" />
 
-        <LayoutToolbarMenu />
+        {/* Layout Menu */}
+        <div className="hidden sm:block shrink-0">
+          <LayoutToolbarMenu />
+        </div>
 
-        <div className="h-6 w-px bg-border mx-2" />
-
-        <div className="flex flex-col justify-center">
+        {/* Document Title - only on larger screens */}
+        <div className="hidden lg:flex items-center gap-2 ml-2">
+          <div className="h-5 w-px bg-border shrink-0" />
           <input
             type="text"
             defaultValue="Untitled Layout"
-            className="text-sm font-medium text-foreground bg-transparent border-none focus:ring-0 p-0 h-auto hover:text-primary transition-colors cursor-pointer"
+            className="text-sm font-medium text-foreground bg-transparent border-none focus:ring-0 p-0 h-auto hover:text-primary transition-colors cursor-pointer truncate max-w-[160px]"
           />
-          <span className="text-[10px] text-muted-foreground">
-            Edited just now
-          </span>
         </div>
       </div>
 
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 bg-muted p-1 rounded-lg border border-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          disabled
-        >
-          <Undo2 className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          disabled
-        >
-          <Redo2 className="h-3.5 w-3.5" />
-        </Button>
+      {/* CENTER SECTION - Mode Toggle */}
+      <div className="flex-1 flex justify-center">
+        <div className="hidden sm:block">
+          <ModeToggle />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* RIGHT SECTION - Actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
+        {/* Version Badge */}
         <Link
           to="/releases"
-          className="hidden sm:inline-flex px-2 py-1 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+          className={cn(
+            "flex items-center h-7 px-2 rounded-md text-xs font-medium",
+            "text-muted-foreground hover:text-foreground hover:bg-accent transition-colors",
+            "hidden sm:flex"
+          )}
+          title="View release notes"
         >
-          v0.1.11
+          v{releases[0].version}
         </Link>
-        <ThemeToggle />
+
+        {/* Output Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleOutput}
           className={cn(
-            "transition-colors",
+            "h-8 transition-colors hidden sm:flex",
             isOutputOpen
               ? "text-primary bg-accent hover:bg-accent/80"
               : "text-muted-foreground hover:text-foreground"
           )}
-          title="Toggle Output Panel"
+          title="Toggle Output Panel (Cmd+/)"
         >
-          <Code2 className="h-4 w-4 mr-2" />
-          Output
+          <Code2 className="h-4 w-4" />
+          <span className="hidden md:inline ml-1.5 text-xs">Output</span>
         </Button>
+
+        {/* Sidebar Toggle - visible on mobile/tablet only */}
         <Button
           variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-foreground"
+          size="icon"
+          onClick={toggleSidebar}
+          className={cn(
+            "h-8 w-8 lg:hidden transition-colors",
+            isSidebarOpen
+              ? "text-primary bg-accent hover:bg-accent/80"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+          )}
+          title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
-          <Save className="h-4 w-4 mr-2" />
-          Save
+          <PanelRight className="h-4 w-4" />
         </Button>
-        <Button
-          size="sm"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-        >
-          <Share2 className="h-3.5 w-3.5 mr-2" />
-          Export
-        </Button>
+
+        {/* Overflow Menu */}
+        <ToolbarOverflowMenu />
       </div>
-    </div>
+    </header>
   );
 };

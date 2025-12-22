@@ -19,7 +19,8 @@ import {
   calculateGridDimensions,
   getBoxCharBounds,
   getBoxContentBounds,
-  meetsMinimumCharDimensions,
+  calculateAdaptiveRatios,
+  canRenderWithBorders,
 } from "./coordinateMapper";
 import { renderBoxBorder } from "./boxRenderer";
 import { resolveAllJunctions } from "./junctionResolver";
@@ -34,10 +35,6 @@ export function generateAscii(
 ): AsciiOutput {
   const startTime = Date.now();
 
-  const charWidthRatio =
-    options?.charWidthRatio ?? ASCII_CONSTANTS.CHAR_WIDTH_RATIO;
-  const charHeightRatio =
-    options?.charHeightRatio ?? ASCII_CONSTANTS.CHAR_HEIGHT_RATIO;
   const includeMetadata = options?.includeMetadata ?? false;
 
   const warnings: string[] = [];
@@ -50,20 +47,25 @@ export function generateAscii(
   if (artboard) {
     boxesToRender = getBoxesInArtboard(artboard.id, boxes);
 
+    // Only offset root-level boxes (no parentId) by artboard position.
+    // Nested boxes have coordinates relative to their parent, so they should
+    // keep their original coordinates - getAbsolutePosition() will handle
+    // the parent chain calculation correctly.
     boxesToRender = boxesToRender.map((box) => ({
       ...box,
-      x: box.x - artboard.x,
-      y: box.y - artboard.y,
+      x: box.parentId ? box.x : box.x - artboard.x,
+      y: box.parentId ? box.y : box.y - artboard.y,
     }));
 
+    // Same logic for lines - only offset root-level lines
     linesToRender = linesToRender
       .filter((line) => line.artboardId === artboard.id)
       .map((line) => ({
         ...line,
-        startX: line.startX - artboard.x,
-        startY: line.startY - artboard.y,
-        endX: line.endX - artboard.x,
-        endY: line.endY - artboard.y,
+        startX: line.parentId ? line.startX : line.startX - artboard.x,
+        startY: line.parentId ? line.startY : line.startY - artboard.y,
+        endX: line.parentId ? line.endX : line.endX - artboard.x,
+        endY: line.parentId ? line.endY : line.endY - artboard.y,
       }));
   }
 
@@ -85,6 +87,17 @@ export function generateAscii(
     };
   }
 
+  // Calculate adaptive character ratios based on the smallest box
+  // This ensures all boxes can render properly, even deeply nested ones
+  const defaultWidthRatio = options?.charWidthRatio ?? ASCII_CONSTANTS.CHAR_WIDTH_RATIO;
+  const defaultHeightRatio = options?.charHeightRatio ?? ASCII_CONSTANTS.CHAR_HEIGHT_RATIO;
+
+  const { charWidthRatio, charHeightRatio } = calculateAdaptiveRatios(
+    boxesToRender.filter((box) => box.visible !== false),
+    defaultWidthRatio,
+    defaultHeightRatio
+  );
+
   const gridDims = calculateGridDimensions(
     boxesToRender,
     charWidthRatio,
@@ -93,17 +106,12 @@ export function generateAscii(
 
   const grid: AsciiGrid = createGrid(gridDims.width, gridDims.height);
 
+  // Only warn about boxes that still can't render even with adaptive scaling
   for (const box of boxesToRender) {
-    if (
-      !meetsMinimumCharDimensions(
-        box,
-        boxesToRender,
-        charWidthRatio,
-        charHeightRatio
-      )
-    ) {
+    if (box.visible === false) continue;
+    if (!canRenderWithBorders(box, boxesToRender, charWidthRatio, charHeightRatio)) {
       warnings.push(
-        `Box "${box.id}" is too small to render properly (min ${ASCII_CONSTANTS.MIN_BOX_CHARS_WIDTH}x${ASCII_CONSTANTS.MIN_BOX_CHARS_HEIGHT} characters)`
+        `Box "${box.id}" is too small to render (needs at least 3x3 characters)`
       );
     }
   }

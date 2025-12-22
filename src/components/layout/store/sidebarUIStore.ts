@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-type NavigatorTab = "artboards" | "layers";
+type NavigatorTab = "artboards" | "layers" | "states";
 
 interface PanelConfig {
   height: number;
@@ -19,6 +19,12 @@ interface SidebarUIState {
   layoutPanelOpen: boolean;
   layoutPanelBoxId: string | null;
 
+  // Left sidebar state
+  leftSidebarExpanded: boolean;
+
+  // Right sidebar responsive state
+  rightSidebarOpen: boolean;
+
   setPanelHeight: (id: string, height: number) => void;
   togglePanel: (id: string) => void;
   setCollapsed: (id: string, collapsed: boolean) => void;
@@ -26,6 +32,10 @@ interface SidebarUIState {
   isPanelCollapsed: (id: string) => boolean;
   openLayoutPanel: (boxId: string) => void;
   closeLayoutPanel: () => void;
+  toggleLeftSidebar: () => void;
+  setLeftSidebarExpanded: (expanded: boolean) => void;
+  toggleRightSidebar: () => void;
+  setRightSidebarOpen: (open: boolean) => void;
 }
 
 const DEFAULT_HEIGHTS: Record<string, number> = {
@@ -48,6 +58,8 @@ export const useSidebarUIStore = create<SidebarUIState>()(
       activeNavigatorTab: "layers",
       layoutPanelOpen: false,
       layoutPanelBoxId: null,
+      rightSidebarOpen: true, // Default open on desktop, will be controlled by viewport
+      leftSidebarExpanded: true, // Default expanded on desktop
 
       setPanelHeight: (id, height) => {
         const constraints = PANEL_CONSTRAINTS[id];
@@ -105,6 +117,22 @@ export const useSidebarUIStore = create<SidebarUIState>()(
       closeLayoutPanel: () => {
         set({ layoutPanelOpen: false, layoutPanelBoxId: null });
       },
+
+      toggleRightSidebar: () => {
+        set((state) => ({ rightSidebarOpen: !state.rightSidebarOpen }));
+      },
+
+      setRightSidebarOpen: (open) => {
+        set({ rightSidebarOpen: open });
+      },
+
+      toggleLeftSidebar: () => {
+        set((state) => ({ leftSidebarExpanded: !state.leftSidebarExpanded }));
+      },
+
+      setLeftSidebarExpanded: (expanded) => {
+        set({ leftSidebarExpanded: expanded });
+      },
     }),
     {
       name: "sidebar-ui-storage",
@@ -112,6 +140,8 @@ export const useSidebarUIStore = create<SidebarUIState>()(
         panelHeights: state.panelHeights,
         collapsedPanels: Array.from(state.collapsedPanels),
         activeNavigatorTab: state.activeNavigatorTab,
+        rightSidebarOpen: state.rightSidebarOpen,
+        leftSidebarExpanded: state.leftSidebarExpanded,
       }),
       merge: (persisted: any, current) => ({
         ...current,

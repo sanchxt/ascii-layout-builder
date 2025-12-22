@@ -8,6 +8,10 @@ import {
   useBoxStore,
   setRecordSnapshotFn,
 } from "@/features/boxes/store/boxStore";
+import {
+  useAnimationStore,
+  setAnimationRecordSnapshotFn,
+} from "@/features/animation/store/animationStore";
 import { useBoxCreation } from "@/features/boxes/hooks/useBoxCreation";
 import { useBoxSelection } from "@/features/boxes/hooks/useBoxSelection";
 import { useGrouping } from "@/features/boxes/hooks/useGrouping";
@@ -34,8 +38,6 @@ import { DropZoneIndicator } from "@/features/boxes/components/DropZoneIndicator
 import { SmartGuides } from "@/features/alignment/components/SmartGuides";
 import { SelectionRectangle } from "./SelectionRectangle";
 import { CanvasGrid } from "./CanvasGrid";
-import { CanvasControls } from "./CanvasControls";
-import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { screenToCanvas } from "../utils/coordinateTransform";
 import {
   useLineStore,
@@ -53,11 +55,19 @@ import {
   convertToLocalPosition,
   getDeepestBoxAtPoint,
   isPositionInsideParent,
+  getAbsolutePosition,
+  getBorderWidth,
 } from "@/features/boxes/utils/boxHierarchy";
 import { snapToGrid } from "@/features/alignment/utils/coordinateHelpers";
 import { CANVAS_CONSTANTS, BOX_CONSTANTS } from "@/lib/constants";
 import { findArtboardAtPoint } from "@/features/artboards/utils/artboardHelpers";
 import { canvasToArtboardRelative } from "@/features/artboards/utils/coordinateConversion";
+import { CanvasTriggerBadges } from "@/features/animation/components/CanvasTriggerBadges";
+import { TriggerConnectionOverlay } from "@/features/animation/components/TriggerConnectionOverlay";
+import { PreviewInteractionLayer } from "@/features/animation/components/PreviewInteractionLayer";
+import { PreviewModeController } from "@/features/animation/components/PreviewModeController";
+import { usePreviewModeShortcuts } from "@/features/animation/hooks/usePreviewModeShortcuts";
+import { usePreviewPlayback } from "@/features/animation/hooks/usePreviewPlayback";
 import { MousePointer2, Square } from "lucide-react";
 
 interface CanvasProps {
@@ -73,12 +83,24 @@ export const Canvas = ({ children }: CanvasProps) => {
   const detachFromParent = useBoxStore((state) => state.detachFromParent);
   const selectBox = useBoxStore((state) => state.selectBox);
   const artboards = useArtboardStore((state) => state.artboards);
+  const selectArtboard = useArtboardStore((state) => state.selectArtboard);
+  const clearArtboardSelection = useArtboardStore(
+    (state) => state.clearSelection
+  );
   const { isArtboardSelected } = useArtboardSelection();
 
   const lines = useLineStore((state) => state.lines);
   const selectLine = useLineStore((state) => state.selectLine);
   const selectedLineIds = useLineStore((state) => state.selectedLineIds);
   const clearLineSelection = useLineStore((state) => state.clearLineSelection);
+
+  // Animation mode state
+  const editorMode = useAnimationStore((state) => state.editorMode);
+  const activeStateId = useAnimationStore((state) => state.activeStateId);
+  const updateStateElement = useAnimationStore(
+    (state) => state.updateStateElement
+  );
+  const isAnimationModeActive = editorMode === "animation" && activeStateId !== null;
   const {
     startCreating: startLineCreating,
     updateCreating: updateLineCreating,
@@ -131,6 +153,10 @@ export const Canvas = ({ children }: CanvasProps) => {
   useHistory();
   useAlignment();
   useDistribution();
+  usePreviewModeShortcuts();
+
+  // Preview playback - handles animated transitions when triggers fire
+  usePreviewPlayback(null);
 
   const rootBoxes = useMemo(() => getRootBoxes(boxes), [boxes]);
 
@@ -157,6 +183,52 @@ export const Canvas = ({ children }: CanvasProps) => {
           finalAbsX = snapToGrid(finalAbsX, CANVAS_CONSTANTS.GRID_SIZE);
           finalAbsY = snapToGrid(finalAbsY, CANVAS_CONSTANTS.GRID_SIZE);
         }
+
+        // In animation mode, only update state element position (not box data)
+        if (isAnimationModeActive && activeStateId) {
+          // For nested boxes, calculate parent-relative coordinates
+          if (box.parentId) {
+            const parent = boxes.find((b) => b.id === box.parentId);
+            if (parent) {
+              const parentAbsPos = getAbsolutePosition(parent, boxes);
+              const borderWidth = getBorderWidth(parent.borderStyle);
+              const localX =
+                finalAbsX - (parentAbsPos.x + borderWidth + parent.padding);
+              const localY =
+                finalAbsY - (parentAbsPos.y + borderWidth + parent.padding);
+              updateStateElement(activeStateId, id, {
+                x: localX,
+                y: localY,
+              });
+              return;
+            }
+          }
+
+          // For root boxes with artboard, convert to artboard-relative coordinates
+          if (box.artboardId) {
+            const artboard = artboards.find((a) => a.id === box.artboardId);
+            if (artboard) {
+              const relativePos = canvasToArtboardRelative(
+                finalAbsX,
+                finalAbsY,
+                artboard
+              );
+              updateStateElement(activeStateId, id, {
+                x: relativePos.x,
+                y: relativePos.y,
+              });
+              return;
+            }
+          }
+
+          // For canvas-level boxes (no parent, no artboard)
+          updateStateElement(activeStateId, id, {
+            x: finalAbsX,
+            y: finalAbsY,
+          });
+          return;
+        }
+
         let targetParentId: string | null = null;
         if (dropZoneState.isValidDropZone && dropZoneState.potentialParentId) {
           targetParentId = dropZoneState.potentialParentId;
@@ -275,6 +347,7 @@ export const Canvas = ({ children }: CanvasProps) => {
     setRecordSnapshotFn(recordSnapshot);
     setArtboardRecordSnapshotFn(recordSnapshot);
     setLineRecordSnapshotFn(recordSnapshot);
+    setAnimationRecordSnapshotFn(recordSnapshot);
   }, []);
 
   useEffect(() => {
@@ -399,6 +472,15 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Block all interactions in preview mode (except panning)
+    if (editorMode === "preview") {
+      // Still allow panning with spacebar in preview mode
+      if (getIsSpacebarPressed()) {
+        handlePanMouseDown(e, true);
+      }
+      return;
+    }
+
     if (interaction.editingBoxId) {
       exitEditMode();
     }
@@ -433,12 +515,25 @@ export const Canvas = ({ children }: CanvasProps) => {
         }
         selectLine(clickedLine.id, e.shiftKey);
       } else {
-        if (!e.shiftKey) {
-          clearLineSelection();
-          handleCanvasClick(canvasPoint, false);
+        // Check for artboard click
+        const clickedArtboard = findArtboardAtPoint(canvasPoint, artboards);
+        if (clickedArtboard && !clickedArtboard.locked) {
+          // Clear box/line selection when selecting artboard (unless shift is pressed)
+          if (!e.shiftKey) {
+            clearLineSelection();
+            handleCanvasClick(canvasPoint, false); // This clears box selection
+          }
+          selectArtboard(clickedArtboard.id, e.shiftKey);
+        } else {
+          // Start selection rectangle
+          if (!e.shiftKey) {
+            clearLineSelection();
+            clearArtboardSelection();
+            handleCanvasClick(canvasPoint, false);
+          }
+          setIsDrawingSelection(true);
+          startSelection(canvasPoint.x, canvasPoint.y);
         }
-        setIsDrawingSelection(true);
-        startSelection(canvasPoint.x, canvasPoint.y);
       }
     }
   };
@@ -528,6 +623,11 @@ export const Canvas = ({ children }: CanvasProps) => {
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
+    // Block all interactions in preview mode
+    if (editorMode === "preview") {
+      return;
+    }
+
     if (interaction.selectedTool === "box") {
       if (!canvasRef.current) return;
       const bounds = canvasRef.current.getBoundingClientRect();
@@ -799,7 +899,18 @@ export const Canvas = ({ children }: CanvasProps) => {
             <SelectionRectangle selectionRect={selectionRect} />
           )}
 
-          {boxes.length === 0 && !tempBox && (
+          {/* Animation trigger visualization overlays */}
+          {(editorMode === "animation" || editorMode === "preview") && (
+            <>
+              <CanvasTriggerBadges zoom={viewport.zoom} />
+              <TriggerConnectionOverlay zoom={viewport.zoom} />
+              {editorMode === "preview" && (
+                <PreviewInteractionLayer zoom={viewport.zoom} />
+              )}
+            </>
+          )}
+
+          {boxes.length === 0 && artboards.length === 0 && !tempBox && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
               <div className="flex flex-col items-center gap-4 text-muted-foreground">
                 <div className="flex gap-4">
@@ -827,8 +938,10 @@ export const Canvas = ({ children }: CanvasProps) => {
         </div>
       </div>
 
-      <LeftSidebar />
-      <CanvasControls />
+      {/* Preview mode controller */}
+      {editorMode === "preview" && (
+        <PreviewModeController position="bottom-right" />
+      )}
     </div>
   );
 };

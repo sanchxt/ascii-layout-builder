@@ -2,6 +2,7 @@ import type { Box } from "@/types/box";
 import { getResizeHandles } from "../utils/boxGeometry";
 import { BOX_CONSTANTS } from "@/lib/constants";
 import { useBoxResize } from "../hooks/useBoxResize";
+import { useAnimationStore } from "@/features/animation/store/animationStore";
 
 interface BoxResizeHandlesProps {
   box: Box;
@@ -14,8 +15,14 @@ export const BoxResizeHandles = ({
   onUpdate,
   getCanvasBounds,
 }: BoxResizeHandlesProps) => {
+  const editorMode = useAnimationStore((s) => s.editorMode);
   const handles = getResizeHandles(box);
   const { handleMouseDown } = useBoxResize(box, onUpdate, getCanvasBounds);
+
+  // Don't render resize handles in preview mode
+  if (editorMode === "preview") {
+    return null;
+  }
 
   return (
     <>

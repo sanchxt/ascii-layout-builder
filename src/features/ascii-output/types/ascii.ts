@@ -86,3 +86,46 @@ export interface NeighborAnalysis {
   leftStyle: BorderStyle | null;
   rightStyle: BorderStyle | null;
 }
+
+// Minimap types for canvas overview visualization
+
+export interface MinimapBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  width: number;
+  height: number;
+}
+
+export interface MinimapElement {
+  id: string;
+  type: "box" | "line" | "artboard";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  // For lines
+  startX?: number;
+  startY?: number;
+  endX?: number;
+  endY?: number;
+  // Visual properties
+  color: string;
+  isSelected?: boolean;
+  isNested?: boolean;
+}
+
+export interface MinimapViewport {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface MinimapData {
+  elements: MinimapElement[];
+  bounds: MinimapBounds;
+  viewport: MinimapViewport;
+  scale: number;
+}

@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useCanvasStore } from "../store/canvasStore";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/useMediaQuery";
+import { Z_INDEX } from "@/lib/zIndex";
 
 export const CanvasControls = () => {
   const {
@@ -25,6 +27,7 @@ export const CanvasControls = () => {
   } = useCanvasZoom();
   const { viewport, toggleGrid, toggleSnapToGrid, toggleSmartGuides } =
     useCanvasStore();
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   const [isEditingZoom, setIsEditingZoom] = useState(false);
   const [zoomInputValue, setZoomInputValue] = useState("");
@@ -72,7 +75,9 @@ export const CanvasControls = () => {
       disabled={disabled}
       title={title}
       className={cn(
-        "h-8 w-8 rounded-md transition-all",
+        "rounded-md transition-all",
+        // Mobile: smaller buttons
+        isMobile ? "h-7 w-7" : "h-8 w-8",
         active
           ? "bg-canvas-selection/10 text-canvas-selection"
           : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -83,8 +88,20 @@ export const CanvasControls = () => {
   );
 
   return (
-    <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-40">
-      <div className="bg-card rounded-xl shadow-lg border border-border p-1.5 flex flex-col gap-1 backdrop-blur-sm">
+    <div
+      className={cn(
+        "absolute flex flex-col",
+        // Mobile: smaller position offset, tighter gap
+        isMobile ? "bottom-3 right-3 gap-2" : "bottom-6 right-6 gap-3"
+      )}
+      style={{ zIndex: Z_INDEX.CANVAS_CONTROLS }}
+    >
+      <div
+        className={cn(
+          "bg-card rounded-xl shadow-lg border border-border flex flex-col backdrop-blur-sm",
+          isMobile ? "p-1 gap-0.5" : "p-1.5 gap-1"
+        )}
+      >
         <ControlButton onClick={zoomIn} disabled={!canZoomIn} title="Zoom In">
           <ZoomIn className="h-4 w-4" />
         </ControlButton>
@@ -124,7 +141,12 @@ export const CanvasControls = () => {
         </ControlButton>
       </div>
 
-      <div className="bg-card rounded-xl shadow-lg border border-border p-1.5 flex flex-col gap-1 backdrop-blur-sm">
+      <div
+        className={cn(
+          "bg-card rounded-xl shadow-lg border border-border flex flex-col backdrop-blur-sm",
+          isMobile ? "p-1 gap-0.5" : "p-1.5 gap-1"
+        )}
+      >
         <ControlButton onClick={resetZoom} title="Fit to Screen">
           <Maximize2 className="h-4 w-4" />
         </ControlButton>

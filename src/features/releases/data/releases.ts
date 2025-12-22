@@ -2,6 +2,52 @@ import type { Release } from "../types/release";
 
 export const releases: Release[] = [
   {
+    version: "0.2.0",
+    date: "Dec 13, 2025",
+    changes: [
+      {
+        text: "Redesigned toolbar with responsive flexbox layout, overflow menu for mobile, and proper theme color support",
+        category: "feature",
+      },
+      {
+        text: "Fully responsive layout: toggle-able right sidebar on mobile/tablet, full-screen output drawer on mobile, compact tool palette and canvas controls",
+        category: "feature",
+      },
+      {
+        text: "Artboards can now be selected via click or drag-to-select rectangle",
+        category: "fix",
+      },
+      {
+        text: "Empty canvas tip no longer shows when artboards are present",
+        category: "fix",
+      },
+      {
+        text: "Fixed State Editor and Output drawer positioning below toolbar with visible headers and close buttons, unified drawer widths (300px)",
+        category: "fix",
+      },
+      {
+        text: "Interactive canvas minimap in ASCII preview panel with click-to-navigate",
+        category: "feature",
+      },
+      {
+        text: "ASCII output now uses adaptive scaling for small nested boxes and correctly positions nested elements",
+        category: "fix",
+      },
+      {
+        text: "Overhauled code generation: removed hardcoded absolute positioning for clean reusable output, added semantic HTML text formatting (bold, italic, code, color), font size support, grid/flex child properties, and lines in HTML output",
+        category: "improvement",
+      },
+      {
+        text: "Theme-aware syntax highlighting for Code and Animation tabs - colors automatically adapt to light/dark mode and custom themes",
+        category: "feature",
+      },
+      {
+        text: "Simplified layout with compact left sidebar (tools + canvas toggles) and cleaner toolbar",
+        category: "improvement",
+      },
+    ],
+  },
+  {
     version: "0.1.11",
     date: "Dec 7, 2025",
     changes: [

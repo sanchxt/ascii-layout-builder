@@ -1,6 +1,7 @@
 import { useCanvasStore } from "../store/canvasStore";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useLineStore } from "@/features/lines/store/lineStore";
+import { useArtboardStore } from "@/features/artboards/store/artboardStore";
 import {
   getRootBoxes,
   getAbsolutePosition,
@@ -35,6 +36,12 @@ export const useSelectionRectangle = () => {
   const lines = useLineStore((state) => state.lines);
   const selectLine = useLineStore((state) => state.selectLine);
   const clearLineSelection = useLineStore((state) => state.clearLineSelection);
+
+  const artboards = useArtboardStore((state) => state.artboards);
+  const selectArtboard = useArtboardStore((state) => state.selectArtboard);
+  const clearArtboardSelection = useArtboardStore(
+    (state) => state.clearSelection
+  );
 
   const startSelection = (canvasX: number, canvasY: number) => {
     startSelectionRect(canvasX, canvasY);
@@ -105,26 +112,59 @@ export const useSelectionRectangle = () => {
       }
     });
 
+    // Check artboard intersections
+    const selectedArtboardIds: string[] = [];
+    const visibleArtboards = artboards.filter((ab) => ab.visible && !ab.locked);
+
+    visibleArtboards.forEach((artboard) => {
+      const artboardRect = {
+        x: artboard.x,
+        y: artboard.y,
+        width: artboard.width,
+        height: artboard.height,
+      };
+
+      const selectionRect = {
+        x: selectionLeft,
+        y: selectionTop,
+        width: selectionWidth,
+        height: selectionHeight,
+      };
+
+      if (rectanglesIntersect(artboardRect, selectionRect)) {
+        selectedArtboardIds.push(artboard.id);
+      }
+    });
+
     const hasBoxSelection = selectedBoxIds.length > 0;
     const hasLineSelection = selectedLineIds.length > 0;
-    const hasAnySelection = hasBoxSelection || hasLineSelection;
+    const hasArtboardSelection = selectedArtboardIds.length > 0;
+    const hasAnySelection =
+      hasBoxSelection || hasLineSelection || hasArtboardSelection;
 
     if (hasAnySelection) {
       if (shiftKey) {
         selectedBoxIds.forEach((id) => selectBox(id, true));
         selectedLineIds.forEach((id) => selectLine(id, true, true));
+        selectedArtboardIds.forEach((id) => selectArtboard(id, true));
       } else {
         clearSelection();
         clearLineSelection();
+        clearArtboardSelection();
         selectedBoxIds.forEach((id, index) => selectBox(id, index > 0));
         selectedLineIds.forEach((id, index) => {
           const isMulti = hasBoxSelection || index > 0;
           selectLine(id, isMulti, hasBoxSelection);
         });
+        selectedArtboardIds.forEach((id, index) => {
+          const isMulti = hasBoxSelection || hasLineSelection || index > 0;
+          selectArtboard(id, isMulti);
+        });
       }
     } else if (!shiftKey) {
       clearSelection();
       clearLineSelection();
+      clearArtboardSelection();
     }
 
     clearSelectionRect();

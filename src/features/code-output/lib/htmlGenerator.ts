@@ -1,12 +1,132 @@
-import type { Box } from "@/types/box";
+import type { Box, TextFormat } from "@/types/box";
+import type { Line } from "@/types/line";
 import type { Artboard } from "@/types/artboard";
 import type { BoxCodeInfo, CodeGeneratorOptions } from "../types/code";
 import { DEFAULT_CODE_OPTIONS } from "../types/code";
+import { generateLineCode } from "./lineCodeGenerator";
+
+/**
+ * Formats text with semantic HTML tags based on formatting array
+ * Handles bold, italic, code, and color formatting
+ */
+function formatTextWithSemanticTags(
+  text: string,
+  formatting: TextFormat[]
+): string {
+  if (!formatting || formatting.length === 0) {
+    return escapeHTML(text);
+  }
+
+  // Create events for each formatting range
+  interface FormatEvent {
+    position: number;
+    type: "open" | "close";
+    format: TextFormat;
+  }
+
+  const events: FormatEvent[] = [];
+
+  formatting.forEach((fmt) => {
+    events.push({ position: fmt.start, type: "open", format: fmt });
+    events.push({ position: fmt.end, type: "close", format: fmt });
+  });
+
+  // Sort events: by position, then closes before opens at same position
+  events.sort((a, b) => {
+    if (a.position !== b.position) return a.position - b.position;
+    // Closes come before opens at the same position
+    if (a.type === "close" && b.type === "open") return -1;
+    if (a.type === "open" && b.type === "close") return 1;
+    return 0;
+  });
+
+  let result = "";
+  let lastPosition = 0;
+
+  // Track open tags to properly nest them
+  const openTags: TextFormat[] = [];
+
+  events.forEach((event) => {
+    // Add text before this event
+    if (event.position > lastPosition) {
+      result += escapeHTML(text.slice(lastPosition, event.position));
+    }
+    lastPosition = event.position;
+
+    if (event.type === "open") {
+      result += getOpenTag(event.format);
+      openTags.push(event.format);
+    } else {
+      // Close tags in reverse order to maintain proper nesting
+      const tagIndex = openTags.findIndex(
+        (t) =>
+          t.start === event.format.start &&
+          t.end === event.format.end &&
+          t.type === event.format.type
+      );
+      if (tagIndex !== -1) {
+        // Close all tags after this one, then close this one, then reopen the others
+        const tagsToReopen = openTags.slice(tagIndex + 1);
+
+        // Close tags in reverse order
+        for (let i = openTags.length - 1; i >= tagIndex; i--) {
+          result += getCloseTag(openTags[i]);
+        }
+
+        // Remove the closed tag
+        openTags.splice(tagIndex, 1);
+
+        // Reopen the tags that were after it
+        tagsToReopen.forEach((t) => {
+          result += getOpenTag(t);
+        });
+      }
+    }
+  });
+
+  // Add remaining text
+  if (lastPosition < text.length) {
+    result += escapeHTML(text.slice(lastPosition));
+  }
+
+  return result;
+}
+
+function getOpenTag(format: TextFormat): string {
+  switch (format.type) {
+    case "bold":
+      return "<strong>";
+    case "italic":
+      return "<em>";
+    case "code":
+      return "<code>";
+    case "color":
+      return `<span style="color: ${format.value || "inherit"}">`;
+    default:
+      return "";
+  }
+}
+
+function getCloseTag(format: TextFormat): string {
+  switch (format.type) {
+    case "bold":
+      return "</strong>";
+    case "italic":
+      return "</em>";
+    case "code":
+      return "</code>";
+    case "color":
+      return "</span>";
+    default:
+      return "";
+  }
+}
 
 export function generateHTML(
   boxes: Box[],
   artboard?: Artboard,
-  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
+  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS,
+  lineElements: Line[] = []
 ): string {
   const opts = { ...DEFAULT_CODE_OPTIONS, ...options };
   const { includeComments } = opts;
@@ -16,7 +136,9 @@ export function generateHTML(
     .filter((box) => (artboard ? box.artboardId === artboard.id : true))
     .sort((a, b) => a.zIndex - b.zIndex);
 
-  if (rootBoxes.length === 0) {
+  const lineCode = generateLineCode(lineElements, artboard, opts, boxes);
+
+  if (rootBoxes.length === 0 && !lineCode) {
     return "";
   }
 
@@ -36,11 +158,20 @@ export function generateHTML(
     rootBoxes.forEach((box) => {
       lines.push(generateBoxHTML(box, boxes, opts, 1));
     });
+
+    if (lineCode) {
+      lines.push(lineCode);
+    }
+
     lines.push(`</div>`);
   } else {
     rootBoxes.forEach((box) => {
       lines.push(generateBoxHTML(box, boxes, opts, 0));
     });
+
+    if (lineCode) {
+      lines.push(lineCode);
+    }
   }
 
   return lines.join("\n");
@@ -72,10 +203,14 @@ function generateBoxHTML(
   lines.push(`${indentStr}<div ${attrs.join(" ")}>`);
 
   if (hasText) {
-    const textLines = box.text.value.split("\n");
+    const formattedText = formatTextWithSemanticTags(
+      box.text.value,
+      box.text.formatting || []
+    );
+    const textLines = formattedText.split("\n");
     textLines.forEach((line) => {
       if (line.trim()) {
-        lines.push(`${indentStr}${indent}${escapeHTML(line)}`);
+        lines.push(`${indentStr}${indent}${line}`);
       }
     });
   }

@@ -1,12 +1,15 @@
 import type { Line, ArrowHeadStyle, LineDirection } from "@/types/line";
+import type { Box } from "@/types/box";
 import type { Artboard } from "@/types/artboard";
 import type { CodeGeneratorOptions } from "../types/code";
 import { DEFAULT_CODE_OPTIONS } from "../types/code";
+import { getLineAbsolutePosition } from "@/features/lines/utils/lineHierarchy";
 
 export function generateLineCode(
   lines: Line[],
   artboard?: Artboard,
-  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
+  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS,
+  boxes: Box[] = []
 ): string {
   const opts = { ...DEFAULT_CODE_OPTIONS, ...options };
 
@@ -30,9 +33,9 @@ export function generateLineCode(
 
   sortedLines.forEach((line) => {
     if (line.outputMode === "svg") {
-      output.push(generateSvgLine(line, artboard, opts));
+      output.push(generateSvgLine(line, artboard, opts, boxes));
     } else if (line.outputMode === "comment") {
-      output.push(generateCommentLine(line, opts));
+      output.push(generateCommentLine(line, opts, boxes));
     }
   });
 
@@ -42,15 +45,22 @@ export function generateLineCode(
 function generateSvgLine(
   line: Line,
   artboard?: Artboard,
-  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
+  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS,
+  boxes: Box[] = []
 ): string {
   const { indent, includeComments } = options;
   const indentStr = indent || "  ";
 
-  const startX = artboard ? line.startX - artboard.x : line.startX;
-  const startY = artboard ? line.startY - artboard.y : line.startY;
-  const endX = artboard ? line.endX - artboard.x : line.endX;
-  const endY = artboard ? line.endY - artboard.y : line.endY;
+  // Get absolute position (handles nested lines with parentId)
+  const absPos = line.parentId
+    ? getLineAbsolutePosition(line, boxes)
+    : { startX: line.startX, startY: line.startY, endX: line.endX, endY: line.endY };
+
+  // Adjust for artboard offset
+  const startX = artboard ? absPos.startX - artboard.x : absPos.startX;
+  const startY = artboard ? absPos.startY - artboard.y : absPos.startY;
+  const endX = artboard ? absPos.endX - artboard.x : absPos.endX;
+  const endY = artboard ? absPos.endY - artboard.y : absPos.endY;
 
   const width = Math.abs(endX - startX) || 2;
   const height = Math.abs(endY - startY) || 2;
@@ -155,9 +165,15 @@ function generateSvgLine(
 
 function generateCommentLine(
   line: Line,
-  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
+  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS,
+  boxes: Box[] = []
 ): string {
   const { includeComments } = options;
+
+  // Get absolute position (handles nested lines with parentId)
+  const absPos = line.parentId
+    ? getLineAbsolutePosition(line, boxes)
+    : { startX: line.startX, startY: line.startY, endX: line.endX, endY: line.endY };
 
   const directionChar = line.direction === "horizontal" ? "→" : "↓";
   const startArrowChar = getArrowCharForComment(
@@ -177,10 +193,10 @@ function generateCommentLine(
   const lineVisual = `${startArrowChar}${"─".repeat(5)}${endArrowChar}`;
 
   if (includeComments) {
-    return `<!-- ${namePart}${lineVisual}${labelPart} (${line.startX},${line.startY} ${directionChar} ${line.endX},${line.endY}) -->`;
+    return `<!-- ${namePart}${lineVisual}${labelPart} (${absPos.startX},${absPos.startY} ${directionChar} ${absPos.endX},${absPos.endY}) -->`;
   }
 
-  return `<!-- Line${labelPart}: ${line.startX},${line.startY} ${directionChar} ${line.endX},${line.endY} -->`;
+  return `<!-- Line${labelPart}: ${absPos.startX},${absPos.startY} ${directionChar} ${absPos.endX},${absPos.endY} -->`;
 }
 
 function generateArrowMarker(
@@ -252,14 +268,15 @@ function escapeHTML(str: string): string {
 export function generateLineTailwind(
   line: Line,
   artboard?: Artboard,
-  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
+  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS,
+  boxes: Box[] = []
 ): string {
   if (line.outputMode === "comment") {
-    return generateCommentLine(line, options);
+    return generateCommentLine(line, options, boxes);
   }
 
   if (line.outputMode === "svg") {
-    return generateSvgLine(line, artboard, options);
+    return generateSvgLine(line, artboard, options, boxes);
   }
 
   return "";
@@ -268,7 +285,8 @@ export function generateLineTailwind(
 export function generateAllLinesTailwind(
   lines: Line[],
   artboard?: Artboard,
-  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS
+  options: CodeGeneratorOptions = DEFAULT_CODE_OPTIONS,
+  boxes: Box[] = []
 ): string {
-  return generateLineCode(lines, artboard, options);
+  return generateLineCode(lines, artboard, options, boxes);
 }

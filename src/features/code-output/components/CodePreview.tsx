@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Copy, Check, Download, Code, FileText, Palette } from "lucide-react";
 import { useCodeGeneration } from "../hooks/useCodeGeneration";
+import { SyntaxHighlighter } from "@/components/ui/syntax-highlighter";
 import { cn } from "@/lib/utils";
 
 type CodeTab = "html" | "css" | "tailwind";
@@ -14,6 +15,17 @@ const TAB_CONFIG: { id: CodeTab; label: string; icon: React.ReactNode }[] = [
     icon: <Palette className="w-3.5 h-3.5" />,
   },
 ];
+
+function getLanguageForTab(tab: CodeTab): string {
+  switch (tab) {
+    case "html":
+      return "html";
+    case "css":
+      return "css";
+    case "tailwind":
+      return "html"; // HTML with Tailwind classes
+  }
+}
 
 export function CodePreview() {
   const [activeTab, setActiveTab] = useState<CodeTab>("tailwind");
@@ -113,9 +125,13 @@ export function CodePreview() {
             </p>
           </div>
         ) : (
-          <pre className="p-4 text-xs font-mono text-foreground whitespace-pre-wrap break-words">
-            {currentContent}
-          </pre>
+          <SyntaxHighlighter
+            code={currentContent}
+            language={getLanguageForTab(activeTab)}
+            showLineNumbers={true}
+            maxHeight="100%"
+            className="h-full rounded-none"
+          />
         )}
       </div>
 

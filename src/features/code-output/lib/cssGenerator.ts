@@ -122,11 +122,30 @@ function getBoxStyles(
   styles.width = formatUnit(box.width, useRem, remBase);
   styles.height = formatUnit(box.height, useRem, remBase);
 
+  // Flex child properties
   if (parentHasLayout && parent?.layout?.type === "flex") {
-    styles.flex = "1";
+    // Use actual flex values when available, otherwise default to flex: 1
+    const flexGrow = box.layoutChildProps?.flexGrow ?? 1;
+    const flexShrink = box.layoutChildProps?.flexShrink ?? 1;
+    const flexBasis = box.layoutChildProps?.flexBasis ?? "auto";
+    styles.flex = `${flexGrow} ${flexShrink} ${flexBasis}`;
+
     styles.minWidth = formatUnit(100, useRem, remBase);
     styles.minHeight = formatUnit(60, useRem, remBase);
 
+    if (box.layoutChildProps?.alignSelf) {
+      styles.alignSelf = mapFlexAlign(box.layoutChildProps.alignSelf);
+    }
+  }
+
+  // Grid child properties
+  if (parentHasLayout && parent?.layout?.type === "grid") {
+    if (box.layoutChildProps?.gridColumn) {
+      styles.gridColumn = box.layoutChildProps.gridColumn;
+    }
+    if (box.layoutChildProps?.gridRow) {
+      styles.gridRow = box.layoutChildProps.gridRow;
+    }
     if (box.layoutChildProps?.alignSelf) {
       styles.alignSelf = mapFlexAlign(box.layoutChildProps.alignSelf);
     }
@@ -143,10 +162,14 @@ function getBoxStyles(
     styles.textAlign = box.text.alignment;
   }
 
-  if (!parentHasLayout) {
-    styles.position = "absolute";
-    styles.left = formatUnit(box.x, useRem, remBase);
-    styles.top = formatUnit(box.y, useRem, remBase);
+  // Add font size support
+  if (box.text.fontSize && box.text.fontSize !== "medium") {
+    const fontSizeMap: Record<string, string> = {
+      small: "0.875rem",
+      medium: "1rem",
+      large: "1.125rem",
+    };
+    styles.fontSize = fontSizeMap[box.text.fontSize];
   }
 
   return styles;

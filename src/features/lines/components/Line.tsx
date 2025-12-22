@@ -5,6 +5,7 @@ import { getLineDashArray } from "../utils/lineHelpers";
 import { getPointAlongLine } from "../utils/lineGeometry";
 import { useBoxStore } from "@/features/boxes/store/boxStore";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { useAnimationStore } from "@/features/animation/store/animationStore";
 import { getLineAbsolutePosition } from "../utils/lineHierarchy";
 import { getNestingDepth } from "@/features/boxes/utils/boxHierarchy";
 
@@ -43,6 +44,8 @@ export const Line = React.memo(function Line({
   const isSpacebarPressed = useCanvasStore(
     (state) => state.interaction.isSpacebarPressed
   );
+  const editorMode = useAnimationStore((s) => s.editorMode);
+  const isPreviewMode = editorMode === "preview";
 
   const renderPosition = useMemo(() => {
     if (dragPreviewPosition) {
@@ -77,6 +80,12 @@ export const Line = React.memo(function Line({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent, handle: "line" | "start" | "end" = "line") => {
+      // Block interactions in preview mode
+      if (isPreviewMode) {
+        e.stopPropagation();
+        return;
+      }
+
       if (isSpacebarPressed) return;
 
       e.stopPropagation();
@@ -91,7 +100,7 @@ export const Line = React.memo(function Line({
         }
       }
     },
-    [line.id, line.locked, onSelect, onDragStart, isSpacebarPressed]
+    [line.id, line.locked, onSelect, onDragStart, isSpacebarPressed, isPreviewMode]
   );
 
   const dashArray = useMemo(

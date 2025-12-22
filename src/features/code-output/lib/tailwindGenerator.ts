@@ -1,4 +1,4 @@
-import type { Box } from "@/types/box";
+import type { Box, TextFormat } from "@/types/box";
 import type { Line } from "@/types/line";
 import type { Artboard } from "@/types/artboard";
 import type { CodeGeneratorOptions } from "../types/code";
@@ -26,7 +26,7 @@ export function generateTailwind(
     .filter((box) => !box.parentId)
     .sort((a, b) => a.zIndex - b.zIndex);
 
-  const lineCode = generateLineCode(lines, artboard, opts);
+  const lineCode = generateLineCode(lines, artboard, opts, boxes);
 
   if (rootBoxes.length === 0 && !lineCode) {
     return "";
@@ -89,10 +89,14 @@ function generateBoxTailwind(
   lines.push(`${indentStr}<div class="${classes.join(" ")}">`);
 
   if (hasText) {
-    const textLines = box.text.value.split("\n");
+    const formattedText = formatTextWithSemanticTags(
+      box.text.value,
+      box.text.formatting || []
+    );
+    const textLines = formattedText.split("\n");
     textLines.forEach((line) => {
       if (line.trim()) {
-        lines.push(`${indentStr}${indent}${escapeHTML(line)}`);
+        lines.push(`${indentStr}${indent}${line}`);
       }
     });
   }
@@ -172,11 +176,42 @@ function getBoxTailwindClasses(box: Box, allBoxes: Box[]): string[] {
   classes.push(`w-[${formatPx(box.width)}px]`);
   classes.push(`h-[${formatPx(box.height)}px]`);
 
+  // Flex child properties
   if (parentHasLayout && parent?.layout?.type === "flex") {
-    classes.push("flex-1");
+    // Use actual flex values when available
+    if (box.layoutChildProps?.flexGrow !== undefined) {
+      classes.push(`grow-[${box.layoutChildProps.flexGrow}]`);
+    } else {
+      classes.push("flex-1");
+    }
+
+    if (box.layoutChildProps?.flexShrink !== undefined) {
+      classes.push(`shrink-[${box.layoutChildProps.flexShrink}]`);
+    }
+
+    if (box.layoutChildProps?.flexBasis) {
+      classes.push(`basis-[${box.layoutChildProps.flexBasis}]`);
+    }
+
     classes.push("min-w-[100px]");
     classes.push("min-h-[60px]");
 
+    if (box.layoutChildProps?.alignSelf) {
+      classes.push(
+        TAILWIND_MAPPINGS.alignSelf?.[box.layoutChildProps.alignSelf] ||
+          `self-${box.layoutChildProps.alignSelf}`
+      );
+    }
+  }
+
+  // Grid child properties
+  if (parentHasLayout && parent?.layout?.type === "grid") {
+    if (box.layoutChildProps?.gridColumn) {
+      classes.push(`col-[${box.layoutChildProps.gridColumn}]`);
+    }
+    if (box.layoutChildProps?.gridRow) {
+      classes.push(`row-[${box.layoutChildProps.gridRow}]`);
+    }
     if (box.layoutChildProps?.alignSelf) {
       classes.push(
         TAILWIND_MAPPINGS.alignSelf?.[box.layoutChildProps.alignSelf] ||
@@ -206,10 +241,14 @@ function getBoxTailwindClasses(box: Box, allBoxes: Box[]): string[] {
     );
   }
 
-  if (!parentHasLayout && parent) {
-    classes.push("absolute");
-    classes.push(`left-[${formatPx(box.x)}px]`);
-    classes.push(`top-[${formatPx(box.y)}px]`);
+  // Add font size support
+  if (box.text.fontSize && box.text.fontSize !== "medium") {
+    const fontSizeMap: Record<string, string> = {
+      small: "text-sm",
+      medium: "text-base",
+      large: "text-lg",
+    };
+    classes.push(fontSizeMap[box.text.fontSize]);
   }
 
   return classes;
@@ -221,6 +260,107 @@ function getContainerClasses(artboard: Artboard): string {
     `w-[${formatPx(artboard.width)}px]`,
     `h-[${formatPx(artboard.height)}px]`,
   ].join(" ");
+}
+
+/**
+ * Formats text with semantic HTML tags based on formatting array
+ */
+function formatTextWithSemanticTags(
+  text: string,
+  formatting: TextFormat[]
+): string {
+  if (!formatting || formatting.length === 0) {
+    return escapeHTML(text);
+  }
+
+  interface FormatEvent {
+    position: number;
+    type: "open" | "close";
+    format: TextFormat;
+  }
+
+  const events: FormatEvent[] = [];
+
+  formatting.forEach((fmt) => {
+    events.push({ position: fmt.start, type: "open", format: fmt });
+    events.push({ position: fmt.end, type: "close", format: fmt });
+  });
+
+  events.sort((a, b) => {
+    if (a.position !== b.position) return a.position - b.position;
+    if (a.type === "close" && b.type === "open") return -1;
+    if (a.type === "open" && b.type === "close") return 1;
+    return 0;
+  });
+
+  let result = "";
+  let lastPosition = 0;
+  const openTags: TextFormat[] = [];
+
+  events.forEach((event) => {
+    if (event.position > lastPosition) {
+      result += escapeHTML(text.slice(lastPosition, event.position));
+    }
+    lastPosition = event.position;
+
+    if (event.type === "open") {
+      result += getOpenTag(event.format);
+      openTags.push(event.format);
+    } else {
+      const tagIndex = openTags.findIndex(
+        (t) =>
+          t.start === event.format.start &&
+          t.end === event.format.end &&
+          t.type === event.format.type
+      );
+      if (tagIndex !== -1) {
+        const tagsToReopen = openTags.slice(tagIndex + 1);
+        for (let i = openTags.length - 1; i >= tagIndex; i--) {
+          result += getCloseTag(openTags[i]);
+        }
+        openTags.splice(tagIndex, 1);
+        tagsToReopen.forEach((t) => {
+          result += getOpenTag(t);
+        });
+      }
+    }
+  });
+
+  if (lastPosition < text.length) {
+    result += escapeHTML(text.slice(lastPosition));
+  }
+
+  return result;
+}
+
+function getOpenTag(format: TextFormat): string {
+  switch (format.type) {
+    case "bold":
+      return "<strong>";
+    case "italic":
+      return "<em>";
+    case "code":
+      return "<code>";
+    case "color":
+      return `<span style="color: ${format.value || "inherit"}">`;
+    default:
+      return "";
+  }
+}
+
+function getCloseTag(format: TextFormat): string {
+  switch (format.type) {
+    case "bold":
+      return "</strong>";
+    case "italic":
+      return "</em>";
+    case "code":
+      return "</code>";
+    case "color":
+      return "</span>";
+    default:
+      return "";
+  }
 }
 
 function escapeHTML(str: string): string {
